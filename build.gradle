@@ -924,3 +924,7 @@ task restart(dependsOn: ['stop', ':cuba-core:deploy', ':cuba-web:deploy', ':cuba
         start.execute()
     }
 }
+
+zipProject {
+    excludeFromZip = ['out']
+}

@@ -34,7 +34,9 @@ import com.haulmont.cuba.gui.components.validators.BeanValidator;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.ValueListener;
 import com.haulmont.cuba.gui.data.impl.WeakItemChangeListener;
+import com.haulmont.cuba.gui.model.InstanceContainer;
 import com.haulmont.cuba.web.gui.data.ItemWrapper;
+import com.haulmont.cuba.web.gui.model.ItemAdapter;
 import org.apache.commons.lang.StringUtils;
 
 import javax.validation.constraints.NotNull;
@@ -47,10 +49,11 @@ import java.util.List;
 import static com.haulmont.cuba.gui.ComponentsHelper.handleFilteredAttributes;
 
 public abstract class WebAbstractField<T extends com.vaadin.ui.AbstractField>
-        extends WebAbstractComponent<T> implements Field {
+        extends WebAbstractComponent<T> implements Field, PropertyBoundComponent /* todo ds: move to Field */ {
 
     protected static final int VALIDATORS_LIST_INITIAL_CAPACITY = 4;
 
+    protected InstanceContainer instanceContainer;
     protected Datasource<Entity> datasource;
     protected MetaProperty metaProperty;
     protected MetaPropertyPath metaPropertyPath;
@@ -62,6 +65,7 @@ public abstract class WebAbstractField<T extends com.vaadin.ui.AbstractField>
     protected boolean editable = true;
 
     protected ItemWrapper itemWrapper;
+    protected ItemAdapter itemAdapter;
 
     protected Datasource.ItemChangeListener<Entity> securityItemChangeListener;
     protected WeakItemChangeListener securityWeakItemChangeListener;
@@ -421,4 +425,66 @@ public abstract class WebAbstractField<T extends com.vaadin.ui.AbstractField>
 
         return getClass().getSimpleName();
     }
+
+    @Override
+    public InstanceContainer getEntityContainer() {
+        return instanceContainer;
+    }
+
+    @Override
+    public void setContainer(InstanceContainer container, String property) {
+        if (this.instanceContainer != null) {
+            metaProperty = null;
+            metaPropertyPath = null;
+
+            component.setPropertyDataSource(null);
+
+            // todo dc
+//            //noinspection unchecked
+//            this.entityContainer.removeItemChangeListener(securityWeakItemChangeListener);
+//            securityWeakItemChangeListener = null;
+
+            this.instanceContainer = null;
+
+            if (itemAdapter != null) {
+                itemAdapter.unsubscribe();
+            }
+
+            disableBeanValidator();
+        }
+
+        if (container != null) {
+            //noinspection unchecked
+            this.instanceContainer = container;
+
+            final MetaClass metaClass = container.getMetaClass();
+            resolveMetaPropertyPath(metaClass, property);
+
+            initFieldConverter();
+
+            itemAdapter = createItemAdapter(container, Collections.singleton(metaPropertyPath));
+            component.setPropertyDataSource(itemAdapter.getItemProperty(metaPropertyPath));
+
+            initRequired(metaPropertyPath);
+
+            if (metaProperty.isReadOnly()) {
+                setEditable(false);
+            }
+
+            // todo dc
+//            handleFilteredAttributes(this, this.datasource, metaPropertyPath);
+//            securityItemChangeListener = e -> handleFilteredAttributes(this, this.datasource, metaPropertyPath);
+//
+//            securityWeakItemChangeListener = new WeakItemChangeListener(datasource, securityItemChangeListener);
+//            //noinspection unchecked
+//            this.datasource.addItemChangeListener(securityWeakItemChangeListener);
+
+            initBeanValidator();
+        }
+    }
+
+    protected ItemAdapter createItemAdapter(InstanceContainer container, Collection<MetaPropertyPath> propertyPaths) {
+        return new ItemAdapter(container, container.getMetaClass(), propertyPaths);
+    }
+
 }

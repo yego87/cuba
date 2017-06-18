@@ -19,6 +19,7 @@ package com.haulmont.cuba.gui.components;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
+import com.haulmont.cuba.gui.model.CollectionContainer;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,8 @@ public interface Table<E extends Entity>
     Map<Object, Object> getAggregationResults();
 
     void setDatasource(CollectionDatasource datasource);
+
+    void setContainer(CollectionContainer container);
 
     void setRequired(Column column, boolean required, String message);
 

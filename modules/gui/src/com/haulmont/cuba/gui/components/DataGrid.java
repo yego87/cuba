@@ -18,20 +18,29 @@ package com.haulmont.cuba.gui.components;
 
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.Entity;
+import com.haulmont.cuba.gui.components.data.DataGridSource;
+import com.haulmont.cuba.gui.components.data.EntityDataGridSource;
+import com.haulmont.cuba.gui.components.data.datagrid.CollectionDatasourceDataGridAdapter;
+import com.haulmont.cuba.gui.components.data.datagrid.SortableCollectionDatasourceDataGridAdapter;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
+import com.haulmont.cuba.gui.data.CollectionDatasource.Sortable;
 import com.haulmont.cuba.gui.data.Datasource;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.EventObject;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static com.haulmont.cuba.gui.components.MouseEventDetails.MouseButton;
 
 public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtonsPanel, Component.HasCaption,
-                                                    Component.HasIcon, HasRowsCount, HasSettings,
-                                                    LookupComponent, Component.Focusable {
+        Component.HasIcon, HasRowsCount, HasSettings,
+        LookupComponent, Component.Focusable {
 
     String NAME = "dataGrid";
 
@@ -138,16 +147,49 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     void removeColumn(String id);
 
     /**
-     * @return the DataGrid data source
+     * @return The DataGrid source
      */
-    CollectionDatasource getDatasource();
+    @Nullable
+    DataGridSource<E> getDataGridSource();
+
+    /**
+     * Sets an instance of {@link DataGridSource} as the DataGrid data source.
+     *
+     * @param dataGridSource the DataGrid data source
+     */
+    void setDataGridSource(@Nullable DataGridSource<E> dataGridSource);
+
+    /**
+     * @return the DataGrid data source
+     * @deprecated use {@link #getDataGridSource()} instead
+     */
+    @Deprecated
+    default CollectionDatasource getDatasource() {
+        DataGridSource<E> dataGridSource = getDataGridSource();
+        return dataGridSource != null ? ((CollectionDatasourceDataGridAdapter) dataGridSource).getDatasource() : null;
+    }
 
     /**
      * Sets an instance of {@link CollectionDatasource} as the DataGrid data source.
      *
      * @param datasource the DataGrid data source, not null
+     * @deprecated use {@link #setDataGridSource(DataGridSource)} instead
      */
-    void setDatasource(CollectionDatasource datasource);
+    @SuppressWarnings("unchecked")
+    @Deprecated
+    default void setDatasource(CollectionDatasource datasource) {
+        if (datasource == null) {
+            setDataGridSource(null);
+        } else {
+            DataGridSource<E> dataGridSource;
+            if (datasource instanceof Sortable) {
+                dataGridSource = new SortableCollectionDatasourceDataGridAdapter<>((Sortable) datasource);
+            } else {
+                dataGridSource = new CollectionDatasourceDataGridAdapter<>(datasource);
+            }
+            setDataGridSource(dataGridSource);
+        }
+    }
 
     /**
      * Marks all the items in the current data provider as selected
@@ -273,7 +315,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * columns will be frozen, but the built-in selection checkbox column will
      * still be frozen if it's in use. -1 means that not even the selection
      * column is frozen.
-     * <p>
+     *
      * <em>NOTE:</em> this count includes {@link Column#isCollapsed() hidden
      * columns} in the count.
      *
@@ -1207,7 +1249,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * @param formatString the pattern describing the date and time format
          *                     which will be used to create {@link DateFormat} instance.
          * @see <a href="https://docs.oracle.com/javase/tutorial/i18n/format/simpleDateFormat.html">Format
-         *      String Syntax</a>
+         * String Syntax</a>
          */
         void setFormatString(String formatString);
 
@@ -1246,7 +1288,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
         /**
          * @param formatString the format string with which to format the number
          * @see <a href=
-         *      "http://docs.oracle.com/javase/8/docs/api/java/util/Formatter.html#dnum">Format String Syntax</a>
+         * "http://docs.oracle.com/javase/8/docs/api/java/util/Formatter.html#dnum">Format String Syntax</a>
          */
         void setFormatString(String formatString);
 
@@ -1330,7 +1372,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
 
         /**
          * The source type of the converter.
-         *
+         * <p>
          * Values of this type can be passed to
          * {@link #convertToPresentation(Object, Class, Locale)}.
          *
@@ -1340,7 +1382,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
 
         /**
          * The target type of the converter.
-         *
+         * <p>
          * Values of this type can be passed to
          * {@link #convertToModel(Object, Class, Locale)}.
          *
@@ -1551,7 +1593,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
 
         /**
          * A {@link List} of all the items that became selected.
-         * <p>
+         *
          * <em>Note:</em> this excludes all items that might have been previously
          * selected.
          *
@@ -1563,7 +1605,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
 
         /**
          * A {@link List} of all the items that became deselected.
-         * <p>
+         *
          * <em>Note:</em> this excludes all items that might have been previously
          * deselected.
          *
@@ -1867,7 +1909,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * took place. The position is relative to the clicked component.
          *
          * @return The mouse cursor x position relative to the clicked layout
-         *         component or -1 if no x coordinate available
+         * component or -1 if no x coordinate available
          */
         public int getRelativeX() {
             return details.getRelativeX();
@@ -1878,7 +1920,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * took place. The position is relative to the clicked component.
          *
          * @return The mouse cursor y position relative to the clicked layout
-         *         component or -1 if no y coordinate available
+         * component or -1 if no y coordinate available
          */
         public int getRelativeY() {
             return details.getRelativeY();
@@ -1965,8 +2007,8 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          *
          * @param columnId column id
          * @return the cell for the given column id,
-         *         merged cell for merged properties,
-         *         null if not found
+         * merged cell for merged properties,
+         * null if not found
          */
         T getCell(String columnId);
     }
@@ -2015,7 +2057,6 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * Returns the HTML content displayed in this cell.
          *
          * @return the html
-         *
          */
         String getHtml();
 
@@ -2260,16 +2301,17 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * A column in the DataGrid.
      */
-    interface Column extends HasXmlDescriptor, HasFormatter, Serializable {
+    interface Column<E> extends HasXmlDescriptor, HasFormatter, Serializable {
 
         /**
          * @return id of a column
          */
         String getId();
 
+        // TODO: gg, do we need this?
         /**
          * @return the instance of {@link MetaPropertyPath} representing a relative path
-         *         to a property from certain MetaClass
+         * to a property from certain MetaClass
          */
         @Nullable
         MetaPropertyPath getPropertyPath();
@@ -2300,7 +2342,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * <p>
          * The default value is <code>null</code>, and in that case the column's
          * {@link #getCaption() header caption} is used.
-         * <p>
+         *
          * <em>NOTE:</em> setting this to empty string might cause the hiding
          * toggle to not render correctly.
          *
@@ -2352,7 +2394,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * <p>
          * If a column has a defined width ({@link #setWidth(double)}), it
          * overrides this method's effects.
-         * <p>
+         *
          * <em>Example:</em> A DataGrid with three columns, with expand ratios 0, 1
          * and 2, respectively. The column with a <strong>ratio of 0 is exactly
          * as wide as its contents requires</strong>. The column with a ratio of
@@ -2414,7 +2456,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
 
         /**
          * @return {@code false} if the column is currently hidden by security permissions,
-         *         {@code true} otherwise
+         * {@code true} otherwise
          */
         boolean isVisible();
 
@@ -2441,7 +2483,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
 
         /**
          * Returns whether this column can be hidden by the user. Default is {@code true}.
-         * <p>
+         *
          * <em>Note:</em> the column can be programmatically hidden using
          * {@link #setCollapsed(boolean)} regardless of the returned value.
          *
@@ -2482,7 +2524,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
         /**
          * Returns whether this column can be resized by the user. Default is
          * {@code true}.
-         * <p>
+         *
          * <em>Note:</em> the column can be programmatically resized using
          * {@link #setWidth(double)} and {@link #setWidthAuto()} regardless
          * of the returned value.
@@ -2497,13 +2539,6 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * @param resizable {@code true} if this column should be resizable, {@code false} otherwise
          */
         void setResizable(boolean resizable);
-
-        /**
-         * Sets this column as the last frozen column in its grid.
-         *
-         * @see DataGrid#setFrozenColumnCount(int)
-         */
-        void setLastFrozenColumn();
 
         /**
          * Returns the renderer instance used by this column.

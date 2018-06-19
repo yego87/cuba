@@ -37,10 +37,10 @@ public abstract class WebAbstractClickableRenderer<T> extends WebDataGrid.Abstra
 
     protected ClickableRenderer.RendererClickListener createClickListenerWrapper(DataGrid.RendererClickListener listener) {
         return (ClickableRenderer.RendererClickListener) e -> {
-            DataGrid.Column column = getColumnByGridColumn(e.getColumn());
-            DataGrid.RendererClickEvent event = new DataGrid.RendererClickEvent(
-                    getDataGrid(), WebWrapperUtils.toMouseEventDetails(e), e.getItemId(), column.getId());
-            listener.onClick(event);
+//            DataGrid.Column column = getColumnByGridColumn(e.getColumn());
+//            DataGrid.RendererClickEvent event = new DataGrid.RendererClickEvent(
+//                    getDataGrid(), WebWrapperUtils.toMouseEventDetails(e), e.getItemId(), column.getId());
+//            listener.onClick(event);
         };
     }
 

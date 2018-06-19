@@ -24,13 +24,13 @@ import com.vaadin.ui.Grid;
 import static com.vaadin.event.ContextClickEvent.ContextClickNotifier;
 import static com.vaadin.ui.Grid.*;
 
-public class CubaGridContextMenu extends GridContextMenu {
+public class CubaGridContextMenu<T> extends GridContextMenu<T> {
 
     protected ContextClickListener contextClickListener;
 
     protected boolean enabled = true;
 
-    public CubaGridContextMenu(Grid parentComponent) {
+    public CubaGridContextMenu(Grid<T> parentComponent) {
         super(parentComponent);
     }
 

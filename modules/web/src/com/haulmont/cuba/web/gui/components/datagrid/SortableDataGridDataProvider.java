@@ -5,7 +5,8 @@ import com.haulmont.cuba.gui.components.data.DataGridSource;
 // TODO: gg, implement sortable
 public class SortableDataGridDataProvider<I> extends DataGridDataProvider<I> {
 
-    public SortableDataGridDataProvider(DataGridSource<I> dataGridSource) {
-        super(dataGridSource);
+    public SortableDataGridDataProvider(DataGridSource<I> dataGridSource,
+                                        DataGridSourceEventsDelegate<I> dataEventsDelegate) {
+        super(dataGridSource, dataEventsDelegate);
     }
 }

@@ -2301,7 +2301,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * A column in the DataGrid.
      */
-    interface Column<E> extends HasXmlDescriptor, HasFormatter, Serializable {
+    interface Column<E extends Entity> extends HasXmlDescriptor, HasFormatter, Serializable {
 
         /**
          * @return id of a column
@@ -2622,12 +2622,12 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
         /**
          * @return The DataGrid this column belongs to
          */
-        DataGrid getOwner();
+        DataGrid<E> getOwner();
 
         /**
          * @param owner The DataGrid this column belongs to
          */
-        void setOwner(DataGrid owner);
+        void setOwner(DataGrid<E> owner);
     }
 
 }

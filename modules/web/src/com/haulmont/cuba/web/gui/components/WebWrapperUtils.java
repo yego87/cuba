@@ -234,6 +234,24 @@ public final class WebWrapperUtils {
         return mouseEventDetails;
     }
 
+    public static MouseEventDetails toMouseEventDetails(com.vaadin.shared.MouseEventDetails vMouseEventDetails) {
+        checkNotNullArgument(vMouseEventDetails);
+
+        MouseEventDetails mouseEventDetails = new MouseEventDetails();
+        mouseEventDetails.setButton(toMouseButton(vMouseEventDetails.getButton()));
+        mouseEventDetails.setClientX(vMouseEventDetails.getClientX());
+        mouseEventDetails.setClientY(vMouseEventDetails.getClientY());
+        mouseEventDetails.setAltKey(vMouseEventDetails.isAltKey());
+        mouseEventDetails.setCtrlKey(vMouseEventDetails.isCtrlKey());
+        mouseEventDetails.setMetaKey(vMouseEventDetails.isMetaKey());
+        mouseEventDetails.setShiftKey(vMouseEventDetails.isShiftKey());
+        mouseEventDetails.setDoubleClick(vMouseEventDetails.isDoubleClick());
+        mouseEventDetails.setRelativeX(vMouseEventDetails.getRelativeX());
+        mouseEventDetails.setRelativeY(vMouseEventDetails.getRelativeY());
+
+        return mouseEventDetails;
+    }
+
     public static MouseEventDetails.MouseButton toMouseButton(com.vaadin.shared.MouseEventDetails.MouseButton mouseButton) {
         if (mouseButton == null) {
             return null;

@@ -61,6 +61,7 @@ import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.components.converters.FormatterBasedConverter;
+import com.haulmont.cuba.web.gui.components.datagrid.DataGridColumnValueProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.SortableDataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.renderers.RendererWrapper;
@@ -79,7 +80,6 @@ import com.haulmont.cuba.web.gui.data.SortableDataGridIndexedCollectionDsWrapper
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.haulmont.cuba.web.widgets.CubaGridContextMenu;
-import com.haulmont.cuba.web.widgets.addons.contextmenu.GridContextMenu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.vaadin.data.ValueProvider;
@@ -630,14 +630,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected void addColumnInternal(ColumnImpl column, int index) {
-        Grid.Column gridColumn = component.addColumn(new ValueProvider<E, Object>() {
-            @Override
-            public Object apply(E e) {
-                MetaPropertyPath propertyPath = column.getPropertyPath();
-                return e.getValueEx(propertyPath != null ? propertyPath.toPathString() : column.getId());
-            }
-        });
-//        addContainerProperty(column);
+        Grid.Column gridColumn = component.addColumn(
+                new DataGridColumnValueProvider<>(column.getPropertyPath()));
 
         columns.put(column.getId(), column);
         columnsOrder.add(index, column);
@@ -656,35 +650,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         component.setColumnOrder(getColumnOrder());
     }
 
-    /*protected void addContainerProperty(ColumnImpl column) {
-        // TODO: gg, implement
-        if (column.getPropertyPath() != null) {
-//            getContainerDataSource().addContainerProperty(column.getPropertyPath(), column.getType(), null);
-        } else {
-//            containerWrapper.addGeneratedProperty(column.getId(), createDefaultPropertyValueGenerator());
-        }
-    }*/
 
-//    protected PropertyValueGenerator createDefaultPropertyValueGenerator() {
-//        return new PropertyValueGenerator() {
-//            @Override
-//            public Object getValue(Item item, Object itemId, Object propertyId) {
-//                return null;
-//            }
-//
-//            @Override
-//            public Class getType() {
-//                return String.class;
-//            }
-//        };
-//    }
-
-//    protected com.vaadin.v7.data.Container.Indexed getContainerDataSource() {
-//        com.vaadin.v7.data.Container.Indexed containerDataSource = component.getContainerDataSource();
-//        return (containerDataSource instanceof GeneratedPropertyContainer)
-//                ? ((GeneratedPropertyContainer) containerDataSource).getWrappedContainer()
-//                : containerDataSource;
-//    }
 
     protected String generateColumnCaption(Column column) {
         return column.getPropertyPath() != null
@@ -741,18 +707,21 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
+    // TODO: gg, implement
     protected void addColumnId(Grid.Column gridColumn, Column column) {
 //        component.addColumnId(gridColumn.getState().id, column.getId());
     }
 
+    // TODO: gg, implement
     protected void removeColumnId(Grid.Column gridColumn) {
 //        component.removeColumnId(gridColumn.getState().id);
     }
 
+    // TODO: gg, implement
     protected void setDefaultRenderer(Grid.Column gridColumn, @Nullable MetaProperty metaProperty, Class type) {
-//        gridColumn.setRenderer(type == Boolean.class && metaProperty != null
-//                ? new com.vaadin.v7.ui.renderers.HtmlRenderer()
-//                : new com.vaadin.v7.ui.renderers.TextRenderer());
+        gridColumn.setRenderer(type == Boolean.class && metaProperty != null
+                ? new com.vaadin.ui.renderers.HtmlRenderer()
+                : new com.vaadin.ui.renderers.TextRenderer());
     }
 
     protected void setDefaultConverter(Grid.Column gridColumn, @Nullable MetaProperty metaProperty, Class type) {
@@ -767,7 +736,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return;
         }
 
-        removeContainerProperty(column);
+        component.removeColumn(column.getId());
 
         columns.remove(column.getId());
         columnsOrder.remove(column);
@@ -775,14 +744,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         ((ColumnImpl) column).setGridColumn(null);
         column.setOwner(null);
-    }
-
-    protected void removeContainerProperty(Column column) {
-        if (column.getPropertyPath() != null) {
-//            getContainerDataSource().removeContainerProperty(column.getPropertyPath());
-        } else {
-//            containerWrapper.removeGeneratedProperty(column.getId());
-        }
     }
 
     @Override
@@ -887,9 +848,10 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     private DataGridDataProvider<E> createDataGridDataProvider(DataGridSource<E> dataGridSource) {
         // TODO: gg, pass this as a EventDelegate
-        return (dataGridSource instanceof DataGridSource.Sortable)
-                ? new SortableDataGridDataProvider<>(dataGridSource)
-                : new DataGridDataProvider<>(dataGridSource);
+//        return (dataGridSource instanceof DataGridSource.Sortable)
+//                ? new SortableDataGridDataProvider<>(dataGridSource)
+//                : new DataGridDataProvider<>(dataGridSource);
+        return new DataGridDataProvider<>(dataGridSource);
     }
 
     protected String[] getColumnOrder() {
@@ -1761,7 +1723,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected boolean canBeSorted(@Nullable DataGridSource<E> dataGridSource) {
-        return dataGridSource instanceof DataGridSource.Sortable;
+        // TODO: gg, implement
+//        return dataGridSource instanceof DataGridSource.Sortable;
+        return false;
     }
 
     @Override
@@ -3066,7 +3030,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //
 //                    grid.setColumnOrder(owner.getColumnPropertyIds());
                 } else {
-                    owner.removeContainerProperty(this);
+//                    owner.removeContainerProperty(this);
                     setGridColumn(null);
                 }
             }

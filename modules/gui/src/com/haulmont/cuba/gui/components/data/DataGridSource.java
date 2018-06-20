@@ -17,7 +17,8 @@ public interface DataGridSource<I> {
 
     int size();
 
-    interface Ordered<T> extends DataGridSource<T> {
+    // TODO: gg, do we need this?
+    /*interface Ordered<T> extends DataGridSource<T> {
         Object nextItemId(Object itemId);
 
         Object prevItemId(Object itemId);
@@ -29,11 +30,12 @@ public interface DataGridSource<I> {
         boolean isFirstId(Object itemId);
 
         boolean isLastId(Object itemId);
-    }
+    }*/
 
-    interface Sortable<T> extends Ordered<T> {
+    // TODO: gg, do we need this? grid is sortable by default?
+    /*interface Sortable<T> extends Ordered<T> {
         void sort(Object[] propertyId, boolean[] ascending);
 
         void resetSortOrder();
-    }
+    }*/
 }

@@ -7,8 +7,7 @@ import com.haulmont.cuba.gui.components.data.DataGridSource;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 
 public class SortableCollectionDatasourceDataGridAdapter<E extends Entity<K>, K>
-        extends CollectionDatasourceDataGridAdapter<E, K>
-        implements DataGridSource.Sortable<E> {
+        extends CollectionDatasourceDataGridAdapter<E, K> {
 
     public SortableCollectionDatasourceDataGridAdapter(CollectionDatasource<E, K> datasource) {
         super(datasource);
@@ -19,7 +18,7 @@ public class SortableCollectionDatasourceDataGridAdapter<E extends Entity<K>, K>
         return (CollectionDatasource.Sortable<E, K>) datasource;
     }
 
-    @Override
+    /*@Override
     public Object nextItemId(Object itemId) {
         return getSortableDatasource().nextItemId((K) itemId);
     }
@@ -67,5 +66,5 @@ public class SortableCollectionDatasourceDataGridAdapter<E extends Entity<K>, K>
     @Override
     public void resetSortOrder() {
         getSortableDatasource().resetSortOrder();
-    }
+    }*/
 }

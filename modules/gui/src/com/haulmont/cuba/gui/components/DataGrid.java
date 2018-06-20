@@ -51,7 +51,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @return unmodifiable copy of current columns
      * @see #getVisibleColumns()
      */
-    List<Column> getColumns();
+    List<Column<E>> getColumns();
 
     /**
      * Returns a copy of columns not hidden by security permissions.
@@ -59,7 +59,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @return copy of columns not hidden by security permissions
      * @see #getColumns()
      */
-    List<Column> getVisibleColumns();
+    List<Column<E>> getVisibleColumns();
 
     /**
      * Returns a column based on the Id.
@@ -69,7 +69,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @see #getColumnNN(String)
      */
     @Nullable
-    Column getColumn(String id);
+    Column<E> getColumn(String id);
 
     /**
      * Returns a column by its Id.
@@ -79,7 +79,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @throws java.lang.IllegalStateException if not found
      * @see #getColumn(String)
      */
-    Column getColumnNN(String id);
+    Column<E> getColumnNN(String id);
 
     /**
      * Adds the given column to DataGrid.
@@ -89,7 +89,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @see #addColumn(String, MetaPropertyPath)
      * @see #addColumn(String, MetaPropertyPath, int)
      */
-    void addColumn(Column column);
+    void addColumn(Column<E> column);
 
     /**
      * Adds the given column at the specified index to DataGrid.
@@ -100,7 +100,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @see #addColumn(String, MetaPropertyPath)
      * @see #addColumn(String, MetaPropertyPath, int)
      */
-    void addColumn(Column column, int index);
+    void addColumn(Column<E> column, int index);
 
     /**
      * Creates new column with given Id and property, then adds this column to DataGrid.
@@ -113,7 +113,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @see #addColumn(Column, int)
      * @see #addColumn(String, MetaPropertyPath, int)
      */
-    Column addColumn(String id, MetaPropertyPath propertyPath);
+    Column<E> addColumn(String id, MetaPropertyPath propertyPath);
 
     /**
      * Creates new column with given Id and property at the specified index,
@@ -128,7 +128,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @see #addColumn(Column, int)
      * @see #addColumn(String, MetaPropertyPath)
      */
-    Column addColumn(String id, MetaPropertyPath propertyPath, int index);
+    Column<E> addColumn(String id, MetaPropertyPath propertyPath, int index);
 
     /**
      * Removes the given column from DataGrid or do nothing if column is {@code null}.
@@ -136,7 +136,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param column the column to add
      * @see #removeColumn(String)
      */
-    void removeColumn(Column column);
+    void removeColumn(Column<E> column);
 
     /**
      * Removes a column from DataGrid by its Id or do nothing if column is not found.
@@ -434,6 +434,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @return the id of the item that is currently being edited, or
      * {@code null} if no item is being edited at the moment
      */
+    // TODO: gg, deplrecate and add method getEditedItem?
     @Nullable
     Object getEditedItemId();
 
@@ -461,12 +462,12 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * Opens the editor interface for the provided entity. Scrolls the Grid to
      * bring the entity to view if it is not already visible.
      *
-     * @param entity the entity to edit
+     * @param item the item to edit
      * @throws IllegalStateException    if the editor is not enabled or already editing an entity in buffered mode
      * @throws IllegalArgumentException if datasource doesn't contain the entity
      * @see #setEditorEnabled(boolean)
      */
-    void edit(E entity);
+    void edit(E item);
 
     /**
      * Field generator that generates component for column in {@link DataGrid} editor.
@@ -1039,7 +1040,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param generator column generator instance
      * @see #addGeneratedColumn(String, ColumnGenerator, int)
      */
-    Column addGeneratedColumn(String columnId, ColumnGenerator<E, ?> generator);
+    Column<E> addGeneratedColumn(String columnId, ColumnGenerator<E, ?> generator);
 
     /**
      * Add a generated column to the DataGrid.
@@ -1049,7 +1050,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param index     index of a new generated column
      * @see #addGeneratedColumn(String, ColumnGenerator)
      */
-    Column addGeneratedColumn(String columnId, ColumnGenerator<E, ?> generator, int index);
+    Column<E> addGeneratedColumn(String columnId, ColumnGenerator<E, ?> generator, int index);
 
     /**
      * Gets the columns generator for the given column id.

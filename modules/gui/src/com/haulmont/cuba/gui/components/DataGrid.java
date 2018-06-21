@@ -1140,21 +1140,21 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * Renderer listens to clicks.
      */
     @FunctionalInterface
-    interface RendererClickListener {
+    interface RendererClickListener<T extends Entity> {
 
         /**
          * Called when a renderer is clicked.
          *
          * @param event the event representing the click
          */
-        void onClick(RendererClickEvent event);
+        void onClick(RendererClickEvent<T> event);
     }
 
     /**
      * Click event fired by a {@link HasRendererClickListener}
      */
-    class RendererClickEvent extends DataGridClickEvent {
-        protected Object itemId;
+    class RendererClickEvent<T extends Entity> extends DataGridClickEvent {
+        protected T item;
         protected String columnId;
 
         /**
@@ -1162,22 +1162,31 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          *
          * @param component the DataGrid from which this event originates
          * @param details   an instance of {@link MouseEventDetails} with information about mouse event details
-         * @param itemId    an item Id
+         * @param item      an item
          * @param columnId  id of the DataGrid column
          */
-        public RendererClickEvent(DataGrid component,
-                                  MouseEventDetails details, Object itemId, String columnId) {
+        public RendererClickEvent(DataGrid<T> component,
+                                  MouseEventDetails details, T item, String columnId) {
             super(component, details);
 
-            this.itemId = itemId;
+            this.item = item;
             this.columnId = columnId;
         }
 
         /**
-         * @return an item Id
+         * @return an item
          */
+        public T getItem() {
+            return item;
+        }
+
+        /**
+         * @return an item Id
+         * @deprecated use {@link #getItem()} instead
+         */
+        @Deprecated
         public Object getItemId() {
-            return itemId;
+            return item.getId();
         }
 
         /**
@@ -1192,13 +1201,13 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * Renderer has click listener.
      */
     @FunctionalInterface
-    interface HasRendererClickListener {
+    interface HasRendererClickListener<T extends Entity> {
         /**
          * Sets new renderer click listener.
          *
          * @param listener the listener to set
          */
-        void setRendererClickListener(RendererClickListener listener);
+        void setRendererClickListener(RendererClickListener<T> listener);
     }
 
     /**
@@ -1210,7 +1219,8 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * A renderer for presenting simple plain-text string values as a link with call back handler.
      */
-    interface ClickableTextRenderer extends Renderer, HasNullRepresentation, HasRendererClickListener {
+    interface ClickableTextRenderer<T extends Entity>
+            extends Renderer, HasNullRepresentation, HasRendererClickListener<T> {
     }
 
     /**
@@ -1309,14 +1319,15 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * corresponding property is used as the caption. Click listeners can be added
      * to the renderer, invoked when any of the rendered buttons is clicked.
      */
-    interface ButtonRenderer extends Renderer, HasNullRepresentation, HasRendererClickListener {
+    interface ButtonRenderer<T extends Entity>
+            extends Renderer, HasNullRepresentation, HasRendererClickListener<T> {
     }
 
     /**
      * A renderer for presenting images. The value of the corresponding property
      * is used as the image location. Location can be a theme resource or URL.
      */
-    interface ImageRenderer extends Renderer, HasRendererClickListener {
+    interface ImageRenderer<T extends Entity> extends Renderer, HasRendererClickListener<T> {
     }
 
     /**

@@ -33,6 +33,8 @@ import java.util.HashMap;
  *
  * @author Jonas Hahn (jonas.hahn@datenhahn.de)
  */
+
+@Deprecated
 public class ComponentRenderer extends Grid.AbstractRenderer<Component> implements DataGenerator {
 
     /** Tracks this renderers trackedComponents to be able to unregister them from the grid upon removal

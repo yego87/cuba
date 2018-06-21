@@ -64,10 +64,6 @@ import com.haulmont.cuba.gui.data.impl.WeakStateChangeListener;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
-import com.haulmont.cuba.web.gui.components.converters.FormatterBasedConverter;
-import com.haulmont.cuba.web.gui.components.converters.StringToObjectConverter;
-import com.haulmont.cuba.web.gui.components.converters.YesNoIconConverter;
-import com.haulmont.cuba.web.gui.components.valueproviders.EntityValueProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridSourceEventsDelegate;
 import com.haulmont.cuba.web.gui.components.renderers.RendererWrapper;
@@ -82,6 +78,7 @@ import com.haulmont.cuba.web.gui.components.renderers.WebNumberRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebProgressBarRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebTextRenderer;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
+import com.haulmont.cuba.web.gui.components.valueproviders.EntityValueProvider;
 import com.haulmont.cuba.web.gui.components.valueproviders.FormatterBasedValueProvider;
 import com.haulmont.cuba.web.gui.components.valueproviders.StringPresentationValueProvider;
 import com.haulmont.cuba.web.gui.components.valueproviders.YesNoIconPresentationValueProvider;
@@ -93,6 +90,7 @@ import com.haulmont.cuba.web.widgets.CubaGridContextMenu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.vaadin.data.SelectionModel;
+import com.vaadin.data.ValueProvider;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.shared.ui.grid.HeightMode;
@@ -2778,9 +2776,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //        }
 //    }
 
-    public static abstract class AbstractRenderer<T> implements RendererWrapper<T> {
-        protected com.vaadin.v7.ui.renderers.Renderer<T> renderer;
-        protected WebDataGrid dataGrid;
+    public static abstract class AbstractRenderer<T extends Entity, V> implements RendererWrapper<V> {
+        protected com.vaadin.ui.renderers.Renderer<V> renderer;
+        protected WebDataGrid<T> dataGrid;
         protected String nullRepresentation;
 
         protected AbstractRenderer() {
@@ -2791,19 +2789,21 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
 
         @Override
-        public com.vaadin.v7.ui.renderers.Renderer<T> getImplementation() {
+        public com.vaadin.ui.renderers.Renderer<V> getImplementation() {
             if (renderer == null) {
                 renderer = createImplementation();
             }
             return renderer;
         }
 
-        protected abstract com.vaadin.v7.ui.renderers.Renderer<T> createImplementation();
+        protected abstract com.vaadin.ui.renderers.Renderer<V> createImplementation();
 
-        public com.vaadin.v7.data.util.converter.Converter<? extends T, ?> getConverter() {
-            // Some renderers need specific converter to be set at the same time
-            // (see com.vaadin.ui.Grid.Column.setRenderer(Renderer<T>, Converter<? extends T,?>)).
-            // Default `null` means do not use any converters
+        public ValueProvider<?, V> getPresentationValueProvider() {
+            // Some renderers need specific presentation ValueProvider to be set at the same time
+            // (see com.vaadin.ui.Grid.Column.setRenderer(com.vaadin.data.ValueProvider<V,P>,
+            //          com.vaadin.ui.renderers.Renderer<? super P>)).
+            // Default `null` means do not use any presentation ValueProvider
+            // TODO: gg, default value?
             return null;
         }
 
@@ -2812,11 +2812,11 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             renderer = null;
         }
 
-        protected WebDataGrid getDataGrid() {
+        protected WebDataGrid<T> getDataGrid() {
             return dataGrid;
         }
 
-        protected void setDataGrid(WebDataGrid dataGrid) {
+        protected void setDataGrid(WebDataGrid<T> dataGrid) {
             this.dataGrid = dataGrid;
         }
 
@@ -2829,7 +2829,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             this.nullRepresentation = nullRepresentation;
         }
 
-        protected Column getColumnByGridColumn(Grid.Column column) {
+        protected Column<T> getColumnByGridColumn(Grid.Column<T, ?> column) {
             return dataGrid.getColumnByGridColumn(column);
         }
 
@@ -2860,7 +2860,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         protected boolean generated;
         protected Formatter formatter;
 
-        protected AbstractRenderer renderer;
+        protected AbstractRenderer<E, ?> renderer;
         protected Converter converter;
 
         protected Class type;
@@ -3210,19 +3210,20 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 this.renderer.setDataGrid(null);
             }
 
-            this.renderer = (AbstractRenderer<?>) renderer;
+            //noinspection unchecked
+            this.renderer = (AbstractRenderer) renderer;
             if (gridColumn != null) {
-                // TODO: gg, implement
                 if (this.renderer != null) {
                     this.renderer.setDataGrid(owner);
-                    if (this.renderer.getConverter() != null) {
-                        //noinspection unchecked
-//                        gridColumn.setRenderer(this.renderer.getImplementation(), this.renderer.getConverter());
+
+                    if (this.renderer.getPresentationValueProvider() != null) {
+                        gridColumn.setRenderer((ValueProvider) this.renderer.getPresentationValueProvider(),
+                                (com.vaadin.ui.renderers.Renderer) this.renderer.getImplementation());
                     } else {
-//                        gridColumn.setRenderer(this.renderer.getImplementation());
+                        gridColumn.setRenderer((com.vaadin.ui.renderers.Renderer) this.renderer.getImplementation());
                     }
                 } else {
-//                    owner.setDefaultRenderer(gridColumn, getMetaProperty(), type);
+                    gridColumn.setRenderer(owner.getDefaultRenderer(this));
                 }
                 owner.repaint();
             }

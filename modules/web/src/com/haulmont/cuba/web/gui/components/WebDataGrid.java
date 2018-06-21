@@ -65,7 +65,9 @@ import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.components.converters.FormatterBasedConverter;
-import com.haulmont.cuba.web.gui.components.datagrid.DataGridColumnValueProvider;
+import com.haulmont.cuba.web.gui.components.converters.StringToObjectConverter;
+import com.haulmont.cuba.web.gui.components.converters.YesNoIconConverter;
+import com.haulmont.cuba.web.gui.components.valueproviders.EntityValueProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridSourceEventsDelegate;
 import com.haulmont.cuba.web.gui.components.renderers.RendererWrapper;
@@ -80,6 +82,9 @@ import com.haulmont.cuba.web.gui.components.renderers.WebNumberRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebProgressBarRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebTextRenderer;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
+import com.haulmont.cuba.web.gui.components.valueproviders.FormatterBasedValueProvider;
+import com.haulmont.cuba.web.gui.components.valueproviders.StringPresentationValueProvider;
+import com.haulmont.cuba.web.gui.components.valueproviders.YesNoIconPresentationValueProvider;
 import com.haulmont.cuba.web.gui.data.DataGridIndexedCollectionDsWrapper;
 import com.haulmont.cuba.web.gui.data.SortableDataGridIndexedCollectionDsWrapper;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
@@ -99,6 +104,8 @@ import com.vaadin.ui.StyleGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 
@@ -127,6 +134,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     protected static final String HAS_TOP_PANEL_STYLE_NAME = "has-top-panel";
     protected static final String TEXT_SELECTION_ENABLED_STYLE = "text-selection-enabled";
+
+    private static final Logger log = LoggerFactory.getLogger(WebDataGrid.class);
 
     /* Beans */
     protected ApplicationContext applicationContext;
@@ -667,7 +676,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     protected void addColumnInternal(ColumnImpl<E> column, int index) {
         Grid.Column<E, ?> gridColumn = component.addColumn(
-                new DataGridColumnValueProvider<>(column.getPropertyPath()));
+                new EntityValueProvider<>(column.getPropertyPath()));
 
         columns.put(column.getId(), column);
         columnsOrder.add(index, column);
@@ -696,7 +705,13 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     // TODO: gg, implement
     @SuppressWarnings("unused")
     protected void setupGridColumnProperties(Grid.Column<E, ?> gridColumn, Column<E> column) {
-        gridColumn.setId(column.getId());
+        if (gridColumn.getId() == null) {
+            gridColumn.setId(column.getId());
+        } else if (!Objects.equals(gridColumn.getId(), column.getId())) {
+            // FIXME: gg, remove after test?
+            log.warn("Trying to copy column settings with mismatched ids. Grid.Column: " +
+                    gridColumn.getId() + "; DataGrid.Column: " + column.getId());
+        }
         gridColumn.setCaption(column.getCaption());
         gridColumn.setHidingToggleCaption(column.getCollapsingToggleCaption());
         if (column.isWidthAuto()) {
@@ -723,51 +738,47 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //            gridColumn.setSortable(column.isSortable() && column.getOwner().isSortable());
 //        }
 
+        gridColumn.setRenderer(getDefaultPresentationValueProvider(column), getDefaultRenderer(column));
+
         ((ColumnImpl<E>) column).setGridColumn(gridColumn);
+    }
+
+    protected com.vaadin.data.ValueProvider getDefaultPresentationValueProvider(Column<E> column) {
+        MetaProperty metaProperty = column.getPropertyPath() != null
+                ? column.getPropertyPath().getMetaProperty()
+                : null;
 
         if (column.getFormatter() != null) {
-            FormatterBasedConverter converter = new FormatterBasedConverter(column.getFormatter());
-//            gridColumn.setConverter(converter);
-        } else {
-            MetaProperty metaProperty = column.getPropertyPath() != null
-                    ? column.getPropertyPath().getMetaProperty()
-                    : null;
-
-            if (metaProperty != null && Collection.class.isAssignableFrom(metaProperty.getJavaType())) {
-                final FormatterBasedConverter converter = new FormatterBasedConverter(new CollectionFormatter(AppBeans.get(MetadataTools.class)));
-//                gridColumn.setConverter(converter);
-            } else {
-                setDefaultConverter(gridColumn, metaProperty, column.getType());
-                setDefaultRenderer(gridColumn, metaProperty, column.getType());
+            return new FormatterBasedValueProvider<>(column.getFormatter());
+        } else if (metaProperty != null) {
+            if (Collection.class.isAssignableFrom(metaProperty.getJavaType())) {
+                new FormatterBasedValueProvider<>(new CollectionFormatter(metadataTools));
+            }
+            if (column.getType() == Boolean.class) {
+                return new YesNoIconPresentationValueProvider();
             }
         }
+
+        return new StringPresentationValueProvider(metaProperty, metadataTools);
     }
 
-    // TODO: gg, implement
-    @SuppressWarnings("unused")
+    protected com.vaadin.ui.renderers.Renderer getDefaultRenderer(Column<E> column) {
+        MetaProperty metaProperty = column.getPropertyPath() != null
+                ? column.getPropertyPath().getMetaProperty()
+                : null;
+
+        return column.getType() == Boolean.class && metaProperty != null
+                ? new com.vaadin.ui.renderers.HtmlRenderer()
+                : new com.vaadin.ui.renderers.TextRenderer();
+    }
+
     protected void addColumnId(Grid.Column<E, ?> gridColumn, Column<E> column) {
-//        component.addColumnId(gridColumn.getState().id, column.getId());
+        // FIXME: gg, probably we need to use internalId
+        component.addColumnId(gridColumn.getId(), column.getId());
     }
 
-    // TODO: gg, implement
-    @SuppressWarnings("unused")
     protected void removeColumnId(Grid.Column<E, ?> gridColumn) {
-//        component.removeColumnId(gridColumn.getState().id);
-    }
-
-    // TODO: gg, implement
-    @SuppressWarnings("unused")
-    protected void setDefaultRenderer(Grid.Column<E, ?> gridColumn, @Nullable MetaProperty metaProperty, Class type) {
-//        gridColumn.setRenderer(type == Boolean.class && metaProperty != null
-//                ? new com.vaadin.ui.renderers.HtmlRenderer()
-//                : new com.vaadin.ui.renderers.TextRenderer());
-    }
-
-    @SuppressWarnings("unused")
-    protected void setDefaultConverter(Grid.Column<E, ?> gridColumn, @Nullable MetaProperty metaProperty, Class type) {
-//        gridColumn.setConverter(type == Boolean.class && metaProperty != null
-//                ? new YesNoIconConverter()
-//                : new StringToObjectConverter(metaProperty));
+        component.removeColumnId(gridColumn.getId());
     }
 
     @Override
@@ -836,6 +847,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
             setVisibleColumns(visibleColumnsOrder);
 
+            // FIXME: gg, why do we need this?
             for (Column<E> column : visibleColumnsOrder) {
                 Grid.Column<E, ?> gridColumn = ((ColumnImpl<E>) column).getGridColumn();
                 setupGridColumnProperties(gridColumn, column);
@@ -2923,6 +2935,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return propertyPath;
         }
 
+        // TODO: gg, remove
 //        public Object getColumnPropertyId() {
 //            return propertyPath != null ? propertyPath : id;
 //        }
@@ -3060,7 +3073,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
                 if (visible) {
                     Grid.Column<E, ?> gridColumn =
-                            grid.addColumn(new DataGridColumnValueProvider<>(getPropertyPath()));
+                            grid.addColumn(new EntityValueProvider<>(getPropertyPath()));
                     owner.setupGridColumnProperties(gridColumn, this);
 
                     grid.setColumnOrder(owner.getColumnOrder());
@@ -3209,7 +3222,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //                        gridColumn.setRenderer(this.renderer.getImplementation());
                     }
                 } else {
-                    owner.setDefaultRenderer(gridColumn, getMetaProperty(), type);
+//                    owner.setDefaultRenderer(gridColumn, getMetaProperty(), type);
                 }
                 owner.repaint();
             }

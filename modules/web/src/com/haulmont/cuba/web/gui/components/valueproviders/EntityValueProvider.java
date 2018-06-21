@@ -1,14 +1,14 @@
-package com.haulmont.cuba.web.gui.components.datagrid;
+package com.haulmont.cuba.web.gui.components.valueproviders;
 
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.Entity;
 import com.vaadin.data.ValueProvider;
 
-public class DataGridColumnValueProvider<E extends Entity, T> implements ValueProvider<E, T> {
+public class EntityValueProvider<E extends Entity, T> implements ValueProvider<E, T> {
 
     protected MetaPropertyPath propertyPath;
 
-    public DataGridColumnValueProvider(MetaPropertyPath propertyPath) {
+    public EntityValueProvider(MetaPropertyPath propertyPath) {
         this.propertyPath = propertyPath;
     }
 

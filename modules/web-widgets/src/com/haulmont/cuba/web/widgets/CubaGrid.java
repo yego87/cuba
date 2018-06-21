@@ -16,8 +16,12 @@
 
 package com.haulmont.cuba.web.widgets;
 
+import com.haulmont.cuba.web.widgets.client.grid.CubaGridState;
 import com.vaadin.event.Action;
 import com.vaadin.ui.Grid;
+
+import java.util.HashMap;
+import java.util.Map;
 
 //import static com.haulmont.cuba.web.widgets.CubaGrid.BeforeEditorOpenListener.EDITOR_OPEN_METHOD;
 //import static com.haulmont.cuba.web.widgets.CubaGrid.EditorCloseListener.EDITOR_CLOSE_METHOD;
@@ -55,39 +59,39 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
 //    public void repaint() {
 //        datasourceExtension.refreshCache();
 //    }
-//
-//    @Override
-//    protected CubaGridState getState() {
-//        return (CubaGridState) super.getState();
-//    }
-//
-//    @Override
-//    protected CubaGridState getState(boolean markAsDirty) {
-//        return (CubaGridState) super.getState(markAsDirty);
-//    }
-//
-//    public Map<String, String> getColumnIds() {
-//        return getState().columnIds;
-//    }
-//
-//    public void setColumnIds(Map<String, String> ids) {
-//        getState().columnIds = ids;
-//    }
-//
-//    public void addColumnId(String column, String value) {
-//        if (getState().columnIds == null) {
-//            getState().columnIds = new HashMap<>();
-//        }
-//
-//        getState().columnIds.put(column, value);
-//    }
-//
-//    public void removeColumnId(String column) {
-//        if (getState().columnIds != null) {
-//            getState().columnIds.remove(column);
-//        }
-//    }
-//
+
+    @Override
+    protected CubaGridState getState() {
+        return (CubaGridState) super.getState();
+    }
+
+    @Override
+    protected CubaGridState getState(boolean markAsDirty) {
+        return (CubaGridState) super.getState(markAsDirty);
+    }
+
+    public Map<String, String> getColumnIds() {
+        return getState().columnIds;
+    }
+
+    public void setColumnIds(Map<String, String> ids) {
+        getState().columnIds = ids;
+    }
+
+    public void addColumnId(String column, String value) {
+        if (getState().columnIds == null) {
+            getState().columnIds = new HashMap<>();
+        }
+
+        getState().columnIds.put(column, value);
+    }
+
+    public void removeColumnId(String column) {
+        if (getState().columnIds != null) {
+            getState().columnIds.remove(column);
+        }
+    }
+
 //    @Override
 //    protected void doEditItem() {
 //        clearFields(editorFields);

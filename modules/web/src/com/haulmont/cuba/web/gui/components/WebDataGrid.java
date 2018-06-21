@@ -116,10 +116,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
@@ -736,6 +736,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //            gridColumn.setSortable(column.isSortable() && column.getOwner().isSortable());
 //        }
 
+        //noinspection unchecked
         gridColumn.setRenderer(getDefaultPresentationValueProvider(column), getDefaultRenderer(column));
 
         ((ColumnImpl<E>) column).setGridColumn(gridColumn);
@@ -747,6 +748,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 : null;
 
         if (column.getFormatter() != null) {
+            //noinspection unchecked
             return new FormatterBasedValueProvider<>(column.getFormatter());
         } else if (metaProperty != null) {
             if (Collection.class.isAssignableFrom(metaProperty.getJavaType())) {
@@ -2286,6 +2288,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         column.setWidth(existingColumn.getWidth());
         column.setExpandRatio(existingColumn.getExpandRatio());
         column.setResizable(existingColumn.isResizable());
+        //noinspection unchecked
         column.setFormatter(existingColumn.getFormatter());
     }
 
@@ -2842,8 +2845,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     protected static class ColumnImpl<E extends Entity> implements Column<E> {
 
-        protected String id;
-        protected MetaPropertyPath propertyPath;
+        protected final String id;
+        protected final MetaPropertyPath propertyPath;
 
         protected String caption;
         protected String collapsingToggleCaption;
@@ -2861,9 +2864,10 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         protected Formatter formatter;
 
         protected AbstractRenderer<E, ?> renderer;
+        protected Function presentationProvider;
         protected Converter converter;
 
-        protected Class type;
+        protected final Class type;
         protected Element element;
 
         protected WebDataGrid<E> owner;
@@ -2919,14 +2923,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 return gridColumn.getId();
             }
             return id;
-        }
-
-        // TODO: gg, do we need this?
-        public void setId(String id) {
-            this.id = id;
-            if (gridColumn != null) {
-                gridColumn.setId(id);
-            }
         }
 
         @Nullable
@@ -3069,6 +3065,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             if (this.visible != visible) {
                 this.visible = visible;
 
+                //noinspection unchecked
                 Grid<E> grid = (Grid<E>) owner.getComponent();
 
                 if (visible) {
@@ -3162,20 +3159,15 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         public void setFormatter(Formatter formatter) {
             this.formatter = formatter;
             if (gridColumn != null) {
-                // TODO: gg, implement
                 if (formatter != null) {
-//                    com.vaadin.v7.data.util.converter.Converter converter = gridColumn.getConverter();
-//                    if (converter instanceof FormatterBasedConverter) {
-//                        ((FormatterBasedConverter) converter).setFormatter(formatter);
-//                    } else {
-//                        gridColumn.setConverter(new FormatterBasedConverter(formatter));
-//                    }
+                    //noinspection unchecked
+                    setRendererInternal(this.renderer, new FormatterBasedValueProvider<>(formatter));
                 } else {
-//                    if (converter != null) {
-//                        gridColumn.setConverter(createConverterWrapper(converter));
-//                    } else {
-//                        owner.setDefaultConverter(gridColumn, getMetaProperty(), type);
-//                    }
+                    if (presentationProvider != null) {
+                        setRendererInternal(this.renderer, createPresentationProviderWrapper(presentationProvider));
+                    } else {
+                        setRendererInternal(this.renderer, null);
+                    }
                 }
                 owner.repaint();
             }
@@ -3205,6 +3197,27 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         @Override
         public void setRenderer(Renderer renderer) {
+            this.presentationProvider = null;
+
+            setRendererInternal(renderer, null);
+        }
+
+        @Override
+        public void setRenderer(Renderer renderer, Function presentationProvider) {
+            this.presentationProvider = presentationProvider;
+
+            setRendererInternal(renderer, presentationProvider != null
+                    ? createPresentationProviderWrapper(presentationProvider) : null);
+        }
+
+        @SuppressWarnings({"unchecked"})
+        protected ValueProvider createPresentationProviderWrapper(Function presentationProvider) {
+            return (ValueProvider) presentationProvider::apply;
+        }
+
+        @SuppressWarnings("unchecked")
+        protected void setRendererInternal(Renderer renderer,
+                                           ValueProvider presentationProvider) {
             if (renderer == null && this.renderer != null) {
                 this.renderer.resetImplementation();
                 this.renderer.setDataGrid(null);
@@ -3216,11 +3229,14 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 if (this.renderer != null) {
                     this.renderer.setDataGrid(owner);
 
-                    if (this.renderer.getPresentationValueProvider() != null) {
-                        gridColumn.setRenderer((ValueProvider) this.renderer.getPresentationValueProvider(),
-                                (com.vaadin.ui.renderers.Renderer) this.renderer.getImplementation());
+                    com.vaadin.ui.renderers.Renderer vRenderer = this.renderer.getImplementation();
+                    if (presentationProvider != null) {
+                        gridColumn.setRenderer(presentationProvider, vRenderer);
+                    } else if (this.renderer.getPresentationValueProvider() != null) {
+                        //noinspection RedundantCast
+                        gridColumn.setRenderer((ValueProvider) this.renderer.getPresentationValueProvider(), vRenderer);
                     } else {
-                        gridColumn.setRenderer((com.vaadin.ui.renderers.Renderer) this.renderer.getImplementation());
+                        gridColumn.setRenderer(vRenderer);
                     }
                 } else {
                     gridColumn.setRenderer(owner.getDefaultRenderer(this));
@@ -3229,54 +3245,30 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             }
         }
 
+        public Function getPresentationProvider() {
+            return presentationProvider;
+        }
+
         @Override
         public Converter<?, ?> getConverter() {
             return converter;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void setConverter(Converter<?, ?> converter) {
             this.converter = converter;
-            if (gridColumn != null) {
-                // TODO: gg, implement
-//                gridColumn.setConverter(converter != null ? createConverterWrapper(converter) : null);
-                owner.repaint();
-            }
+            setRenderer(this.renderer, createConverterWrapper(converter));
         }
 
-        // TODO: gg, implement
-        protected com.vaadin.v7.data.util.converter.Converter<?, ?> createConverterWrapper(final Converter converter) {
-            return new com.vaadin.v7.data.util.converter.Converter<Object, Object>() {
-                @SuppressWarnings("unchecked")
-                @Override
-                public Object convertToModel(Object value, Class<?> targetType, Locale locale)
-                        throws ConversionException {
-                    return converter.convertToModel(value, targetType, locale);
-                }
-
-                @SuppressWarnings("unchecked")
-                @Override
-                public Object convertToPresentation(Object value, Class<?> targetType, Locale locale)
-                        throws ConversionException {
-                    return converter.convertToPresentation(value, targetType, locale);
-                }
-
-                @SuppressWarnings("unchecked")
-                @Override
-                public Class<Object> getModelType() {
-                    return converter.getModelType();
-                }
-
-                @SuppressWarnings("unchecked")
-                @Override
-                public Class<Object> getPresentationType() {
-                    return converter.getPresentationType();
-                }
+        @Deprecated
+        protected Function createConverterWrapper(final Converter converter) {
+            return (Function<Object, Object>) value -> {
+                //noinspection unchecked
+                return converter.convertToPresentation(value, null, null);
             };
         }
 
-        // TODO: gg, do we need this?
-        @Nullable
         @Override
         public Class getType() {
             return type;

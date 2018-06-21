@@ -35,6 +35,7 @@ import java.util.EventObject;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.haulmont.cuba.gui.components.MouseEventDetails.MouseButton;
 
@@ -1357,7 +1358,9 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      *            {@link #getPresentationType()} returns.
      * @param <M> the model type. Must be compatible with what
      *            {@link #getModelType()} returns.
+     * @deprecated todo add explanation
      */
+    @Deprecated
     interface Converter<P, M> {
 
         /**
@@ -2565,15 +2568,23 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * If given renderer is null, then the default renderer will be used.
          *
          * @param renderer the renderer to use
-         * @see #setConverter(Converter)
+         * @see #setRenderer(Renderer, Function)
          */
         void setRenderer(Renderer renderer);
+
+        // TODO: gg, JavaDoc
+        void setRenderer(Renderer renderer, Function presentationProvider);
+
+        // TODO: gg, JavaDoc
+        Function getPresentationProvider();
 
         /**
          * Returns the converter instance used by this column.
          *
          * @return the converter
+         * @deprecated use {@link #getPresentationProvider()} instead
          */
+        @Deprecated
         Converter<?, ?> getConverter();
 
         /**
@@ -2583,14 +2594,14 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          *
          * @param converter the converter to use, or {@code null} to not use any
          *                  converters
-         * @see #setRenderer(Renderer)
+         * @deprecated use {@link #setRenderer(Renderer, Function)} instead
          */
+        @Deprecated
         void setConverter(Converter<?, ?> converter);
 
         /**
          * @return the type of value represented by this column
          */
-        @Nullable
         Class getType();
 
         /**

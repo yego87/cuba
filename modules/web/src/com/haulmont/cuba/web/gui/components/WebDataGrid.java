@@ -306,7 +306,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         this.messages = messages;
     }
 
-    @SuppressWarnings("unused")
     @Inject
     public void setMessageTools(MessageTools messageTools) {
         this.messageTools = messageTools;

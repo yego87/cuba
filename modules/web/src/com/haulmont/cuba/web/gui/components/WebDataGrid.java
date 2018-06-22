@@ -364,25 +364,25 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                     refreshActionsState();
                 }
             }*/
-            EntityDataGridSource<E> entityDataGridSource = (EntityDataGridSource<E>) getDataGridSource();
+            DataGridSource<E> dataGridSource = getDataGridSource();
 
-            if (entityDataGridSource == null
-                    || entityDataGridSource.getState() == BindingState.INACTIVE) {
+            if (dataGridSource == null
+                    || dataGridSource.getState() == BindingState.INACTIVE) {
                 return;
             }
 
             // TEST: gg, do we need to use refreshActionsState()?
             Set<E> selected = getSelected();
             if (selected.isEmpty()) {
-                entityDataGridSource.setSelectedItem(null);
+                dataGridSource.setSelectedItem(null);
             } else {
                 // reset selection and select new item
                 if (isMultiSelect()) {
-                    entityDataGridSource.setSelectedItem(null);
+                    dataGridSource.setSelectedItem(null);
                 }
 
                 E newItem = selected.iterator().next();
-                entityDataGridSource.setSelectedItem(newItem);
+                dataGridSource.setSelectedItem(newItem);
             }
 
             LookupSelectionChangeEvent selectionChangeEvent = new LookupSelectionChangeEvent(this);
@@ -396,9 +396,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected void fireSelectionEvent(com.vaadin.event.selection.SelectionEvent<E> e) {
-        e.getFirstSelectedItem();
-        e.getAllSelectedItems();
-
         List<E> addedItems;
         List<E> removedItems;
         List<E> selectedItems;

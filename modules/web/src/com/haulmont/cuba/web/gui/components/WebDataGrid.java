@@ -332,7 +332,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         component.setHeightMode(HeightMode.UNDEFINED);
 
         component.setStyleGenerator(createRowStyleGenerator());
-        // TODO: gg, implement
+        // VAADIN8: gg, implement
 //        component.setCellStyleGenerator(createCellStyleGenerator());
     }
 

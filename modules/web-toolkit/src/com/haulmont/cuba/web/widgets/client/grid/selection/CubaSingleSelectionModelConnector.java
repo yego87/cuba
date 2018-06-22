@@ -20,10 +20,10 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.haulmont.cuba.web.widgets.CubaSingleSelectionModel;
 import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.ServerConnector;
-import com.vaadin.v7.client.connectors.SingleSelectionModelConnector;
-import com.vaadin.v7.client.widget.grid.events.BodyClickHandler;
-import com.vaadin.v7.client.widget.grid.selection.ClickSelectHandler;
-import com.vaadin.v7.client.widgets.Grid;
+import com.vaadin.client.connectors.grid.SingleSelectionModelConnector;
+import com.vaadin.client.widget.grid.events.BodyClickHandler;
+import com.vaadin.client.widget.grid.selection.ClickSelectHandler;
+import com.vaadin.client.widgets.Grid;
 import com.vaadin.shared.ui.Connect;
 import elemental.json.JsonObject;
 
@@ -35,7 +35,8 @@ public class CubaSingleSelectionModelConnector extends SingleSelectionModelConne
         super.extend(target);
     }
 
-    @Override
+    // TODO: gg, implement
+    /*@Override
     protected ClickSelectHandler<JsonObject> createClickSelectHandler() {
         return Tools.isUseSimpleMultiselectForTouchDevice()
                 ? super.createClickSelectHandler()
@@ -43,7 +44,7 @@ public class CubaSingleSelectionModelConnector extends SingleSelectionModelConne
     }
 
     protected class CubaClickSelectHandler
-            extends com.vaadin.v7.client.widget.grid.selection.ClickSelectHandler<JsonObject> {
+            extends com.vaadin.client.widget.grid.selection.ClickSelectHandler<JsonObject> {
 
         public CubaClickSelectHandler(Grid<JsonObject> grid) {
             super(grid);
@@ -68,5 +69,5 @@ public class CubaSingleSelectionModelConnector extends SingleSelectionModelConne
                 }
             };
         }
-    }
+    }*/
 }

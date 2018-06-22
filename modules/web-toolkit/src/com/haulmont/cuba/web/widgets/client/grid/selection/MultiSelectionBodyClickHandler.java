@@ -19,15 +19,16 @@ package com.haulmont.cuba.web.widgets.client.grid.selection;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.vaadin.shared.Range;
-import com.vaadin.v7.client.widget.grid.CellReference;
-import com.vaadin.v7.client.widget.grid.DataAvailableEvent;
-import com.vaadin.v7.client.widget.grid.DataAvailableHandler;
-import com.vaadin.v7.client.widget.grid.events.BodyClickHandler;
-import com.vaadin.v7.client.widget.grid.events.GridClickEvent;
-import com.vaadin.v7.client.widget.grid.selection.SelectionModel;
-import com.vaadin.v7.client.widgets.Grid;
+import com.vaadin.client.widget.grid.CellReference;
+import com.vaadin.client.widget.grid.DataAvailableEvent;
+import com.vaadin.client.widget.grid.DataAvailableHandler;
+import com.vaadin.client.widget.grid.events.BodyClickHandler;
+import com.vaadin.client.widget.grid.events.GridClickEvent;
+import com.vaadin.client.widget.grid.selection.SelectionModel;
+import com.vaadin.client.widgets.Grid;
 import elemental.json.JsonObject;
 
+// TODO: gg, implement
 public class MultiSelectionBodyClickHandler implements BodyClickHandler {
 
     protected Grid<JsonObject> grid;
@@ -41,6 +42,11 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
     }
 
     @Override
+    public void onClick(GridClickEvent event) {
+
+    }
+
+    /*@Override
     public void onClick(GridClickEvent event) {
         SelectionModel<JsonObject> selectionModel = grid.getSelectionModel();
         if (!(selectionModel instanceof SelectionModel.Multi)) {
@@ -125,5 +131,5 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
                 handler.removeHandler();
             }
         }
-    }
+    }*/
 }

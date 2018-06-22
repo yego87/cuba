@@ -20,11 +20,10 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.haulmont.cuba.web.widgets.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.ServerConnector;
-import com.vaadin.v7.client.connectors.MultiSelectionModelConnector;
-import com.vaadin.v7.client.renderers.ComplexRenderer;
-import com.vaadin.v7.client.widget.grid.events.BodyClickHandler;
-import com.vaadin.v7.client.widget.grid.selection.SelectionModel;
-import com.vaadin.v7.client.widgets.Grid;
+import com.vaadin.client.connectors.grid.MultiSelectionModelConnector;
+import com.vaadin.client.renderers.ComplexRenderer;
+import com.vaadin.client.widget.grid.events.BodyClickHandler;
+import com.vaadin.client.widgets.Grid;
 import com.vaadin.shared.ui.Connect;
 import elemental.json.JsonObject;
 
@@ -34,14 +33,15 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
     protected HandlerRegistration clickHandler;
 
     @Override
-    protected SelectionModel.Multi<JsonObject> createSelectionModel() {
+    protected MultiSelectionModel createSelectionModel() {
         return Tools.isUseSimpleMultiselectForTouchDevice()
                 ? super.createSelectionModel()
                 : new MultiSelectionModel() {
-            @Override
+            // TODO: gg, how to replace?
+            /*@Override
             protected ComplexRenderer<Boolean> createSelectionColumnRenderer(Grid<JsonObject> grid) {
                 return null;
-            }
+            }*/
         };
     }
 

@@ -31,7 +31,7 @@ import com.vaadin.shared.ui.datefield.DateResolution;
 import com.vaadin.shared.ui.grid.ColumnResizeMode;
 import com.vaadin.shared.ui.grid.ScrollDestination;
 import com.vaadin.v7.shared.ui.combobox.FilteringMode;
-import com.vaadin.v7.shared.ui.grid.GridStaticCellType;
+import com.vaadin.shared.ui.grid.GridStaticCellType;
 import com.vaadin.v7.ui.AbstractSelect;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
@@ -500,6 +500,17 @@ public final class WebWrapperUtils {
         }
     }
 
+    public static DataGrid.SortDirection convertToDataGridSortDirection(SortDirection sortDirection) {
+        switch (sortDirection) {
+            case ASCENDING:
+                return DataGrid.SortDirection.ASCENDING;
+            case DESCENDING:
+                return DataGrid.SortDirection.DESCENDING;
+            default:
+                throw new IllegalArgumentException("Can't be converted to SortDirection: " + sortDirection);
+        }
+    }
+
     public static ScrollDestination convertToGridScrollDestination(DataGrid.ScrollDestination destination) {
         switch (destination) {
             case ANY:
@@ -514,6 +525,4 @@ public final class WebWrapperUtils {
                 throw new IllegalArgumentException("Can't be converted to ScrollDestination: " + destination);
         }
     }
-
-
 }

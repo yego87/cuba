@@ -18,11 +18,23 @@ package com.haulmont.cuba.web.gui.components;
 
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.Configuration;
-import com.haulmont.cuba.gui.components.*;
+import com.haulmont.cuba.gui.components.AbstractFrame;
+import com.haulmont.cuba.gui.components.ButtonsPanel;
 import com.haulmont.cuba.gui.components.ComponentContainer;
+import com.haulmont.cuba.gui.components.DataGrid;
 import com.haulmont.cuba.gui.components.DateField;
+import com.haulmont.cuba.gui.components.DatePicker;
+import com.haulmont.cuba.gui.components.FieldGroup;
+import com.haulmont.cuba.gui.components.Frame;
+import com.haulmont.cuba.gui.components.HasButtonsPanel;
+import com.haulmont.cuba.gui.components.KeyCombination;
 import com.haulmont.cuba.gui.components.KeyCombination.Modifier;
+import com.haulmont.cuba.gui.components.ShortcutTriggeredEvent;
 import com.haulmont.cuba.gui.components.TextField;
+import com.haulmont.cuba.gui.components.TimeField;
+import com.haulmont.cuba.gui.components.ValidationErrors;
+import com.haulmont.cuba.gui.components.WrappedFrame;
+import com.haulmont.cuba.gui.components.WrappedWindow;
 import com.haulmont.cuba.gui.icons.Icons;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
@@ -30,25 +42,46 @@ import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.toolkit.VersionedThemeResource;
-import com.haulmont.cuba.web.widgets.*;
+import com.haulmont.cuba.web.widgets.CubaFieldGroupLayout;
+import com.haulmont.cuba.web.widgets.CubaGroupBox;
+import com.haulmont.cuba.web.widgets.CubaHorizontalActionsLayout;
+import com.haulmont.cuba.web.widgets.CubaScrollBoxLayout;
+import com.haulmont.cuba.web.widgets.CubaTextField;
+import com.haulmont.cuba.web.widgets.CubaVerticalActionsLayout;
 import com.haulmont.cuba.web.widgets.client.timefield.TimeResolution;
 import com.vaadin.event.Action;
 import com.vaadin.event.ShortcutAction;
-import com.vaadin.server.*;
+import com.vaadin.server.ClassResource;
 import com.vaadin.server.FileResource;
+import com.vaadin.server.FontAwesome;
+import com.vaadin.server.FontIcon;
 import com.vaadin.server.Resource;
+import com.vaadin.shared.data.sort.SortDirection;
 import com.vaadin.shared.ui.datefield.DateResolution;
-import com.vaadin.ui.*;
+import com.vaadin.shared.ui.grid.ColumnResizeMode;
+import com.vaadin.shared.ui.grid.ScrollDestination;
+import com.vaadin.ui.AbstractOrderedLayout;
+import com.vaadin.ui.AbstractSingleComponentContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HasComponents;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.SelectiveRenderer;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -352,58 +385,6 @@ public class WebComponentsHelper {
             return true;
         else
             return false;
-    }
-
-    public static DateResolution convertDateResolution(DatePicker.Resolution resolution) {
-        switch (resolution) {
-            case YEAR:
-                return DateResolution.YEAR;
-            case MONTH:
-                return DateResolution.MONTH;
-            case DAY:
-            default:
-                return DateResolution.DAY;
-        }
-    }
-
-    public static DateResolution convertDateTimeResolution(DateField.Resolution resolution) {
-        switch (resolution) {
-            case YEAR:
-                return DateResolution.YEAR;
-            case MONTH:
-                return DateResolution.MONTH;
-            case DAY:
-            case HOUR:
-            case MIN:
-            case SEC:
-            default:
-                return DateResolution.DAY;
-        }
-    }
-
-    public static TimeResolution convertTimeResolution(TimeField.Resolution resolution) {
-        switch (resolution) {
-            case SEC:
-                return TimeResolution.SECOND;
-            case HOUR:
-                return TimeResolution.HOUR;
-            case MIN:
-            default:
-                return TimeResolution.MINUTE;
-        }
-    }
-
-    public static TimeResolution convertTimeResolution(DateField.Resolution resolution) {
-        switch (resolution) {
-            case HOUR:
-                return TimeResolution.HOUR;
-            case MIN:
-                return TimeResolution.MINUTE;
-            case SEC:
-                return TimeResolution.SECOND;
-            default:
-                throw new IllegalArgumentException("Can't be converted to TimeResolution: " + resolution);
-        }
     }
 
     public static void setClickShortcut(Button button, String shortcut) {

@@ -16,21 +16,22 @@
 
 package com.haulmont.cuba.web.widgets;
 
-import com.vaadin.v7.ui.Grid;
+import com.vaadin.ui.components.grid.SingleSelectionModelImpl;
 
-public class CubaSingleSelectionModel extends Grid.SingleSelectionModel {
+public class CubaSingleSelectionModel<T> extends SingleSelectionModelImpl<T> {
 
     @Override
-    protected boolean select(Object itemId, boolean refresh) {
+    public void select(T item) {
+        // TEST: gg, do we still need this?
         // We want to prevent exception when selecting an item
         // right after removing from the container (triggered from
         // a client side i.e. refresh is false)
         // See https://github.com/vaadin/framework/issues/9911
-        if (!refresh && itemId != null) {
+        /*if (!refresh && itemId != null) {
             if (!getParentGrid().getContainerDataSource().containsId(itemId)) {
                 return false;
             }
-        }
-        return super.select(itemId, refresh);
+        }*/
+        super.select(item);
     }
 }

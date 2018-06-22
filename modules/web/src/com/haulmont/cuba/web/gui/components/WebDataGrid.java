@@ -87,6 +87,9 @@ import com.haulmont.cuba.web.gui.data.SortableDataGridIndexedCollectionDsWrapper
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.haulmont.cuba.web.widgets.CubaGridContextMenu;
+import com.haulmont.cuba.web.widgets.CubaMultiCheckSelectionModel;
+import com.haulmont.cuba.web.widgets.CubaMultiSelectionModel;
+import com.haulmont.cuba.web.widgets.CubaSingleSelectionModel;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.vaadin.data.SelectionModel;
@@ -796,9 +799,21 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         return this.dataBinding != null ? this.dataBinding.getDataGridSource() : null;
     }
 
-    @Nullable
+    protected DataGridSource<E> getDataGridSourceNN() {
+        DataGridSource<E> dataGridSource = getDataGridSource();
+        if (dataGridSource == null
+                || dataGridSource.getState() == BindingState.INACTIVE) {
+            throw new IllegalStateException("DataGridSource is not active");
+        }
+        return dataGridSource;
+    }
+
     protected EntityDataGridSource<E> getEntityDataGridSource() {
         return getDataGridSource() != null ? (EntityDataGridSource<E>) getDataGridSource() : null;
+    }
+
+    protected EntityDataGridSource<E> getEntityDataGridSourceNN() {
+        return (EntityDataGridSource<E>) getDataGridSourceNN();
     }
 
     @Override
@@ -1018,10 +1033,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @SuppressWarnings("unused")
     protected Datasource createItemDatasource(Entity item) {
-        EntityDataGridSource<E> entityDataGridSource = getEntityDataGridSource();
-        if (entityDataGridSource == null) {
-            return null;
-        }
+        EntityDataGridSource<E> entityDataGridSource = getEntityDataGridSourceNN();
 
         Datasource fieldDatasource = DsBuilder.create()
                 .setAllowCommit(false)
@@ -1124,7 +1136,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             throw new IllegalArgumentException("Datasource doesn't contain item");
         }
 
-        // TODO: gg, get the row number
+        // VAADIN8: gg, implement a custom editor, so that we will be able to edit by item
         int rowNumber = 0;
 
         component.getEditor().editRow(rowNumber);
@@ -1420,41 +1432,12 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public ColumnResizeMode getColumnResizeMode() {
-        // TODO: gg, implement
-//        return convertToDataGridColumnResizeMode(component.getColumnResizeMode());
-        return null;
-    }
-
-    // TODO: gg, move to a helper class
-    @SuppressWarnings("unused")
-    @Nullable
-    protected ColumnResizeMode convertToDataGridColumnResizeMode(com.vaadin.v7.shared.ui.grid.ColumnResizeMode mode) {
-        switch (mode) {
-            case ANIMATED:
-                return ColumnResizeMode.ANIMATED;
-            case SIMPLE:
-                return ColumnResizeMode.SIMPLE;
-        }
-        return null;
+        return WebWrapperUtils.convertToDataGridColumnResizeMode(component.getColumnResizeMode());
     }
 
     @Override
     public void setColumnResizeMode(ColumnResizeMode mode) {
-        // TODO: gg, implement
-//        component.setColumnResizeMode(convertToGridColumnResizeMode(mode));
-    }
-
-    // TODO: gg, move to a helper class
-    @SuppressWarnings("unused")
-    @Nullable
-    protected com.vaadin.v7.shared.ui.grid.ColumnResizeMode convertToGridColumnResizeMode(ColumnResizeMode mode) {
-        switch (mode) {
-            case ANIMATED:
-                return com.vaadin.v7.shared.ui.grid.ColumnResizeMode.ANIMATED;
-            case SIMPLE:
-                return com.vaadin.v7.shared.ui.grid.ColumnResizeMode.SIMPLE;
-        }
-        return null;
+        component.setColumnResizeMode(WebWrapperUtils.convertToGridColumnResizeMode(mode));
     }
 
     @Override
@@ -1464,17 +1447,16 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public void setSelectionMode(SelectionMode selectionMode) {
-        // TODO: gg, implement
         this.selectionMode = selectionMode;
         switch (selectionMode) {
             case SINGLE:
-//                component.setSelectionModel(new CubaSingleSelectionModel());
+                component.setGridSelectionModel(new CubaSingleSelectionModel<>());
                 break;
             case MULTI:
-//                component.setSelectionModel(new CubaMultiSelectionModel());
+                component.setGridSelectionModel(new CubaMultiSelectionModel<>());
                 break;
             case MULTI_CHECK:
-//                component.setSelectionModel(new CubaMultiCheckSelectionModel());
+                component.setGridSelectionModel(new CubaMultiCheckSelectionModel<>());
                 break;
             case NONE:
                 component.setSelectionMode(Grid.SelectionMode.NONE);
@@ -1561,17 +1543,15 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
-    @SuppressWarnings("unused")
     @Override
     public void sort(String columnId, SortDirection direction) {
-        // VAADIN8: gg, implement
-        ColumnImpl column = (ColumnImpl) getColumnNN(columnId);
-//        component.sort(column.getColumnPropertyId(), convertToGridSortDirection(direction));
+        ColumnImpl<E> column = (ColumnImpl<E>) getColumnNN(columnId);
+        component.sort(column.getGridColumn(), WebWrapperUtils.convertToGridSortDirection(direction));
     }
 
     @Override
     public List<SortOrder> getSortOrder() {
-        // VAADIN8: gg, implement
+        // TODO: gg, implement
 //        return convertToDataGridSortOrder(component.getSortOrder());
         return Collections.emptyList();
     }
@@ -1719,7 +1699,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unused")
     protected List<MetaPropertyPath> getPropertyColumns() {
         EntityDataGridSource<E> entityDataGridSource = getEntityDataGridSource();
         if (entityDataGridSource == null
@@ -1761,28 +1740,14 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     @Override
     public void scrollTo(E item, ScrollDestination destination) {
         Preconditions.checkNotNullArgument(item);
-        // TODO: gg, implement
-//        if (!getContainerDataSource().getItemIds().contains(item.getId())) {
-//            throw new IllegalArgumentException("Unable to find item in DataGrid");
-//        }
-//
-//        component.scrollTo(item.getId(), convertToGridScrollDestination(destination));
-    }
 
-    @Nullable
-    protected com.vaadin.v7.shared.ui.grid.ScrollDestination convertToGridScrollDestination(
-            ScrollDestination destination) {
-        switch (destination) {
-            case ANY:
-                return com.vaadin.v7.shared.ui.grid.ScrollDestination.ANY;
-            case START:
-                return com.vaadin.v7.shared.ui.grid.ScrollDestination.START;
-            case MIDDLE:
-                return com.vaadin.v7.shared.ui.grid.ScrollDestination.MIDDLE;
-            case END:
-                return com.vaadin.v7.shared.ui.grid.ScrollDestination.END;
+        if (!getDataGridSourceNN().containsItem(item)) {
+            throw new IllegalArgumentException("Unable to find item in DataGrid");
         }
-        return null;
+
+        // VAADIN8: gg, get row index
+        int rowIndex = 0;
+        component.scrollTo(rowIndex, WebWrapperUtils.convertToGridScrollDestination(destination));
     }
 
     @Override
@@ -2406,18 +2371,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 return SortDirection.ASCENDING;
             case DESCENDING:
                 return SortDirection.DESCENDING;
-            default:
-                throw new UnsupportedOperationException("Unsupported SortDirection");
-        }
-    }
-
-    @SuppressWarnings("unused")
-    protected com.vaadin.shared.data.sort.SortDirection convertToGridSortDirection(SortDirection sortDirection) {
-        switch (sortDirection) {
-            case ASCENDING:
-                return com.vaadin.shared.data.sort.SortDirection.ASCENDING;
-            case DESCENDING:
-                return com.vaadin.shared.data.sort.SortDirection.DESCENDING;
             default:
                 throw new UnsupportedOperationException("Unsupported SortDirection");
         }

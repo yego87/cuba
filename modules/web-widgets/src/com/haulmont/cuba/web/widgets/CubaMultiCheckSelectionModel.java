@@ -16,25 +16,39 @@
 
 package com.haulmont.cuba.web.widgets;
 
-import com.vaadin.v7.ui.Grid;
+import com.vaadin.ui.components.grid.MultiSelectionModelImpl;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
-
-public class CubaMultiCheckSelectionModel extends Grid.MultiSelectionModel {
+public class CubaMultiCheckSelectionModel<T> extends MultiSelectionModelImpl<T> {
 
     @Override
-    protected boolean select(Collection<?> itemIds, boolean refresh) {
+    public void select(T item) {
+        // TEST: gg, do we still need this?
         // We want to prevent exception when selecting an item
         // right after removing from the container (triggered from
         // a client side i.e. refresh is false)
         // See https://github.com/vaadin/framework/issues/9911
-        if (!refresh) {
+        /*if (!refresh) {
             itemIds = itemIds.stream()
                     .filter(itemId ->
                             getParentGrid().getContainerDataSource().containsId(itemId))
                     .collect(Collectors.toList());
-        }
-        return super.select(itemIds, refresh);
+        }*/
+        super.select(item);
+    }
+
+    @Override
+    public void selectItems(T... items) {
+        // TEST: gg, do we still need this?
+        // We want to prevent exception when selecting an item
+        // right after removing from the container (triggered from
+        // a client side i.e. refresh is false)
+        // See https://github.com/vaadin/framework/issues/9911
+        /*if (!refresh) {
+            itemIds = itemIds.stream()
+                    .filter(itemId ->
+                            getParentGrid().getContainerDataSource().containsId(itemId))
+                    .collect(Collectors.toList());
+        }*/
+        super.selectItems(items);
     }
 }

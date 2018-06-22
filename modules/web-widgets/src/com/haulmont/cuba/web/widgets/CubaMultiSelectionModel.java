@@ -18,12 +18,13 @@ package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.grid.selection.CubaMultiSelectionModelServerRpc;
 import com.vaadin.server.AbstractClientConnector;
+import com.vaadin.ui.components.grid.MultiSelectionModelImpl;
 import com.vaadin.v7.ui.Grid;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class CubaMultiSelectionModel extends Grid.MultiSelectionModel {
+public class CubaMultiSelectionModel<T> extends MultiSelectionModelImpl<T> {
 
     @Override
     protected void extend(AbstractClientConnector target) {
@@ -31,23 +32,41 @@ public class CubaMultiSelectionModel extends Grid.MultiSelectionModel {
 
         registerRpc((CubaMultiSelectionModelServerRpc) (start, length) -> {
             if (length != 0) {
-                select(getParentGrid().getContainerDataSource().getItemIds(start, length), false);
+                // TODO: gg, implement
+//                select(getParentGrid().getContainerDataSource().getItemIds(start, length), false);
             }
         });
     }
 
     @Override
-    protected boolean select(Collection<?> itemIds, boolean refresh) {
+    public void select(T item) {
+        // TEST: gg, do we still need this?
         // We want to prevent exception when selecting an item
         // right after removing from the container (triggered from
         // a client side i.e. refresh is false)
         // See https://github.com/vaadin/framework/issues/9911
-        if (!refresh) {
+        /*if (!refresh) {
             itemIds = itemIds.stream()
                     .filter(itemId ->
                             getParentGrid().getContainerDataSource().containsId(itemId))
                     .collect(Collectors.toList());
-        }
-        return super.select(itemIds, refresh);
+        }*/
+        super.select(item);
+    }
+
+    @Override
+    public void selectItems(T... items) {
+        // TEST: gg, do we still need this?
+        // We want to prevent exception when selecting an item
+        // right after removing from the container (triggered from
+        // a client side i.e. refresh is false)
+        // See https://github.com/vaadin/framework/issues/9911
+        /*if (!refresh) {
+            itemIds = itemIds.stream()
+                    .filter(itemId ->
+                            getParentGrid().getContainerDataSource().containsId(itemId))
+                    .collect(Collectors.toList());
+        }*/
+        super.selectItems(items);
     }
 }

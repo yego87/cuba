@@ -21,10 +21,15 @@ import com.haulmont.cuba.gui.components.Component.Alignment;
 import com.haulmont.cuba.gui.components.DataGrid.DataGridStaticCellType;
 import com.haulmont.cuba.gui.components.LookupField.FilterMode;
 import com.haulmont.cuba.web.widgets.client.resizabletextarea.ResizeDirection;
+import com.haulmont.cuba.web.widgets.client.timefield.TimeResolution;
 import com.haulmont.cuba.web.widgets.data.AggregationContainer;
 import com.vaadin.event.MouseEvents;
 import com.vaadin.server.Sizeable;
+import com.vaadin.shared.data.sort.SortDirection;
 import com.vaadin.shared.ui.ValueChangeMode;
+import com.vaadin.shared.ui.datefield.DateResolution;
+import com.vaadin.shared.ui.grid.ColumnResizeMode;
+import com.vaadin.shared.ui.grid.ScrollDestination;
 import com.vaadin.v7.shared.ui.combobox.FilteringMode;
 import com.vaadin.v7.shared.ui.grid.GridStaticCellType;
 import com.vaadin.v7.ui.AbstractSelect;
@@ -409,4 +414,106 @@ public final class WebWrapperUtils {
                 throw new IllegalArgumentException("Unknown function: " + function);
         }
     }
+
+    public static DateResolution convertDateResolution(DatePicker.Resolution resolution) {
+        switch (resolution) {
+            case YEAR:
+                return DateResolution.YEAR;
+            case MONTH:
+                return DateResolution.MONTH;
+            case DAY:
+            default:
+                return DateResolution.DAY;
+        }
+    }
+
+    public static DateResolution convertDateTimeResolution(DateField.Resolution resolution) {
+        switch (resolution) {
+            case YEAR:
+                return DateResolution.YEAR;
+            case MONTH:
+                return DateResolution.MONTH;
+            case DAY:
+            case HOUR:
+            case MIN:
+            case SEC:
+            default:
+                return DateResolution.DAY;
+        }
+    }
+
+    public static TimeResolution convertTimeResolution(TimeField.Resolution resolution) {
+        switch (resolution) {
+            case SEC:
+                return TimeResolution.SECOND;
+            case HOUR:
+                return TimeResolution.HOUR;
+            case MIN:
+            default:
+                return TimeResolution.MINUTE;
+        }
+    }
+
+    public static TimeResolution convertTimeResolution(DateField.Resolution resolution) {
+        switch (resolution) {
+            case HOUR:
+                return TimeResolution.HOUR;
+            case MIN:
+                return TimeResolution.MINUTE;
+            case SEC:
+                return TimeResolution.SECOND;
+            default:
+                throw new IllegalArgumentException("Can't be converted to TimeResolution: " + resolution);
+        }
+    }
+
+    public static DataGrid.ColumnResizeMode convertToDataGridColumnResizeMode(ColumnResizeMode mode) {
+        switch (mode) {
+            case ANIMATED:
+                return DataGrid.ColumnResizeMode.ANIMATED;
+            case SIMPLE:
+                return DataGrid.ColumnResizeMode.SIMPLE;
+            default:
+                throw new IllegalArgumentException("Can't be converted to ColumnResizeMode: " + mode);
+        }
+    }
+
+    public static ColumnResizeMode convertToGridColumnResizeMode(DataGrid.ColumnResizeMode mode) {
+        switch (mode) {
+            case ANIMATED:
+                return ColumnResizeMode.ANIMATED;
+            case SIMPLE:
+                return ColumnResizeMode.SIMPLE;
+            default:
+                throw new IllegalArgumentException("Can't be converted to ColumnResizeMode: " + mode);
+        }
+    }
+
+    public static SortDirection convertToGridSortDirection(DataGrid.SortDirection sortDirection) {
+        switch (sortDirection) {
+            case ASCENDING:
+                return SortDirection.ASCENDING;
+            case DESCENDING:
+                return SortDirection.DESCENDING;
+            default:
+                throw new IllegalArgumentException("Can't be converted to SortDirection: " + sortDirection);
+        }
+    }
+
+    public static ScrollDestination convertToGridScrollDestination(DataGrid.ScrollDestination destination) {
+        switch (destination) {
+            case ANY:
+                return ScrollDestination.ANY;
+            case START:
+                return ScrollDestination.START;
+            case MIDDLE:
+                return ScrollDestination.MIDDLE;
+            case END:
+                return ScrollDestination.END;
+            default:
+                throw new IllegalArgumentException("Can't be converted to ScrollDestination: " + destination);
+        }
+    }
+
+
 }

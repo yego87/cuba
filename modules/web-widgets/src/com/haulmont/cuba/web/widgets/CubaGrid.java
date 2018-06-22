@@ -19,6 +19,7 @@ package com.haulmont.cuba.web.widgets;
 import com.haulmont.cuba.web.widgets.client.grid.CubaGridState;
 import com.vaadin.event.Action;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.components.grid.GridSelectionModel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +56,10 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
 //    public void setCubaEditorFieldFactory(CubaGridEditorFieldFactory editorFieldFactory) {
 //        this.editorFieldFactory = editorFieldFactory;
 //    }
+
+    public void setGridSelectionModel(GridSelectionModel<T> model) {
+        setSelectionModel(model);
+    }
 
     public void repaint() {
         // TODO: gg, implement

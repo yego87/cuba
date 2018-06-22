@@ -434,10 +434,20 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      *
      * @return the id of the item that is currently being edited, or
      * {@code null} if no item is being edited at the moment
+     * @deprecated use {@link #getEditedItem()} instead
      */
     // TODO: gg, deplrecate and add method getEditedItem?
+    @Deprecated
     @Nullable
     Object getEditedItemId();
+
+    /**
+     * Returns the item that is currently being edited.
+     *
+     * @return the item that is currently being edited, or
+     * {@code null} if no item is being edited at the moment
+     */
+    E getEditedItem();
 
     /**
      * Returns whether an item is currently being edited in the editor.

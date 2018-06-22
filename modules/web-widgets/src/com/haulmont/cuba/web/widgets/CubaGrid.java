@@ -55,10 +55,11 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
 //    public void setCubaEditorFieldFactory(CubaGridEditorFieldFactory editorFieldFactory) {
 //        this.editorFieldFactory = editorFieldFactory;
 //    }
-//
-//    public void repaint() {
+
+    public void repaint() {
+        // TODO: gg, implement
 //        datasourceExtension.refreshCache();
-//    }
+    }
 
     @Override
     protected CubaGridState getState() {

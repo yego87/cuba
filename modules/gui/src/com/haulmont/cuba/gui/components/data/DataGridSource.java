@@ -18,6 +18,8 @@ public interface DataGridSource<I> {
 
     Object getItemId(I item);
 
+    I getItem(Object itemId);
+
     Stream<I> getItems();
 
     boolean containsItem(I item);

@@ -49,7 +49,7 @@ public class CollectionDatasourceDataGridAdapter<E extends Entity<K>, K> impleme
         events.publish(ItemSetChangeEvent.class, new ItemSetChangeEvent<>(this));
     }
 
-    // TODO: gg, need to test
+    @SuppressWarnings("unchecked")
     protected void datasourceItemPropertyChanged(Datasource.ItemPropertyChangeEvent<E> e) {
         events.publish(ValueChangeEvent.class, new ValueChangeEvent(this, e.getPrevValue(), e.getValue()));
     }
@@ -98,6 +98,12 @@ public class CollectionDatasourceDataGridAdapter<E extends Entity<K>, K> impleme
     @Override
     public Object getItemId(E item) {
         return item.getId();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public E getItem(Object itemId) {
+        return datasource.getItem((K) itemId);
     }
 
     @Override

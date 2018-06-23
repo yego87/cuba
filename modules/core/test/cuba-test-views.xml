@@ -26,4 +26,8 @@
             </property>
         </property>
     </view>
+
+    <view entity="test$PurchaseItem" name="with-product" extends="_local">
+        <property name="product" view="_local"/>
+    </view>
 </views>

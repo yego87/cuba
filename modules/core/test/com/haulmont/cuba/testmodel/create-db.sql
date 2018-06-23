@@ -930,3 +930,37 @@ create table TEST_LOCAL_DATE_TIME_ENTITY (
     --
     primary key (ID)
 )^
+
+----------------------------------------------------------------------------------------------------------------
+
+create table TEST_PRODUCT (
+    ID varchar(36) not null,
+    CREATE_TS timestamp,
+    CREATED_BY varchar(50),
+    VERSION integer,
+    UPDATE_TS timestamp,
+    UPDATED_BY varchar(50),
+    DELETE_TS timestamp,
+    DELETED_BY varchar(50),
+    NAME varchar(255),
+    QUANTITY decimal,
+    primary key (ID)
+)^
+
+create table TEST_PURCHASE_ITEM (
+    ID varchar(36) not null,
+    CREATE_TS timestamp,
+    CREATED_BY varchar(50),
+    VERSION integer,
+    UPDATE_TS timestamp,
+    UPDATED_BY varchar(50),
+    DELETE_TS timestamp,
+    DELETED_BY varchar(50),
+    NUM varchar(255),
+    QUANTITY decimal,
+    PRODUCT_ID varchar(50),
+    primary key (ID)
+)^
+
+alter table TEST_PURCHASE_ITEM add constraint FK_TEST_PURCHASE_ITEM_PRODUCT
+    foreign key (PRODUCT_ID) references TEST_PRODUCT(ID)^

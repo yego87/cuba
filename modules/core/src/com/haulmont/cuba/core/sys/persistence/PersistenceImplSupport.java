@@ -20,17 +20,18 @@ package com.haulmont.cuba.core.sys.persistence;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.haulmont.bali.util.StackTrace;
+import com.haulmont.chile.core.model.MetaClass;
+import com.haulmont.cuba.core.EntityChangedEvent;
 import com.haulmont.cuba.core.EntityManager;
 import com.haulmont.cuba.core.Persistence;
 import com.haulmont.cuba.core.app.FtsSender;
 import com.haulmont.cuba.core.app.MiddlewareStatisticsAccumulator;
 import com.haulmont.cuba.core.entity.*;
-import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.core.global.FtsConfigHelper;
-import com.haulmont.cuba.core.global.PersistenceHelper;
-import com.haulmont.cuba.core.global.Stores;
+import com.haulmont.cuba.core.entity.annotation.PublishEntityChangedEvents;
+import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.core.listener.AfterCompleteTransactionListener;
 import com.haulmont.cuba.core.listener.BeforeCommitTransactionListener;
+import com.haulmont.cuba.core.sys.EntityFetcher;
 import com.haulmont.cuba.core.sys.entitycache.QueryCacheManager;
 import com.haulmont.cuba.core.sys.listener.EntityListenerManager;
 import com.haulmont.cuba.core.sys.listener.EntityListenerType;
@@ -74,6 +75,18 @@ public class PersistenceImplSupport implements ApplicationContextAware {
 
     @Inject
     protected EntityListenerManager entityListenerManager;
+
+    @Inject
+    protected Metadata metadata;
+
+    @Inject
+    protected MetadataTools metadataTools;
+
+    @Inject
+    protected Events events;
+
+    @Inject
+    protected EntityFetcher entityFetcher;
 
     @Inject
     protected QueryCacheManager queryCacheManager;
@@ -378,8 +391,12 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                 for (BeforeCommitTransactionListener transactionListener : beforeCommitTxListeners) {
                     transactionListener.beforeCommit(persistence.getEntityManager(container.getStoreName()), allInstances);
                 }
-
                 queryCacheManager.invalidate(typeNames, true);
+                List<EntityChangedEvent> collectedEvents = collectEntityChangedEvents();
+                detachAll();
+                publishEntityChangedEvents(collectedEvents);
+            } else {
+                detachAll();
             }
         }
 
@@ -391,32 +408,104 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                     log.trace("ContainerResourceSynchronization.afterCompletion: instances = " + instances);
                 for (Object instance : instances) {
                     if (instance instanceof BaseGenericIdEntity) {
-                        BaseGenericIdEntity baseGenericIdEntity = (BaseGenericIdEntity) instance;
-                        BaseEntityInternalAccess.setManaged(baseGenericIdEntity, false);
-
-                        if (BaseEntityInternalAccess.isNew(baseGenericIdEntity)) {
-                            // new instances become not new and detached only if the transaction was committed
-                            if (status == TransactionSynchronization.STATUS_COMMITTED) {
-                                BaseEntityInternalAccess.setNew(baseGenericIdEntity, false);
-                                BaseEntityInternalAccess.setDetached(baseGenericIdEntity, true);
+                        if (status == TransactionSynchronization.STATUS_COMMITTED) {
+                            if (BaseEntityInternalAccess.isNew((BaseGenericIdEntity) instance)) {
+                                // new instances become not new and detached only if the transaction was committed
+                                BaseEntityInternalAccess.setNew((BaseGenericIdEntity) instance, false);
                             }
                         } else {
-                            BaseEntityInternalAccess.setDetached(baseGenericIdEntity, true);
+                            // commit failed
+                            detachInstance(instance); // if the transaction was committed, it was performed in beforeCommit
+                            if (BaseEntityInternalAccess.isNew((BaseGenericIdEntity) instance)) {
+                                // make new entities non-detached again
+                                BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, false);
+                            }
                         }
                     }
-                    if (instance instanceof FetchGroupTracker) {
-                        ((FetchGroupTracker) instance)._persistence_setSession(null);
-                    }
-                    if (instance instanceof ChangeTracker) {
-                        ((ChangeTracker) instance)._persistence_setPropertyChangeListener(null);
-                    }
                 }
-
                 for (AfterCompleteTransactionListener listener : afterCompleteTxListeners) {
                     listener.afterComplete(status == TransactionSynchronization.STATUS_COMMITTED, instances);
                 }
             } finally {
                 super.afterCompletion(status);
+            }
+        }
+
+        private void detachAll() {
+            persistence.getEntityManager().getDelegate().flush();
+            persistence.getEntityManager().getDelegate().clear();
+
+            Collection<Entity> instances = container.getAllInstances();
+            for (Object instance : instances) {
+                detachInstance(instance);
+            }
+        }
+
+        private void detachInstance(Object instance) {
+            if (instance instanceof BaseGenericIdEntity) {
+                BaseEntityInternalAccess.setManaged((BaseGenericIdEntity) instance, false);
+                BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, true);
+            }
+            if (instance instanceof FetchGroupTracker) {
+                ((FetchGroupTracker) instance)._persistence_setSession(null);
+            }
+            if (instance instanceof ChangeTracker) {
+                ((ChangeTracker) instance)._persistence_setPropertyChangeListener(null);
+            }
+        }
+
+        private List<EntityChangedEvent> collectEntityChangedEvents() {
+            List<EntityChangedEvent> list = new ArrayList<>();
+            for (Entity entity : container.getAllInstances()) {
+                MetaClass metaClass = metadata.getClassNN(entity.getClass());
+
+                Map attrMap = (Map) metaClass.getAnnotations().get(PublishEntityChangedEvents.class.getName());
+                if (attrMap != null) {
+                    if (!(entity instanceof BaseGenericIdEntity)) {
+                        log.warn("Cannot publish EntityChangedEvent for {} because it is not a BaseGenericIdEntity", entity);
+                        continue;
+                    }
+
+                    boolean onCreated = (boolean) attrMap.get("created");
+                    boolean onUpdated = (boolean) attrMap.get("updated");
+                    boolean onDeleted = (boolean) attrMap.get("deleted");
+                    String viewName = (String) attrMap.get("view");
+
+                    EntityChangedEvent.Type type = null;
+                    EntityAttributeChanges changes = new EntityAttributeChanges();
+                    if (onCreated && BaseEntityInternalAccess.isNew((BaseGenericIdEntity) entity)) {
+                        type = EntityChangedEvent.Type.CREATED;
+                    } else {
+                        if (onUpdated || onDeleted) {
+                            AttributeChangeListener changeListener =
+                                    (AttributeChangeListener) ((ChangeTracker) entity)._persistence_getPropertyChangeListener();
+                            if (changeListener == null) {
+                                log.warn("Cannot publish EntityChangedEvent for {} because its AttributeChangeListener is null", entity);
+                                continue;
+                            }
+                            if (onDeleted && isDeleted((BaseGenericIdEntity) entity, changeListener)) {
+                                type = EntityChangedEvent.Type.DELETED;
+                            } else if (onUpdated && changeListener.hasChanges()) {
+                                type = EntityChangedEvent.Type.UPDATED;
+                                changes.addChanges(changeListener.getObjectChangeSet());
+                            }
+                        }
+                    }
+                    if (type != null) {
+                        if (!Strings.isNullOrEmpty(viewName)) {
+                            entityFetcher.fetch(entity, viewName);
+                        }
+                        EntityChangedEvent event = new EntityChangedEvent<Entity>(this, entity, type, changes);
+                        list.add(event);
+                    }
+                }
+            }
+            return list;
+        }
+
+        private void publishEntityChangedEvents(List<EntityChangedEvent> collectedEvents) {
+            for (EntityChangedEvent event : collectedEvents) {
+                events.publish(event);
             }
         }
 

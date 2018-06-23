@@ -92,5 +92,8 @@
         <class>com.haulmont.cuba.testmodel.not_persistent.CustomerWithNonPersistentRef</class>
 
         <class>com.haulmont.cuba.testmodel.localdatetime.LocalDateTimeEntity</class>
+
+        <class>com.haulmont.cuba.testmodel.data_events.Product</class>
+        <class>com.haulmont.cuba.testmodel.data_events.PurchaseItem</class>
     </persistence-unit>
 </persistence>

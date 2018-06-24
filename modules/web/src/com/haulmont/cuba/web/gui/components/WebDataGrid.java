@@ -2574,34 +2574,24 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     @Override
     public void setDetailsGenerator(DetailsGenerator<E> detailsGenerator) {
         this.detailsGenerator = detailsGenerator;
-        // TODO: gg, implement
-        if (detailsGenerator != null) {
-//            component.setDetailsGenerator(createDetailsGenerator());
-        } else {
-//            component.setDetailsGenerator(Grid.DetailsGenerator.NULL);
-        }
+        component.setDetailsGenerator(detailsGenerator != null ? createDetailsGenerator() : null);
     }
 
-//    protected Grid.DetailsGenerator createDetailsGenerator() {
-//        return (Grid.DetailsGenerator) rowReference -> {
-    // noinspection unchecked
-//            E item = (E) datasource.getItem(rowReference.getItemId());
-//            com.haulmont.cuba.gui.components.Component component = detailsGenerator.getDetails(item);
-//            return component.unwrapComposition(Component.class);
-//        };
-//    }
-
-    @Override
-    public boolean isDetailsVisible(Entity entity) {
-        // TODO: gg, implement
-//        return component.isDetailsVisible(entity.getId());
-        return false;
+    protected com.vaadin.ui.components.grid.DetailsGenerator<E> createDetailsGenerator() {
+        return (com.vaadin.ui.components.grid.DetailsGenerator<E>) item -> {
+            com.haulmont.cuba.gui.components.Component component = detailsGenerator.getDetails(item);
+            return component != null ? component.unwrapComposition(Component.class) : null;
+        };
     }
 
     @Override
-    public void setDetailsVisible(Entity entity, boolean visible) {
-        // TODO: gg, implement
-//        component.setDetailsVisible(entity.getId(), visible);
+    public boolean isDetailsVisible(E entity) {
+        return component.isDetailsVisible(entity);
+    }
+
+    @Override
+    public void setDetailsVisible(E entity, boolean visible) {
+        component.setDetailsVisible(entity, visible);
     }
 
     @Override

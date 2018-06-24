@@ -19,7 +19,6 @@ package com.haulmont.cuba.gui.components;
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.components.data.DataGridSource;
-import com.haulmont.cuba.gui.components.data.EntityDataGridSource;
 import com.haulmont.cuba.gui.components.data.datagrid.CollectionDatasourceDataGridAdapter;
 import com.haulmont.cuba.gui.components.data.datagrid.SortableCollectionDatasourceDataGridAdapter;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
@@ -1111,7 +1110,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param entity the item for which to check details visibility
      * @return {@code true} if the details are visible
      */
-    boolean isDetailsVisible(Entity entity);
+    boolean isDetailsVisible(E entity);
 
     /**
      * Shows or hides the details for a specific item.
@@ -1119,7 +1118,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param entity  the item for which to set details visibility
      * @param visible {@code true} to show the details, or {@code false} to hide them
      */
-    void setDetailsVisible(Entity entity, boolean visible);
+    void setDetailsVisible(E entity, boolean visible);
 
     /**
      * Marker interface to indicate that the implementing class can be used as a renderer.

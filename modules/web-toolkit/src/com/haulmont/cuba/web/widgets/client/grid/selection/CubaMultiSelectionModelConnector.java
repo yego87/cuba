@@ -16,14 +16,21 @@
 
 package com.haulmont.cuba.web.widgets.client.grid.selection;
 
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.haulmont.cuba.web.widgets.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.connectors.grid.MultiSelectionModelConnector;
 import com.vaadin.client.renderers.Renderer;
+import com.vaadin.client.widget.grid.CellReference;
+import com.vaadin.client.widget.grid.DataAvailableEvent;
+import com.vaadin.client.widget.grid.DataAvailableHandler;
 import com.vaadin.client.widget.grid.events.BodyClickHandler;
+import com.vaadin.client.widget.grid.events.GridClickEvent;
+import com.vaadin.client.widget.grid.selection.SelectionModel;
 import com.vaadin.client.widgets.Grid;
+import com.vaadin.shared.Range;
 import com.vaadin.shared.ui.Connect;
 import elemental.json.JsonObject;
 
@@ -72,5 +79,108 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
         }
 
         super.onUnregister();
+    }
+
+    public class MultiSelectionBodyClickHandler implements BodyClickHandler {
+
+        protected Grid<JsonObject> grid;
+        protected CubaMultiSelectionModelServerRpc rpc;
+        protected HandlerRegistration handler;
+        protected int previous = -1;
+
+        public MultiSelectionBodyClickHandler(Grid<JsonObject> grid, CubaMultiSelectionModelServerRpc rpc) {
+            this.grid = grid;
+            this.rpc = rpc;
+        }
+
+        @Override
+        public void onClick(GridClickEvent event) {
+            SelectionModel<JsonObject> selectionModel = grid.getSelectionModel();
+            if (!(selectionModel instanceof MultiSelectionModel)) {
+                return;
+            }
+
+            //noinspection unchecked
+            MultiSelectionModel model = (MultiSelectionModel) selectionModel;
+            CellReference<JsonObject> cell = grid.getEventCell();
+
+            if (!event.isShiftKeyDown() || previous < 0) {
+                handleCtrlClick(model, cell, event);
+                previous = cell.getRowIndex();
+                return;
+            }
+
+            // This works on the premise that grid fires the data available event to
+            // any newly added handlers.
+            boolean ctrlOrMeta = event.isControlKeyDown() || event.isMetaKeyDown();
+            handler = grid.addDataAvailableHandler(new ShiftSelector(cell, model, ctrlOrMeta));
+        }
+
+        protected void handleCtrlClick(MultiSelectionModel model,
+                                       CellReference<JsonObject> cell, GridClickEvent event) {
+            NativeEvent e = event.getNativeEvent();
+            JsonObject row = cell.getRow();
+            if (!e.getCtrlKey() && !e.getMetaKey()) {
+                model.deselectAll();
+            }
+
+            if (model.isSelected(row)) {
+                model.deselect(row);
+            } else {
+                model.select(row);
+            }
+        }
+
+        protected final class ShiftSelector implements DataAvailableHandler {
+            protected final CellReference<JsonObject> cell;
+            protected final MultiSelectionModel model;
+            protected boolean ctrlOrMeta;
+
+            private ShiftSelector(CellReference<JsonObject> cell,
+                                  MultiSelectionModel model, boolean ctrlOrMeta) {
+                this.cell = cell;
+                this.model = model;
+                this.ctrlOrMeta = ctrlOrMeta;
+            }
+
+            @Override
+            public void onDataAvailable(DataAvailableEvent event) {
+                int current = cell.getRowIndex();
+                int min = Math.min(current, previous);
+                int max = Math.max(current, previous);
+
+                // TODO: gg, how to replace?
+                /*MultiSelectionModel.Batched<JsonObject> batched = null;
+                if (model instanceof MultiSelectionModel.Batched) {
+                    batched = (MultiSelectionModel.Batched<JsonObject>) model;
+                    batched.startBatchSelect();
+                }*/
+
+                if (!ctrlOrMeta) {
+                    model.deselectAll();
+                }
+
+                Range dataAvailable = event.getAvailableRows();
+
+                Range selected = Range.between(min, max + 1);
+                Range[] partition = selected.partitionWith(dataAvailable);
+
+                for (int i = partition[1].getStart(); i < partition[1].getEnd(); ++i) {
+                    model.select(grid.getDataSource().getRow(i));
+                }
+
+                // TODO: gg, how to replace?
+                /*if (batched != null) {
+                    batched.commitBatchSelect();
+                }*/
+
+                rpc.selectRange(partition[0].getStart(), partition[0].length());
+                rpc.selectRange(partition[2].getStart(), partition[2].length());
+
+                if (handler != null) {
+                    handler.removeHandler();
+                }
+            }
+        }
     }
 }

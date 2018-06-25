@@ -108,6 +108,7 @@ public class CubaGridWidget extends Grid<JsonObject> {
 
     @Override
     protected boolean isEventHandlerShouldHandleEvent(Element targetElement) {
+        // TEST: gg, instanceof is used for the ComponentRenderer. Check if we need some changes in the renderer
         // by default, clicking on widget renderer prevents cell focus changing
         // for some widget renderers we want to allow focus changing
         Widget widget = WidgetUtil.findWidget(targetElement, null);

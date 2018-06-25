@@ -26,9 +26,9 @@ import com.vaadin.client.widget.grid.events.BodyClickHandler;
 import com.vaadin.client.widget.grid.events.GridClickEvent;
 import com.vaadin.client.widget.grid.selection.SelectionModel;
 import com.vaadin.client.widgets.Grid;
+import com.vaadin.ui.components.grid.MultiSelectionModel;
 import elemental.json.JsonObject;
 
-// TODO: gg, implement
 public class MultiSelectionBodyClickHandler implements BodyClickHandler {
 
     protected Grid<JsonObject> grid;
@@ -43,17 +43,13 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
 
     @Override
     public void onClick(GridClickEvent event) {
-
-    }
-
-    /*@Override
-    public void onClick(GridClickEvent event) {
         SelectionModel<JsonObject> selectionModel = grid.getSelectionModel();
-        if (!(selectionModel instanceof SelectionModel.Multi)) {
+        if (!(selectionModel instanceof MultiSelectionModel)) {
             return;
         }
 
-        SelectionModel.Multi<JsonObject> model = (SelectionModel.Multi<JsonObject>) selectionModel;
+        //noinspection unchecked
+        MultiSelectionModel<JsonObject> model = (MultiSelectionModel<JsonObject>) selectionModel;
         CellReference<JsonObject> cell = grid.getEventCell();
 
         if (!event.isShiftKeyDown() || previous < 0) {
@@ -68,7 +64,7 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
         handler = grid.addDataAvailableHandler(new ShiftSelector(cell, model, ctrlOrMeta));
     }
 
-    protected void handleCtrlClick(SelectionModel.Multi<JsonObject> model,
+    protected void handleCtrlClick(MultiSelectionModel<JsonObject> model,
                                    CellReference<JsonObject> cell, GridClickEvent event) {
         NativeEvent e = event.getNativeEvent();
         JsonObject row = cell.getRow();
@@ -85,11 +81,11 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
 
     protected final class ShiftSelector implements DataAvailableHandler {
         protected final CellReference<JsonObject> cell;
-        protected final SelectionModel.Multi<JsonObject> model;
+        protected final MultiSelectionModel<JsonObject> model;
         protected boolean ctrlOrMeta;
 
         private ShiftSelector(CellReference<JsonObject> cell,
-                              SelectionModel.Multi<JsonObject> model, boolean ctrlOrMeta) {
+                              MultiSelectionModel<JsonObject> model, boolean ctrlOrMeta) {
             this.cell = cell;
             this.model = model;
             this.ctrlOrMeta = ctrlOrMeta;
@@ -101,11 +97,12 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
             int min = Math.min(current, previous);
             int max = Math.max(current, previous);
 
-            SelectionModel.Multi.Batched<JsonObject> batched = null;
-            if (model instanceof SelectionModel.Multi.Batched) {
-                batched = (SelectionModel.Multi.Batched<JsonObject>) model;
+            // TODO: gg, how to replace?
+            /*MultiSelectionModel.Batched<JsonObject> batched = null;
+            if (model instanceof MultiSelectionModel.Batched) {
+                batched = (MultiSelectionModel.Batched<JsonObject>) model;
                 batched.startBatchSelect();
-            }
+            }*/
 
             if (!ctrlOrMeta) {
                 model.deselectAll();
@@ -120,9 +117,10 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
                 model.select(grid.getDataSource().getRow(i));
             }
 
-            if (batched != null) {
+            // TODO: gg, how to replace?
+            /*if (batched != null) {
                 batched.commitBatchSelect();
-            }
+            }*/
 
             rpc.selectRange(partition[0].getStart(), partition[0].length());
             rpc.selectRange(partition[2].getStart(), partition[2].length());
@@ -131,5 +129,5 @@ public class MultiSelectionBodyClickHandler implements BodyClickHandler {
                 handler.removeHandler();
             }
         }
-    }*/
+    }
 }

@@ -21,7 +21,7 @@ import com.haulmont.cuba.web.widgets.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.connectors.grid.MultiSelectionModelConnector;
-import com.vaadin.client.renderers.ComplexRenderer;
+import com.vaadin.client.renderers.Renderer;
 import com.vaadin.client.widget.grid.events.BodyClickHandler;
 import com.vaadin.client.widgets.Grid;
 import com.vaadin.shared.ui.Connect;
@@ -37,11 +37,10 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
         return Tools.isUseSimpleMultiselectForTouchDevice()
                 ? super.createSelectionModel()
                 : new MultiSelectionModel() {
-            // TODO: gg, how to replace?
-            /*@Override
-            protected ComplexRenderer<Boolean> createSelectionColumnRenderer(Grid<JsonObject> grid) {
+            @Override
+            public Renderer<Boolean> getRenderer() {
                 return null;
-            }*/
+            }
         };
     }
 

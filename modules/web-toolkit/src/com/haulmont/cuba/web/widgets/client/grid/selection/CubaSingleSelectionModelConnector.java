@@ -35,16 +35,14 @@ public class CubaSingleSelectionModelConnector extends SingleSelectionModelConne
         super.extend(target);
     }
 
-    // TODO: gg, implement
-    /*@Override
+    @Override
     protected ClickSelectHandler<JsonObject> createClickSelectHandler() {
         return Tools.isUseSimpleMultiselectForTouchDevice()
                 ? super.createClickSelectHandler()
                 : new CubaClickSelectHandler(getGrid());
     }
 
-    protected class CubaClickSelectHandler
-            extends com.vaadin.client.widget.grid.selection.ClickSelectHandler<JsonObject> {
+    protected class CubaClickSelectHandler extends ClickSelectHandler<JsonObject> {
 
         public CubaClickSelectHandler(Grid<JsonObject> grid) {
             super(grid);
@@ -69,5 +67,5 @@ public class CubaSingleSelectionModelConnector extends SingleSelectionModelConne
                 }
             };
         }
-    }*/
+    }
 }

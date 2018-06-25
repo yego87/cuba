@@ -16,9 +16,11 @@
 
 package com.haulmont.cuba.web.widgets.client.grid;
 
+import com.google.gson.JsonObject;
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.vaadin.client.connectors.grid.GridConnector;
 import com.vaadin.shared.ui.Connect;
+import com.vaadin.ui.Grid;
 
 @Connect(CubaGrid.class)
 public class CubaGridConnector extends GridConnector {

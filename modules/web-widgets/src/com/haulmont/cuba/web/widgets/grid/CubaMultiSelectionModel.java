@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.widgets;
+package com.haulmont.cuba.web.widgets.grid;
 
 import com.haulmont.cuba.web.widgets.client.grid.selection.CubaMultiSelectionModelServerRpc;
 import com.vaadin.server.AbstractClientConnector;

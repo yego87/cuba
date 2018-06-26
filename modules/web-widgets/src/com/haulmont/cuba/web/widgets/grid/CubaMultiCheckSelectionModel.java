@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.widgets;
+package com.haulmont.cuba.web.widgets.grid;
 
 import com.vaadin.ui.components.grid.MultiSelectionModelImpl;
 

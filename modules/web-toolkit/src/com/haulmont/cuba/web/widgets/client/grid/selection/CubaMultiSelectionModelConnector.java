@@ -18,7 +18,7 @@ package com.haulmont.cuba.web.widgets.client.grid.selection;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.haulmont.cuba.web.widgets.CubaMultiSelectionModel;
+import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.connectors.grid.MultiSelectionModelConnector;
@@ -149,13 +149,6 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
                 int min = Math.min(current, previous);
                 int max = Math.max(current, previous);
 
-                // TODO: gg, how to replace?
-                /*MultiSelectionModel.Batched<JsonObject> batched = null;
-                if (model instanceof MultiSelectionModel.Batched) {
-                    batched = (MultiSelectionModel.Batched<JsonObject>) model;
-                    batched.startBatchSelect();
-                }*/
-
                 if (!ctrlOrMeta) {
                     model.deselectAll();
                 }
@@ -168,11 +161,6 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
                 for (int i = partition[1].getStart(); i < partition[1].getEnd(); ++i) {
                     model.select(grid.getDataSource().getRow(i));
                 }
-
-                // TODO: gg, how to replace?
-                /*if (batched != null) {
-                    batched.commitBatchSelect();
-                }*/
 
                 rpc.selectRange(partition[0].getStart(), partition[0].length());
                 rpc.selectRange(partition[2].getStart(), partition[2].length());

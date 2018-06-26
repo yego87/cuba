@@ -17,7 +17,7 @@
 package com.haulmont.cuba.web.widgets.client.grid.selection;
 
 import com.google.gwt.dom.client.NativeEvent;
-import com.haulmont.cuba.web.widgets.CubaSingleSelectionModel;
+import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
 import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.connectors.grid.SingleSelectionModelConnector;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.widgets;
+package com.haulmont.cuba.web.widgets.grid;
 
 import com.haulmont.cuba.web.widgets.addons.contextmenu.GridContextMenu;
 import com.vaadin.event.ContextClickEvent.ContextClickListener;

@@ -86,10 +86,10 @@ import com.haulmont.cuba.web.gui.data.DataGridIndexedCollectionDsWrapper;
 import com.haulmont.cuba.web.gui.data.SortableDataGridIndexedCollectionDsWrapper;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaGrid;
-import com.haulmont.cuba.web.widgets.CubaGridContextMenu;
-import com.haulmont.cuba.web.widgets.CubaMultiCheckSelectionModel;
-import com.haulmont.cuba.web.widgets.CubaMultiSelectionModel;
-import com.haulmont.cuba.web.widgets.CubaSingleSelectionModel;
+import com.haulmont.cuba.web.widgets.grid.CubaGridContextMenu;
+import com.haulmont.cuba.web.widgets.grid.CubaMultiCheckSelectionModel;
+import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
+import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.vaadin.data.HasValue;
@@ -196,6 +196,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     protected Registration columnResizeListenerRegistration;
     protected Registration sortListenerRegistration;
     protected Registration contextClickListenerRegistration;
+
+    protected com.vaadin.event.selection.SelectionListener<E> selectionListener;
 
 //    protected CubaGrid.EditorCloseListener editorCloseListener;
 //    protected CubaGrid.BeforeEditorOpenListener beforeEditorOpenListener;
@@ -312,11 +314,11 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected void initComponent(Grid<E> component) {
+        selectionListener = createSelectionListener();
         setSelectionMode(SelectionMode.SINGLE);
 
         component.setColumnReorderingAllowed(true);
 
-        component.addSelectionListener(createSelectionListener());
         component.addShortcutListener(createEnterShortcutListener());
         component.addItemClickListener(createItemClickListener());
         component.addColumnReorderListener(createColumnReorderListener());
@@ -1477,8 +1479,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 break;
             case NONE:
                 component.setSelectionMode(Grid.SelectionMode.NONE);
-                break;
+                return;
         }
+        component.getSelectionModel().addSelectionListener(selectionListener);
     }
 
     @Override

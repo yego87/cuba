@@ -709,8 +709,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         gridColumn.setHidable(column.isCollapsible() && column.getOwner().isColumnsCollapsingAllowed());
         gridColumn.setResizable(column.isResizable());
         gridColumn.setSortable(column.isSortable() && column.getOwner().isSortable());
-        if (column.getOwner().isEditorEnabled()) {
-            gridColumn.setEditable(column.isEditable());
+        if (gridColumn.getEditorBinding() != null) {
+            gridColumn.setEditable(column.isEditable() && column.getOwner().isEditorEnabled());
         }
 
         AppUI current = AppUI.getCurrent();

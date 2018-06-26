@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.EventObject;
 import java.util.List;
@@ -1127,7 +1128,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     }
 
     /**
-     * Renderer has null representation.
+     * A renderer has a null representation.
      * String value which will be used for rendering if the original value is null.
      */
     interface HasNullRepresentation {
@@ -1144,6 +1145,51 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * @param nullRepresentation a textual representation of {@code null}
          */
         void setNullRepresentation(String nullRepresentation);
+    }
+
+    /**
+     * A renderer has a locale.
+     */
+    interface HasLocale {
+        /**
+         * @return the locale which is used to present values
+         */
+        Locale getLocale();
+
+        /**
+         * Sets the locale in which to present values.
+         *
+         * @param locale the locale in which to present values
+         */
+        void setLocale(Locale locale);
+    }
+
+    /**
+     * A renderer has a DateTimeFormatter.
+     */
+    interface HasDateTimeFormatter {
+        /**
+         * @return the pattern describing the date format
+         */
+        String getFormatPattern();
+
+        /**
+         * @param formatPattern the pattern describing the date and time format
+         *                      which will be used to create {@link DateTimeFormatter} instance.
+         * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#patterns">
+         * Format Pattern Syntax</a>
+         */
+        void setFormatPattern(String formatPattern);
+
+        /**
+         * @return the instance of {@link DateTimeFormatter} which is used to present dates
+         */
+        DateTimeFormatter getFormatter();
+
+        /**
+         * @param formatter the instance of {@link DateTimeFormatter} with which to present dates
+         */
+        void setFormatter(DateTimeFormatter formatter);
     }
 
     /**
@@ -1248,19 +1294,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * A renderer for presenting date values.
      */
-    interface DateRenderer extends Renderer, HasNullRepresentation {
-        /**
-         * @return the locale which is used to present dates
-         */
-        Locale getLocale();
-
-        /**
-         * Sets the locale in which to present dates.
-         *
-         * @param locale the locale in which to present dates
-         */
-        void setLocale(Locale locale);
-
+    interface DateRenderer extends Renderer, HasNullRepresentation, HasLocale {
         /**
          * @return the pattern describing the date and time format
          */
@@ -1283,6 +1317,18 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * @param dateFormat the instance of {@link DateFormat} with which to present dates
          */
         void setDateFormat(DateFormat dateFormat);
+    }
+
+    /**
+     * A renderer for presenting LocalDate values.
+     */
+    interface LocalDateRenderer extends Renderer, HasNullRepresentation, HasLocale, HasDateTimeFormatter {
+    }
+
+    /**
+     * A renderer for presenting LocalDateTime values.
+     */
+    interface LocalDateTimeRenderer extends Renderer, HasNullRepresentation, HasLocale, HasDateTimeFormatter {
     }
 
     /**
@@ -2325,7 +2371,6 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * A column in the DataGrid.
      */
-    // TODO: gg, Add value type?
     interface Column<E extends Entity> extends HasXmlDescriptor, HasFormatter, Serializable {
 
         /**
@@ -2333,7 +2378,6 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          */
         String getId();
 
-        // TODO: gg, do we need this?
         /**
          * @return the instance of {@link MetaPropertyPath} representing a relative path
          * to a property from certain MetaClass

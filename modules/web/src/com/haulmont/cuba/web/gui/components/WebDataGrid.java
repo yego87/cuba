@@ -74,6 +74,8 @@ import com.haulmont.cuba.web.gui.components.renderers.WebComponentRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebDateRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebHtmlRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebImageRenderer;
+import com.haulmont.cuba.web.gui.components.renderers.WebLocalDateRenderer;
+import com.haulmont.cuba.web.gui.components.renderers.WebLocalDateTimeRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebNumberRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebProgressBarRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebTextRenderer;
@@ -222,6 +224,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         builder.put(DataGrid.HtmlRenderer.class, WebHtmlRenderer.class);
         builder.put(DataGrid.ProgressBarRenderer.class, WebProgressBarRenderer.class);
         builder.put(DataGrid.DateRenderer.class, WebDateRenderer.class);
+        builder.put(DataGrid.LocalDateRenderer.class, WebLocalDateRenderer.class);
+        builder.put(DataGrid.LocalDateTimeRenderer.class, WebLocalDateTimeRenderer.class);
         builder.put(DataGrid.NumberRenderer.class, WebNumberRenderer.class);
         builder.put(DataGrid.ButtonRenderer.class, WebButtonRenderer.class);
         builder.put(DataGrid.ImageRenderer.class, WebImageRenderer.class);

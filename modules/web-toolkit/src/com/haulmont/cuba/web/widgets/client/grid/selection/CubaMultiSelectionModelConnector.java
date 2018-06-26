@@ -68,7 +68,7 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
     }
 
     protected MultiSelectionBodyClickHandler createBodyClickHandler(Grid<JsonObject> grid) {
-        return new MultiSelectionBodyClickHandler(grid, getRpcProxy(CubaMultiSelectionModelServerRpc.class));
+        return new MultiSelectionBodyClickHandler(grid);
     }
 
     @Override
@@ -84,13 +84,11 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
     public class MultiSelectionBodyClickHandler implements BodyClickHandler {
 
         protected Grid<JsonObject> grid;
-        protected CubaMultiSelectionModelServerRpc rpc;
         protected HandlerRegistration handler;
         protected int previous = -1;
 
-        public MultiSelectionBodyClickHandler(Grid<JsonObject> grid, CubaMultiSelectionModelServerRpc rpc) {
+        public MultiSelectionBodyClickHandler(Grid<JsonObject> grid) {
             this.grid = grid;
-            this.rpc = rpc;
         }
 
         @Override
@@ -161,9 +159,6 @@ public class CubaMultiSelectionModelConnector extends MultiSelectionModelConnect
                 for (int i = partition[1].getStart(); i < partition[1].getEnd(); ++i) {
                     model.select(grid.getDataSource().getRow(i));
                 }
-
-                rpc.selectRange(partition[0].getStart(), partition[0].length());
-                rpc.selectRange(partition[2].getStart(), partition[2].length());
 
                 if (handler != null) {
                     handler.removeHandler();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2016 Haulmont.
+ * Copyright (c) 2008-2018 Haulmont.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.widgets.client.grid.selection;
+package com.haulmont.cuba.web.test.datatypes;
 
-import com.vaadin.shared.communication.ServerRpc;
+import com.haulmont.cuba.gui.components.AbstractEditor;
+import com.haulmont.cuba.test.entity.DataTypes;
 
-public interface CubaMultiSelectionModelServerRpc extends ServerRpc {
-
-    void selectRange(int start, int length);
+public class DataTypesEdit extends AbstractEditor<DataTypes> {
 }

@@ -19,36 +19,4 @@ package com.haulmont.cuba.web.widgets.grid;
 import com.vaadin.ui.components.grid.MultiSelectionModelImpl;
 
 public class CubaMultiCheckSelectionModel<T> extends MultiSelectionModelImpl<T> {
-
-    @Override
-    public void select(T item) {
-        // TEST: gg, do we still need this?
-        // We want to prevent exception when selecting an item
-        // right after removing from the container (triggered from
-        // a client side i.e. refresh is false)
-        // See https://github.com/vaadin/framework/issues/9911
-        /*if (!refresh) {
-            itemIds = itemIds.stream()
-                    .filter(itemId ->
-                            getParentGrid().getContainerDataSource().containsId(itemId))
-                    .collect(Collectors.toList());
-        }*/
-        super.select(item);
-    }
-
-    @Override
-    public void selectItems(T... items) {
-        // TEST: gg, do we still need this?
-        // We want to prevent exception when selecting an item
-        // right after removing from the container (triggered from
-        // a client side i.e. refresh is false)
-        // See https://github.com/vaadin/framework/issues/9911
-        /*if (!refresh) {
-            itemIds = itemIds.stream()
-                    .filter(itemId ->
-                            getParentGrid().getContainerDataSource().containsId(itemId))
-                    .collect(Collectors.toList());
-        }*/
-        super.selectItems(items);
-    }
 }

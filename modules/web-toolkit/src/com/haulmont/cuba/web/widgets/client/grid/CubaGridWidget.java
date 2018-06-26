@@ -263,8 +263,7 @@ public class CubaGridWidget extends Grid<JsonObject> {
 
         @Override
         protected void onHeaderClickEvent(GridClickEvent event) {
-            super.onHeaderClickEvent(event);
-            // do nothing, as we want trigger select/deselect all only by clicking on the checkbox
+            // do nothing, as we want to trigger select/deselect all only by clicking on the checkbox
         }
     }
 }

@@ -84,16 +84,14 @@ import com.haulmont.cuba.web.gui.components.valueproviders.EntityValueProvider;
 import com.haulmont.cuba.web.gui.components.valueproviders.FormatterBasedValueProvider;
 import com.haulmont.cuba.web.gui.components.valueproviders.StringPresentationValueProvider;
 import com.haulmont.cuba.web.gui.components.valueproviders.YesNoIconPresentationValueProvider;
-import com.haulmont.cuba.web.gui.data.DataGridIndexedCollectionDsWrapper;
-import com.haulmont.cuba.web.gui.data.SortableDataGridIndexedCollectionDsWrapper;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaGrid;
+import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
+import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.haulmont.cuba.web.widgets.grid.CubaGridContextMenu;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiCheckSelectionModel;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
-import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
-import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.vaadin.data.HasValue;
 import com.vaadin.data.SelectionModel;
 import com.vaadin.data.ValueProvider;
@@ -192,7 +190,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     protected DetailsGenerator<E> detailsGenerator = null;
 
-    protected CollectionDsListenersWrapper collectionDsListenersWrapper;
+//    protected CollectionDsListenersWrapper collectionDsListenersWrapper;
 
     protected Registration columnCollapsingChangeListenerRegistration;
     protected Registration columnResizeListenerRegistration;
@@ -343,32 +341,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     protected com.vaadin.event.selection.SelectionListener<E> createSelectionListener() {
         return e -> {
-            /*final Set<E> selected = getSelected();
-            if (selected.isEmpty()) {
-                Entity dsItem = datasource.getItemIfValid();
-                //noinspection unchecked
-                datasource.setItem(null);
-                if (dsItem == null) {
-                    // in this case item change event will not be generated
-                    refreshActionsState();
-                }
-            } else {
-                // reset selection and select new item
-                if (isMultiSelect()) {
-                    //noinspection unchecked
-                    datasource.setItem(null);
-                }
-
-                Entity newItem = selected.iterator().next();
-                Entity dsItem = datasource.getItemIfValid();
-                //noinspection unchecked
-                datasource.setItem(newItem);
-
-                if (Objects.equals(dsItem, newItem)) {
-                    // in this case item change event will not be generated
-                    refreshActionsState();
-                }
-            }*/
             DataGridSource<E> dataGridSource = getDataGridSource();
 
             if (dataGridSource == null
@@ -376,7 +348,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 return;
             }
 
-            // TEST: gg, do we need to use refreshActionsState()?
             Set<E> selected = getSelected();
             if (selected.isEmpty()) {
                 dataGridSource.setSelectedItem(null);
@@ -737,9 +708,10 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         gridColumn.setHidden(column.isCollapsed());
         gridColumn.setHidable(column.isCollapsible() && column.getOwner().isColumnsCollapsingAllowed());
         gridColumn.setResizable(column.isResizable());
-        // FIXME: gg, do something to prevent exception
-//        gridColumn.setEditable(column.isEditable() && column.getOwner().isEditorEnabled());
         gridColumn.setSortable(column.isSortable() && column.getOwner().isSortable());
+        if (column.getOwner().isEditorEnabled()) {
+            gridColumn.setEditable(column.isEditable());
+        }
 
         AppUI current = AppUI.getCurrent();
         if (current != null && current.isTestMode()) {
@@ -930,7 +902,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public void dataGridSourceItemSetChanged(DataGridSource.ItemSetChangeEvent<E> event) {
-        // TEST: gg, do we need to add something else?
+        // TODO: gg, refresh DataGrid
 
         refreshActionsState();
     }
@@ -2553,7 +2525,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
         // VAADIN8: gg, implement
 //        Entity item = datasource.getItem(itemId);
-        StringBuilder joinedStyle = null;
+//        StringBuilder joinedStyle = null;
 //        for (CellStyleProvider styleProvider : cellStyleProviders) {
 //            Column column = getColumnByPropertyId(propertyId);
 //            if (column == null) {
@@ -2568,8 +2540,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //                }
 //            }
 //        }
-
-        return joinedStyle != null ? joinedStyle.toString() : null;
+//
+//        return joinedStyle != null ? joinedStyle.toString() : null;
+        return null;
     }
 
     @Nullable
@@ -2621,7 +2594,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         getEventRouter().removeListener(LookupSelectionChangeListener.class, listener);
     }
 
-    protected class DataGridDsWrapper extends DataGridIndexedCollectionDsWrapper {
+    /*protected class DataGridDsWrapper extends DataGridIndexedCollectionDsWrapper {
 
         public DataGridDsWrapper(CollectionDatasource.Indexed datasource, Collection<MetaPropertyPath> properties,
                                  CollectionDsListenersWrapper collectionDsListenersWrapper) {
@@ -2660,7 +2633,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         @Override
         public void sort(Object[] propertyId, boolean[] ascending) {
-            // FIXME: gg, workaround to prevent exception from datasource
+            // _FIXME: gg, workaround to prevent exception from datasource
             if (propertyId.length == 1) {
                 super.sort(propertyId, ascending);
             }
@@ -2676,7 +2649,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             }
             return ids;
         }
-    }
+    }*/
 
     protected class RowStyleGeneratorAdapter<T extends E> implements StyleGenerator<T> {
         @Override
@@ -2740,7 +2713,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             // (see com.vaadin.ui.Grid.Column.setRenderer(com.vaadin.data.ValueProvider<V,P>,
             //          com.vaadin.ui.renderers.Renderer<? super P>)).
             // Default `null` means do not use any presentation ValueProvider
-            // TEST: gg, default value?
             return null;
         }
 
@@ -3178,18 +3150,20 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return presentationProvider;
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public Converter<?, ?> getConverter() {
             return converter;
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("deprecation")
         @Override
         public void setConverter(Converter<?, ?> converter) {
             this.converter = converter;
             setRenderer(this.renderer, createConverterWrapper(converter));
         }
 
+        @SuppressWarnings("DeprecatedIsStillUsed")
         @Deprecated
         protected Function createConverterWrapper(final Converter converter) {
             return (Function<Object, Object>) value -> {
@@ -3335,7 +3309,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         public T join(String... columnIds) {
             T cell = joinInternal(columnIds);
 
-            // FIXME: gg, workaround for https://github.com/vaadin/framework/issues/8512
+            // TEST: gg, workaround for https://github.com/vaadin/framework/issues/8512
             switch (cell.getCellType()) {
                 case HTML:
                     cell.setHtml(cell.getHtml());
@@ -3687,6 +3661,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
+    @Deprecated
     public class CollectionDsListenersWrapper implements
             Datasource.ItemChangeListener,
             Datasource.ItemPropertyChangeListener,
@@ -3717,29 +3692,29 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         @Override
         public void collectionChanged(CollectionDatasource.CollectionChangeEvent e) {
             // #PL-2035, reload selection from ds
-//            Collection<Object> selectedItemIds = component.getSelectedRows();
-//            if (selectedItemIds == null) {
-//                selectedItemIds = Collections.emptySet();
-//            }
+            Set<E> selectedItems = component.getSelectedItems();
+            if (selectedItems == null) {
+                selectedItems = Collections.emptySet();
+            }
 
             //noinspection unchecked
-//            Set<Object> newSelection = selectedItemIds.stream()
-//                    .filter(entityId -> e.getDs().containsItem(entityId))
-//                    .collect(Collectors.toSet());
-//
-//            if (e.getDs().getState() == Datasource.State.VALID && e.getDs().getItem() != null) {
-//                newSelection.add(e.getDs().getItem().getId());
-//            }
-//
-//            if (newSelection.isEmpty()) {
-//                setSelected((E) null);
-//            } else {
-//                setSelectedItems(newSelection);
-//            }
+            Set<E> newSelection = selectedItems.stream()
+                    .filter(entity -> e.getDs().containsItem(entity.getId()))
+                    .collect(Collectors.toSet());
 
-//            for (Action action : getActions()) {
-//                action.refreshState();
-//            }
+            if (e.getDs().getState() == Datasource.State.VALID && e.getDs().getItem() != null) {
+                newSelection.add((E) e.getDs().getItem());
+            }
+
+            if (newSelection.isEmpty()) {
+                setSelected((E) null);
+            } else {
+                setSelectedItems(newSelection);
+            }
+
+            for (Action action : getActions()) {
+                action.refreshState();
+            }
 
             if (getEventRouter().hasListeners(CollectionDatasource.CollectionChangeListener.class)) {
                 getEventRouter().fireEvent(CollectionDatasource.CollectionChangeListener.class,

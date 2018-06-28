@@ -83,7 +83,6 @@ public class DataGridDataProvider<T> extends AbstractDataProvider<T, Serializabl
 
     @Override
     public Stream<T> fetch(Query<T, SerializablePredicate<T>> query) {
-        // TODO: gg, query?
         if (dataGridSource.getState() == BindingState.INACTIVE) {
             return Stream.empty();
         }

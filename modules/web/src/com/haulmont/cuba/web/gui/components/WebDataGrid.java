@@ -89,6 +89,7 @@ import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
+import com.haulmont.cuba.web.widgets.data.SortableDataProvider;
 import com.haulmont.cuba.web.widgets.grid.CubaGridContextMenu;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiCheckSelectionModel;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
@@ -326,6 +327,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         component.addShortcutListener(createEnterShortcutListener());
         component.addItemClickListener(createItemClickListener());
         component.addColumnReorderListener(createColumnReorderListener());
+        component.addSortListener(createSortListener());
 
         componentComposition = new GridComposition();
         componentComposition.setPrimaryStyleName("c-data-grid-composition");
@@ -339,6 +341,30 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         component.setStyleGenerator(createRowStyleGenerator());
         // VAADIN8: gg, implement
 //        component.setCellStyleGenerator(createCellStyleGenerator());
+    }
+
+    protected com.vaadin.event.SortEvent.SortListener<GridSortOrder<E>> createSortListener() {
+        return (com.vaadin.event.SortEvent.SortListener<GridSortOrder<E>>) event -> {
+            if (component.getDataProvider() instanceof SortableDataProvider) {
+                //noinspection unchecked
+                SortableDataProvider<E> dataProvider = (SortableDataProvider<E>) component.getDataProvider();
+
+                List<GridSortOrder<E>> sortOrders = event.getSortOrder();
+                if (sortOrders.isEmpty()) {
+                    dataProvider.resetSortOrder();
+                } else {
+                    GridSortOrder<E> sortOrder = sortOrders.get(0);
+
+                    Column<E> column = getColumnByGridColumn(sortOrder.getSorted());
+                    if (column != null) {
+                        MetaPropertyPath propertyPath = column.getPropertyPath();
+                        boolean ascending = com.vaadin.shared.data.sort.SortDirection.ASCENDING
+                                .equals(sortOrder.getDirection());
+                        dataProvider.sort(new Object[]{propertyPath}, new boolean[]{ascending});
+                    }
+                }
+            }
+        };
     }
 
     protected com.vaadin.event.selection.SelectionListener<E> createSelectionListener() {

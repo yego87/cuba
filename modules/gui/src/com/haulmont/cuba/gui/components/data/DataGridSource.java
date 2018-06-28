@@ -45,7 +45,9 @@ public interface DataGridSource<T> {
     Subscription addSelectedItemChangeListener(Consumer<SelectedItemChangeEvent<T>> listener);
 
     interface Sortable<T> extends DataGridSource<T> {
-        void sort(List<String> sortColumns, List<Boolean> ascendingFlags);
+        void sort(Object[] propertyId, boolean[] ascending);
+
+        void resetSortOrder();
     }
 
     // todo

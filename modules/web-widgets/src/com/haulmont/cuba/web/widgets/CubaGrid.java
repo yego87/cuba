@@ -103,16 +103,6 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
         }
     }
 
-    @Override
-    protected void sort(boolean userOriginated) {
-        super.sort(userOriginated);
-
-        DataProvider<T, ?> dataProvider = getDataCommunicator().getDataProvider();
-        if (dataProvider instanceof SortableDataProvider) {
-            ((SortableDataProvider) dataProvider).sort(getDataCommunicator().getBackEndSorting());
-        }
-    }
-
     //    @Override
 //    protected void doEditItem() {
 //        clearFields(editorFields);

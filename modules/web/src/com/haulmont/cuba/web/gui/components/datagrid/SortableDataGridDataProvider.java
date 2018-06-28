@@ -2,11 +2,6 @@ package com.haulmont.cuba.web.gui.components.datagrid;
 
 import com.haulmont.cuba.gui.components.data.DataGridSource;
 import com.haulmont.cuba.web.widgets.data.SortableDataProvider;
-import com.vaadin.data.provider.QuerySortOrder;
-import com.vaadin.shared.data.sort.SortDirection;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SortableDataGridDataProvider<T>
         extends DataGridDataProvider<T>
@@ -22,14 +17,12 @@ public class SortableDataGridDataProvider<T>
     }
 
     @Override
-    public void sort(List<QuerySortOrder> sortOrders) {
-        /*List<String> sortColumns = new ArrayList<>();
-        List<Boolean> ascendingFlags = new ArrayList<>();
-        for (QuerySortOrder sortOrder : sortOrders) {
-            sortColumns.add(sortOrder.getSorted());
-            ascendingFlags.add(SortDirection.ASCENDING.equals(sortOrder.getDirection()));
-        }*/
+    public void sort(Object[] propertyId, boolean[] ascending) {
+        getSortableDataGridSource().sort(propertyId, ascending);
+    }
 
-//        getSortableDataGridSource().sort(sortColumns, ascendingFlags);
+    @Override
+    public void resetSortOrder() {
+        getSortableDataGridSource().resetSortOrder();
     }
 }

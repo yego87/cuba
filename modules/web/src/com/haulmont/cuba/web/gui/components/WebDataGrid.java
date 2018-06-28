@@ -66,6 +66,7 @@ import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridSourceEventsDelegate;
+import com.haulmont.cuba.web.gui.components.datagrid.SortableDataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.renderers.RendererWrapper;
 import com.haulmont.cuba.web.gui.components.renderers.WebButtonRenderer;
 import com.haulmont.cuba.web.gui.components.renderers.WebCheckBoxRenderer;
@@ -894,16 +895,14 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected DataGridDataProvider<E> createDataGridDataProvider(DataGridSource<E> dataGridSource) {
-        // TODO: gg, we need sortable!
-//        return (dataGridSource instanceof DataGridSource.Sortable)
-//                ? new SortableDataGridDataProvider<>(dataGridSource)
-//                : new DataGridDataProvider<>(dataGridSource);
-        return new DataGridDataProvider<>(dataGridSource, this);
+        return (dataGridSource instanceof DataGridSource.Sortable)
+                ? new SortableDataGridDataProvider<>((DataGridSource.Sortable<E>) dataGridSource, this)
+                : new DataGridDataProvider<>(dataGridSource, this);
     }
 
     @Override
     public void dataGridSourceItemSetChanged(DataGridSource.ItemSetChangeEvent<E> event) {
-        // TODO: gg, refresh DataGrid
+        // TODO: gg, #PL-2035, reload selection from ds
 
         refreshActionsState();
     }
@@ -1740,11 +1739,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         component.repaint();
     }
 
-    @SuppressWarnings("unused")
     protected boolean canBeSorted(@Nullable DataGridSource<E> dataGridSource) {
-        // VAADIN8: gg, implement
-//        return dataGridSource instanceof DataGridSource.Sortable;
-        return false;
+        return dataGridSource instanceof DataGridSource.Sortable;
     }
 
     @Override
@@ -2836,6 +2832,10 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         @Override
         public MetaPropertyPath getPropertyPath() {
             return propertyPath;
+        }
+
+        public String getInternalId() {
+            return propertyPath != null ? propertyPath.toPathString() : id;
         }
 
         @Override

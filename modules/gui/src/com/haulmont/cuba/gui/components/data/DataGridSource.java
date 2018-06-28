@@ -28,6 +28,7 @@ public interface DataGridSource<T> {
 
     Stream<T> getItems();
 
+    // TODO: gg, probably we don't need this method
     List<T> getItems(int startIndex, int numberOfItems);
 
     boolean containsItem(T item);
@@ -42,6 +43,10 @@ public interface DataGridSource<T> {
     Subscription addValueChangeListener(Consumer<ValueChangeEvent<T>> listener);
     Subscription addItemSetChangeListener(Consumer<ItemSetChangeEvent<T>> listener);
     Subscription addSelectedItemChangeListener(Consumer<SelectedItemChangeEvent<T>> listener);
+
+    interface Sortable<T> extends DataGridSource<T> {
+        void sort(List<String> sortColumns, List<Boolean> ascendingFlags);
+    }
 
     // todo
     class StateChangeEvent<T> extends EventObject {

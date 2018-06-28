@@ -10,18 +10,18 @@ import com.vaadin.server.SerializablePredicate;
 
 import java.util.stream.Stream;
 
-public class DataGridDataProvider<I> extends AbstractDataProvider<I, SerializablePredicate<I>> {
+public class DataGridDataProvider<T> extends AbstractDataProvider<T, SerializablePredicate<T>> {
 
-    protected DataGridSource<I> dataGridSource;
-    protected DataGridSourceEventsDelegate<I> dataEventsDelegate;
+    protected DataGridSource<T> dataGridSource;
+    protected DataGridSourceEventsDelegate<T> dataEventsDelegate;
 
     protected Subscription itemSetChangeSubscription;
     protected Subscription valueChangeSubscription;
     protected Subscription stateChangeSubscription;
     protected Subscription selectedItemChangeSubscription;
 
-    public DataGridDataProvider(DataGridSource<I> dataGridSource,
-                                DataGridSourceEventsDelegate<I> dataEventsDelegate) {
+    public DataGridDataProvider(DataGridSource<T> dataGridSource,
+                                DataGridSourceEventsDelegate<T> dataEventsDelegate) {
         this.dataGridSource = dataGridSource;
         this.dataEventsDelegate = dataEventsDelegate;
 
@@ -57,12 +57,12 @@ public class DataGridDataProvider<I> extends AbstractDataProvider<I, Serializabl
         }
     }
 
-    public DataGridSource<I> getDataGridSource() {
+    public DataGridSource<T> getDataGridSource() {
         return dataGridSource;
     }
 
     @Override
-    public Object getId(I item) {
+    public Object getId(T item) {
         return dataGridSource.getItemId(item);
     }
 
@@ -72,7 +72,7 @@ public class DataGridDataProvider<I> extends AbstractDataProvider<I, Serializabl
     }
 
     @Override
-    public int size(Query<I, SerializablePredicate<I>> query) {
+    public int size(Query<T, SerializablePredicate<T>> query) {
         // TODO: gg, query?
         if (dataGridSource.getState() == BindingState.INACTIVE) {
             return 0;
@@ -82,43 +82,42 @@ public class DataGridDataProvider<I> extends AbstractDataProvider<I, Serializabl
     }
 
     @Override
-    public Stream<I> fetch(Query<I, SerializablePredicate<I>> query) {
+    public Stream<T> fetch(Query<T, SerializablePredicate<T>> query) {
         // TODO: gg, query?
         if (dataGridSource.getState() == BindingState.INACTIVE) {
             return Stream.empty();
         }
 
-        return dataGridSource.getItems();
+        return dataGridSource.getItems()
+                .skip(query.getOffset())
+                .limit(query.getLimit());
     }
 
     @Override
-    public void refreshItem(I item) {
-        // Use a datasource instead
-        throw new UnsupportedOperationException();
+    public void refreshItem(T item) {
+        throw new UnsupportedOperationException("Use a datasource instead");
     }
 
     @Override
     public void refreshAll() {
-        // Use a datasource instead
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Use a datasource instead");
     }
 
-    protected void datasourceItemSetChanged(DataGridSource.ItemSetChangeEvent<I> event) {
+    protected void datasourceItemSetChanged(DataGridSource.ItemSetChangeEvent<T> event) {
         fireEvent(new DataChangeEvent<>(this));
 
         dataEventsDelegate.dataGridSourceItemSetChanged(event);
     }
 
-    protected void datasourceValueChanged(DataGridSource.ValueChangeEvent<I> event) {
-        // TODO: gg, probably need to fire DataChangeEvent/DataRefreshEvent
+    protected void datasourceValueChanged(DataGridSource.ValueChangeEvent<T> event) {
         dataEventsDelegate.dataGridSourcePropertyValueChanged(event);
     }
 
-    protected void datasourceStateChanged(DataGridSource.StateChangeEvent<I> event) {
+    protected void datasourceStateChanged(DataGridSource.StateChangeEvent<T> event) {
         dataEventsDelegate.dataGridSourceStateChanged(event);
     }
 
-    protected void datasourceSelectedItemChanged(DataGridSource.SelectedItemChangeEvent<I> event) {
+    protected void datasourceSelectedItemChanged(DataGridSource.SelectedItemChangeEvent<T> event) {
         dataEventsDelegate.dataGridSourceSelectedItemChanged(event);
     }
 }

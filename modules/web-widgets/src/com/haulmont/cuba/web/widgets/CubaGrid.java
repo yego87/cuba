@@ -17,11 +17,16 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.grid.CubaGridState;
+import com.haulmont.cuba.web.widgets.data.SortableDataProvider;
+import com.vaadin.data.provider.DataProvider;
+import com.vaadin.data.provider.QuerySortOrder;
 import com.vaadin.event.Action;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //import static com.haulmont.cuba.web.widgets.CubaGrid.BeforeEditorOpenListener.EDITOR_OPEN_METHOD;
@@ -98,7 +103,17 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
         }
     }
 
-//    @Override
+    @Override
+    protected void sort(boolean userOriginated) {
+        super.sort(userOriginated);
+
+        DataProvider<T, ?> dataProvider = getDataCommunicator().getDataProvider();
+        if (dataProvider instanceof SortableDataProvider) {
+            ((SortableDataProvider) dataProvider).sort(getDataCommunicator().getBackEndSorting());
+        }
+    }
+
+    //    @Override
 //    protected void doEditItem() {
 //        clearFields(editorFields);
 //

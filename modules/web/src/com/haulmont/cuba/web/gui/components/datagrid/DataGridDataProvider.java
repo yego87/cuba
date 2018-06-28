@@ -4,6 +4,7 @@ import com.haulmont.bali.events.Subscription;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.DataGridSource;
 import com.vaadin.data.provider.AbstractDataProvider;
+import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.Query;
 import com.vaadin.server.SerializablePredicate;
 
@@ -103,7 +104,8 @@ public class DataGridDataProvider<I> extends AbstractDataProvider<I, Serializabl
     }
 
     protected void datasourceItemSetChanged(DataGridSource.ItemSetChangeEvent<I> event) {
-        // TODO: gg, probably need to fire DataChangeEvent/DataRefreshEvent
+        fireEvent(new DataChangeEvent<>(this));
+
         dataEventsDelegate.dataGridSourceItemSetChanged(event);
     }
 

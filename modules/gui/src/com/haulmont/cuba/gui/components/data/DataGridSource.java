@@ -4,36 +4,44 @@ import com.haulmont.bali.events.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.EventObject;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
  * todo JavaDoc
  *
- * @param <I>
+ * @param <T>
  */
-public interface DataGridSource<I> {
+public interface DataGridSource<T> {
 
     BindingState getState();
 
-    Object getItemId(I item);
+    Object getItemId(T item);
 
-    I getItem(Object itemId);
+    T getItem(@Nullable Object itemId);
 
-    Stream<I> getItems();
+    int indexOfItem(T item);
 
-    boolean containsItem(I item);
+    @Nullable
+    T getItemByIndex(int index);
+
+    Stream<T> getItems();
+
+    List<T> getItems(int startIndex, int numberOfItems);
+
+    boolean containsItem(T item);
 
     int size();
 
     @Nullable
-    I getSelectedItem();
-    void setSelectedItem(@Nullable I item);
+    T getSelectedItem();
+    void setSelectedItem(@Nullable T item);
 
-    Subscription addStateChangeListener(Consumer<StateChangeEvent<I>> listener);
-    Subscription addValueChangeListener(Consumer<ValueChangeEvent<I>> listener);
-    Subscription addItemSetChangeListener(Consumer<ItemSetChangeEvent<I>> listener);
-    Subscription addSelectedItemChangeListener(Consumer<SelectedItemChangeEvent<I>> listener);
+    Subscription addStateChangeListener(Consumer<StateChangeEvent<T>> listener);
+    Subscription addValueChangeListener(Consumer<ValueChangeEvent<T>> listener);
+    Subscription addItemSetChangeListener(Consumer<ItemSetChangeEvent<T>> listener);
+    Subscription addSelectedItemChangeListener(Consumer<SelectedItemChangeEvent<T>> listener);
 
     // todo
     class StateChangeEvent<T> extends EventObject {

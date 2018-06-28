@@ -2,6 +2,7 @@ package com.haulmont.cuba.gui.components.data.datagrid;
 
 import com.haulmont.bali.events.EventPublisher;
 import com.haulmont.bali.events.Subscription;
+import com.haulmont.bali.util.Preconditions;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.Entity;
@@ -15,18 +16,25 @@ import com.haulmont.cuba.gui.data.impl.CollectionDsHelper;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CollectionDatasourceDataGridAdapter<E extends Entity<K>, K> implements EntityDataGridSource<E> {
 
-    protected CollectionDatasource<E, K> datasource;
+    protected CollectionDatasource.Indexed<E, K> datasource;
     protected EventPublisher events = new EventPublisher();
 
     protected BindingState state = BindingState.INACTIVE;
 
     public CollectionDatasourceDataGridAdapter(CollectionDatasource<E, K> datasource) {
-        this.datasource = datasource;
+        if (!(datasource instanceof CollectionDatasource.Indexed)) {
+            throw new IllegalArgumentException("Datasource must implement " +
+                    "com.haulmont.cuba.gui.data.CollectionDatasource.Indexed");
+        }
+
+        this.datasource = (CollectionDatasource.Indexed<E, K>) datasource;
 
         this.datasource.addStateChangeListener(this::datasourceStateChanged);
         this.datasource.addItemPropertyChangeListener(this::datasourceItemPropertyChanged);
@@ -97,18 +105,39 @@ public class CollectionDatasourceDataGridAdapter<E extends Entity<K>, K> impleme
 
     @Override
     public Object getItemId(E item) {
+        Preconditions.checkNotNullArgument(item);
         return item.getId();
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public E getItem(Object itemId) {
+    public E getItem(@Nullable Object itemId) {
         return datasource.getItem((K) itemId);
+    }
+
+    @Override
+    public int indexOfItem(E item) {
+        Preconditions.checkNotNullArgument(item);
+        return datasource.indexOfId(item.getId());
+    }
+
+    @Nullable
+    @Override
+    public E getItemByIndex(int index) {
+        K id = datasource.getIdByIndex(index);
+        return datasource.getItem(id);
     }
 
     @Override
     public Stream<E> getItems() {
         return datasource.getItems().stream();
+    }
+
+    @Override
+    public List<E> getItems(int startIndex, int numberOfItems) {
+        return datasource.getItemIds(startIndex, numberOfItems).stream()
+                .map(id -> datasource.getItem(id))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -134,24 +163,24 @@ public class CollectionDatasourceDataGridAdapter<E extends Entity<K>, K> impleme
     @SuppressWarnings("unchecked")
     @Override
     public Subscription addStateChangeListener(Consumer<StateChangeEvent<E>> listener) {
-        return events.subscribe(StateChangeEvent.class, (Consumer)listener);
+        return events.subscribe(StateChangeEvent.class, (Consumer) listener);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Subscription addValueChangeListener(Consumer<ValueChangeEvent<E>> listener) {
-        return events.subscribe(ValueChangeEvent.class, (Consumer)listener);
+        return events.subscribe(ValueChangeEvent.class, (Consumer) listener);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Subscription addItemSetChangeListener(Consumer<ItemSetChangeEvent<E>> listener) {
-        return events.subscribe(ItemSetChangeEvent.class, (Consumer)listener);
+        return events.subscribe(ItemSetChangeEvent.class, (Consumer) listener);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Subscription addSelectedItemChangeListener(Consumer<SelectedItemChangeEvent<E>> listener) {
-        return events.subscribe(SelectedItemChangeEvent.class, (Consumer)listener);
+        return events.subscribe(SelectedItemChangeEvent.class, (Consumer) listener);
     }
 }

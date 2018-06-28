@@ -1131,10 +1131,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             throw new IllegalArgumentException("Datasource doesn't contain item");
         }
 
-        // VAADIN8: gg, implement a custom editor, so that we will be able to edit by item
-        int rowNumber = 0;
-
-        component.getEditor().editRow(rowNumber);
+        int rowIndex = dataGridSource.indexOfItem(item);
+        component.getEditor().editRow(rowIndex);
     }
 
     @Override
@@ -1714,13 +1712,14 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     @Override
     public void scrollTo(E item, ScrollDestination destination) {
         Preconditions.checkNotNullArgument(item);
+        Preconditions.checkNotNullArgument(destination);
 
-        if (!getDataGridSourceNN().containsItem(item)) {
+        DataGridSource<E> dataGridSource = getDataGridSourceNN();
+        if (!dataGridSource.containsItem(item)) {
             throw new IllegalArgumentException("Unable to find item in DataGrid");
         }
 
-        // VAADIN8: gg, get row index
-        int rowIndex = 0;
+        int rowIndex = dataGridSource.indexOfItem(item);
         component.scrollTo(rowIndex, WebWrapperUtils.convertToGridScrollDestination(destination));
     }
 

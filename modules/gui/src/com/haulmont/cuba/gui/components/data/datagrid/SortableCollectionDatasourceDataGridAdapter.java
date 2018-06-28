@@ -1,15 +1,12 @@
 package com.haulmont.cuba.gui.components.data.datagrid;
 
-import com.google.common.base.Preconditions;
-import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.Entity;
-import com.haulmont.cuba.gui.components.data.DataGridSource;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 
 public class SortableCollectionDatasourceDataGridAdapter<E extends Entity<K>, K>
         extends CollectionDatasourceDataGridAdapter<E, K> {
 
-    public SortableCollectionDatasourceDataGridAdapter(CollectionDatasource<E, K> datasource) {
+    public SortableCollectionDatasourceDataGridAdapter(CollectionDatasource.Sortable<E, K> datasource) {
         super(datasource);
     }
 

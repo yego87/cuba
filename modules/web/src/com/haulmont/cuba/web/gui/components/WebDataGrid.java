@@ -310,6 +310,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         this.messages = messages;
     }
 
+    @SuppressWarnings("unused")
     @Inject
     public void setMessageTools(MessageTools messageTools) {
         this.messageTools = messageTools;
@@ -2748,6 +2749,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected static class ColumnImpl<E extends Entity> implements Column<E> {
 
         protected final String id;
@@ -3176,6 +3178,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return type;
         }
 
+        @SuppressWarnings("unused")
         public boolean isGenerated() {
             return generated;
         }
@@ -3768,10 +3771,12 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             getEventRouter().removeListener(CollectionDatasource.CollectionChangeListener.class, listener);
         }
 
+        @SuppressWarnings("unused")
         public void addItemChangeListener(Datasource.ItemChangeListener listener) {
             getEventRouter().addListener(Datasource.ItemChangeListener.class, listener);
         }
 
+        @SuppressWarnings("unused")
         public void removeItemChangeListener(Datasource.ItemChangeListener listener) {
             getEventRouter().removeListener(Datasource.ItemChangeListener.class, listener);
         }

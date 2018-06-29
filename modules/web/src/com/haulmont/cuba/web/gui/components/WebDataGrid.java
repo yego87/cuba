@@ -2891,10 +2891,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return propertyPath;
         }
 
-        public String getInternalId() {
-            return propertyPath != null ? propertyPath.toPathString() : id;
-        }
-
         @Override
         public String getCaption() {
             if (gridColumn != null) {

@@ -343,8 +343,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         component.setHeightMode(HeightMode.UNDEFINED);
 
         component.setStyleGenerator(createRowStyleGenerator());
-        // VAADIN8: gg, implement
-//        component.setCellStyleGenerator(createCellStyleGenerator());
     }
 
     protected com.vaadin.event.SortEvent.SortListener<GridSortOrder<E>> createSortListener() {

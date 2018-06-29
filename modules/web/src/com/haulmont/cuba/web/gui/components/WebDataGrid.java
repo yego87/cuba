@@ -185,7 +185,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     protected ButtonsPanel buttonsPanel;
     protected RowsCount rowsCount;
 
-    protected List<RowStyleProvider<? super E>> rowStyleProviders;
+    protected List<StyleProvider<? super E>> rowStyleProviders;
+    @SuppressWarnings("deprecation")
     protected List<CellStyleProvider<? super E>> cellStyleProviders;
 
     protected RowDescriptionProvider<E> rowDescriptionProvider;
@@ -706,6 +707,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
 
         setupGridColumnProperties(gridColumn, column);
+
+        gridColumn.setStyleGenerator(new CellStyleGeneratorAdapter<>(column));
 
         component.setColumnOrder(getColumnOrder());
     }
@@ -2107,7 +2110,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     @Override
-    public void addRowStyleProvider(RowStyleProvider<? super E> styleProvider) {
+    public void addRowStyleProvider(StyleProvider<? super E> styleProvider) {
         if (this.rowStyleProviders == null) {
             this.rowStyleProviders = new LinkedList<>();
         }
@@ -2120,7 +2123,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     @Override
-    public void removeRowStyleProvider(RowStyleProvider<? super E> styleProvider) {
+    public void removeRowStyleProvider(StyleProvider<? super E> styleProvider) {
         if (this.rowStyleProviders != null) {
             if (this.rowStyleProviders.remove(styleProvider)) {
                 repaint();
@@ -2128,6 +2131,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void addCellStyleProvider(CellStyleProvider<? super E> styleProvider) {
         if (this.cellStyleProviders == null) {
@@ -2141,6 +2145,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void removeCellStyleProvider(CellStyleProvider<? super E> styleProvider) {
         if (this.cellStyleProviders != null) {
@@ -2555,34 +2560,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         getEventRouter().removeListener(SelectionListener.class, listener);
     }
 
-    @SuppressWarnings({"unchecked", "unused"})
-    @Nullable
-    protected String getGeneratedCellStyle(Object itemId, Object propertyId) {
-        if (cellStyleProviders == null) {
-            return null;
-        }
-        // VAADIN8: gg, implement
-//        Entity item = datasource.getItem(itemId);
-//        StringBuilder joinedStyle = null;
-//        for (CellStyleProvider styleProvider : cellStyleProviders) {
-//            Column column = getColumnByPropertyId(propertyId);
-//            if (column == null) {
-//                throw new RuntimeException("Column not found for propertyId: " + propertyId);
-//            }
-//            String styleName = styleProvider.getStyleName(item, column.getId());
-//            if (styleName != null) {
-//                if (joinedStyle == null) {
-//                    joinedStyle = new StringBuilder(styleName);
-//                } else {
-//                    joinedStyle.append(" ").append(styleName);
-//                }
-//            }
-//        }
-//
-//        return joinedStyle != null ? joinedStyle.toString() : null;
-        return null;
-    }
-
     @Nullable
     @Override
     public DetailsGenerator<E> getDetailsGenerator() {
@@ -2703,7 +2680,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
 
         StringBuilder joinedStyle = null;
-        for (RowStyleProvider<? super E> styleProvider : rowStyleProviders) {
+        for (StyleProvider<? super E> styleProvider : rowStyleProviders) {
             String styleName = styleProvider.getStyleName(item);
             if (styleName != null) {
                 if (joinedStyle == null) {
@@ -2717,12 +2694,48 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         return joinedStyle != null ? joinedStyle.toString() : null;
     }
 
-//    protected class CellStyleGeneratorAdapter implements Grid.CellStyleGenerator {
-//        @Override
-//        public String getStyle(Grid.CellReference cell) {
-//            return getGeneratedCellStyle(cell.getItemId(), cell.getPropertyId());
-//        }
-//    }
+    protected class CellStyleGeneratorAdapter<T extends E> implements StyleGenerator<T> {
+
+        protected Column<T> column;
+
+        public CellStyleGeneratorAdapter(Column<T> column) {
+            this.column = column;
+        }
+
+        @Override
+        public String apply(T item) {
+            //noinspection unchecked
+            return getGeneratedCellStyle(item, (Column<E>) column);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Nullable
+    protected String getGeneratedCellStyle(E item, Column<E> column) {
+        StringBuilder joinedStyle = null;
+
+        if (column.getStyleProvider() != null) {
+            String styleName = column.getStyleProvider().getStyleName(item);
+            if (styleName != null) {
+                joinedStyle = new StringBuilder(styleName);
+            }
+        }
+
+        if (cellStyleProviders != null) {
+            for (CellStyleProvider<? super E> styleProvider : cellStyleProviders) {
+                String styleName = styleProvider.getStyleName(item, column.getId());
+                if (styleName != null) {
+                    if (joinedStyle == null) {
+                        joinedStyle = new StringBuilder(styleName);
+                    } else {
+                        joinedStyle.append(" ").append(styleName);
+                    }
+                }
+            }
+        }
+
+        return joinedStyle != null ? joinedStyle.toString() : null;
+    }
 
     public static abstract class AbstractRenderer<T extends Entity, V> implements RendererWrapper<V> {
         protected com.vaadin.ui.renderers.Renderer<V> renderer;
@@ -2811,6 +2824,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         protected AbstractRenderer<E, ?> renderer;
         protected Function presentationProvider;
         protected Converter converter;
+
+        private StyleProvider<? super E> styleProvider;
 
         protected final Class type;
         protected Element element;
@@ -3282,6 +3297,17 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         public void setEditorFieldGenerator(ColumnEditorFieldGenerator fieldFactory) {
             this.fieldGenerator = fieldFactory;
             updateEditable();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public StyleProvider<E> getStyleProvider() {
+            return (StyleProvider<E>) styleProvider;
+        }
+
+        @Override
+        public void setStyleProvider(StyleProvider<? super E> styleProvider) {
+            this.styleProvider = styleProvider;
         }
 
         public Grid.Column<E, ?> getGridColumn() {

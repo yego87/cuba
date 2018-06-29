@@ -847,11 +847,11 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     void setSelectionMode(SelectionMode selectionMode);
 
     /**
-     * Allows to define different styles for DataGrid rows.
+     * Allows to define different styles for DataGrid.
      */
-    interface RowStyleProvider<E extends Entity> {
+    interface StyleProvider<E extends Entity> {
         /**
-         * Called by {@link DataGrid} to get a style for row.
+         * Called by {@link DataGrid} to get a style.
          *
          * @param entity an entity instance represented by the current row
          * @return style name or null to apply the default
@@ -860,20 +860,34 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     }
 
     /**
+     * Allows to define different styles for DataGrid rows.
+     *
+     * @deprecated use {@link StyleProvider} instead
+     */
+    @Deprecated
+    interface RowStyleProvider<E extends Entity> extends StyleProvider<E> {
+    }
+
+    /**
      * Adds style provider for the DataGrid rows.
      * <p>
      * DataGrid can use several providers to obtain many style names for rows.
+     *
+     * @param styleProvider a style provider to add, not null
      */
-    void addRowStyleProvider(RowStyleProvider<? super E> styleProvider);
+    void addRowStyleProvider(StyleProvider<? super E> styleProvider);
 
     /**
      * Removes style provider for the DataGrid rows.
+     *
+     * @param styleProvider a style provider to remove, not null
      */
-    void removeRowStyleProvider(RowStyleProvider<? super E> styleProvider);
+    void removeRowStyleProvider(StyleProvider<? super E> styleProvider);
 
     /**
      * Allows to define different styles for DataGrid cells.
      */
+    @Deprecated
     interface CellStyleProvider<E extends Entity> {
         /**
          * Called by {@link DataGrid} to get a style for cell.
@@ -889,12 +903,18 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * Adds style provider for the DataGrid cells.
      * <p>
      * DataGrid can use several providers to obtain many style names for cells.
+     *
+     * @deprecated use {@link Column#setStyleProvider(StyleProvider)} instead
      */
+    @Deprecated
     void addCellStyleProvider(CellStyleProvider<? super E> styleProvider);
 
     /**
      * Removes style provider for the DataGrid cells.
+     *
+     * @deprecated use {@link Column#setStyleProvider(StyleProvider)} instead
      */
+    @Deprecated
     void removeCellStyleProvider(CellStyleProvider<? super E> styleProvider);
 
     /**
@@ -2695,6 +2715,18 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          *                     for this column in {@link DataGrid} editor.
          */
         void setEditorFieldGenerator(ColumnEditorFieldGenerator fieldFactory);
+
+        /**
+         * @return the style provider that is used for generating styles for cells
+         */
+        StyleProvider<E> getStyleProvider();
+
+        /**
+         * Sets the style provider for the DataGrid column.
+         *
+         * @param styleProvider a style provider to set
+         */
+        void setStyleProvider(StyleProvider<? super E> styleProvider);
 
         /**
          * @return The DataGrid this column belongs to

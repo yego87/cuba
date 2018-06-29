@@ -105,6 +105,7 @@ import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.grid.HeightMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.DescriptionGenerator;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.StyleGenerator;
@@ -189,8 +190,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     @SuppressWarnings("deprecation")
     protected List<CellStyleProvider<? super E>> cellStyleProviders;
 
-    protected RowDescriptionProvider<E> rowDescriptionProvider;
-    protected CellDescriptionProvider<E> cellDescriptionProvider;
+    protected DescriptionProvider<? super E> rowDescriptionProvider;
+    @SuppressWarnings("deprecation")
+    protected CellDescriptionProvider<? super E> cellDescriptionProvider;
 
     protected DetailsGenerator<E> detailsGenerator = null;
 
@@ -709,6 +711,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         setupGridColumnProperties(gridColumn, column);
 
         gridColumn.setStyleGenerator(new CellStyleGeneratorAdapter<>(column));
+        gridColumn.setDescriptionGenerator(new CellDescriptionGeneratorAdapter<>(column));
 
         component.setColumnOrder(getColumnOrder());
     }
@@ -2155,60 +2158,40 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
+    @SuppressWarnings("unchecked, deprecation")
     @Override
-    public CellDescriptionProvider getCellDescriptionProvider() {
-        return cellDescriptionProvider;
+    public CellDescriptionProvider<E> getCellDescriptionProvider() {
+        return (CellDescriptionProvider<E>) cellDescriptionProvider;
     }
 
-    // VAADIN8: gg, implement
+    @SuppressWarnings("deprecation")
     @Override
-    public void setCellDescriptionProvider(CellDescriptionProvider<E> provider) {
+    public void setCellDescriptionProvider(CellDescriptionProvider<? super E> provider) {
         this.cellDescriptionProvider = provider;
-
-        if (provider != null) {
-//            component.setCellDescriptionGenerator(createCellDescriptionGenerator());
-        } else {
-//            component.setCellDescriptionGenerator(null);
-        }
+        repaint();
     }
 
-//    protected Grid.CellDescriptionGenerator createCellDescriptionGenerator() {
-//        return cell -> {
-//            //noinspection unchecked
-//            E item = (E) datasource.getItem(cell.getItemId());
-//            Column column = getColumnByPropertyId(cell.getPropertyId());
-//            if (column == null) {
-//                throw new RuntimeException("Column not found for propertyId: " + cell.getPropertyId());
-//            }
-//            return cellDescriptionProvider.getDescription(item, column.getId());
-//        };
-//    }
-
+    @SuppressWarnings("unchecked")
     @Override
-    public RowDescriptionProvider getRowDescriptionProvider() {
-        return rowDescriptionProvider;
+    public DescriptionProvider<E> getRowDescriptionProvider() {
+        return (DescriptionProvider<E>) rowDescriptionProvider;
     }
 
-    // VAADIN8: gg, implement
     @Override
-    public void setRowDescriptionProvider(RowDescriptionProvider<E> provider) {
+    public void setRowDescriptionProvider(DescriptionProvider<? super E> provider) {
         this.rowDescriptionProvider = provider;
 
         if (provider != null) {
-//            component.setRowDescriptionGenerator(createRowDescriptionGenerator());
+            component.setDescriptionGenerator(createRowDescriptionGenerator());
         } else {
-//            component.setRowDescriptionGenerator(null);
+            component.setDescriptionGenerator(null);
         }
     }
 
-//    protected Grid.RowDescriptionGenerator createRowDescriptionGenerator() {
-//        return row -> {
-//            //noinspection unchecked
-//            E item = (E) datasource.getItem(row.getItemId());
-//
-//            return rowDescriptionProvider.getDescription(item);
-//        };
-//    }
+    protected DescriptionGenerator<E> createRowDescriptionGenerator() {
+        return item ->
+                rowDescriptionProvider.getDescription(item);
+    }
 
     @Override
     public Column<E> addGeneratedColumn(String columnId, ColumnGenerator<E, ?> generator) {
@@ -2609,63 +2592,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         getEventRouter().removeListener(LookupSelectionChangeListener.class, listener);
     }
 
-    /*protected class DataGridDsWrapper extends DataGridIndexedCollectionDsWrapper {
-
-        public DataGridDsWrapper(CollectionDatasource.Indexed datasource, Collection<MetaPropertyPath> properties,
-                                 CollectionDsListenersWrapper collectionDsListenersWrapper) {
-            super(datasource, properties, true, collectionDsListenersWrapper);
-        }
-
-        @Override
-        protected void createProperties(View view, MetaClass metaClass) {
-            if (columns.isEmpty()) {
-                super.createProperties(view, metaClass);
-            } else {
-                columns.values().forEach(column ->
-                        properties.add(column.getPropertyPath()));
-            }
-        }
-    }
-
-    protected class SortableDataGridDsWrapper
-            extends SortableDataGridIndexedCollectionDsWrapper {
-
-        public SortableDataGridDsWrapper(CollectionDatasource.Indexed datasource,
-                                         Collection<MetaPropertyPath> properties,
-                                         CollectionDsListenersWrapper collectionDsListenersWrapper) {
-            super(datasource, properties, true, collectionDsListenersWrapper);
-        }
-
-        @Override
-        protected void createProperties(View view, MetaClass metaClass) {
-            if (columns.isEmpty()) {
-                super.createProperties(view, metaClass);
-            } else {
-                columns.values().forEach(column ->
-                        properties.add(column.getPropertyPath()));
-            }
-        }
-
-        @Override
-        public void sort(Object[] propertyId, boolean[] ascending) {
-            // _FIXME: gg, workaround to prevent exception from datasource
-            if (propertyId.length == 1) {
-                super.sort(propertyId, ascending);
-            }
-        }
-
-        @Override
-        public Collection getSortableContainerPropertyIds() {
-            Collection<?> ids = new ArrayList<>(super.getSortableContainerPropertyIds());
-            for (Column column : getColumns()) {
-                if (!column.isSortable()) {
-                    ids.remove(column.getPropertyPath());
-                }
-            }
-            return ids;
-        }
-    }*/
-
     protected class RowStyleGeneratorAdapter<T extends E> implements StyleGenerator<T> {
         @Override
         public String apply(T item) {
@@ -2735,6 +2661,32 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
 
         return joinedStyle != null ? joinedStyle.toString() : null;
+    }
+
+    protected class CellDescriptionGeneratorAdapter<T extends E> implements DescriptionGenerator<T> {
+        protected Column<T> column;
+
+        public CellDescriptionGeneratorAdapter(Column<T> column) {
+            this.column = column;
+        }
+
+        @Override
+        public String apply(T item) {
+            //noinspection unchecked
+            return getGeneratedCellDescription(item, (Column<E>) column);
+        }
+    }
+
+    protected String getGeneratedCellDescription(E item, Column<E> column) {
+        if (column.getDescriptionProvider() != null) {
+            return column.getDescriptionProvider().getDescription(item);
+        }
+
+        if (cellDescriptionProvider != null) {
+            return cellDescriptionProvider.getDescription(item, column.getId());
+        }
+
+        return null;
     }
 
     public static abstract class AbstractRenderer<T extends Entity, V> implements RendererWrapper<V> {
@@ -2825,7 +2777,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         protected Function presentationProvider;
         protected Converter converter;
 
-        private StyleProvider<? super E> styleProvider;
+        protected StyleProvider<? super E> styleProvider;
+        protected DescriptionProvider<? super E> descriptionProvider;
 
         protected final Class type;
         protected Element element;
@@ -3304,6 +3257,19 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         @Override
         public void setStyleProvider(StyleProvider<? super E> styleProvider) {
             this.styleProvider = styleProvider;
+            owner.repaint();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public DescriptionProvider<E> getDescriptionProvider() {
+            return (DescriptionProvider<E>) descriptionProvider;
+        }
+
+        @Override
+        public void setDescriptionProvider(DescriptionProvider<? super E> descriptionProvider) {
+            this.descriptionProvider = descriptionProvider;
+            owner.repaint();
         }
 
         public Grid.Column<E, ?> getGridColumn() {

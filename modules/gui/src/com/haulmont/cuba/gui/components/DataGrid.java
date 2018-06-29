@@ -922,6 +922,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * DataGrid cells. If a cell has both a {@link RowDescriptionProvider row
      * description} and a cell description, the latter has precedence.
      */
+    @Deprecated
     interface CellDescriptionProvider<E extends Entity> {
 
         /**
@@ -941,7 +942,8 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      *
      * @return the description provider or {@code null} if no provider is set
      */
-    CellDescriptionProvider getCellDescriptionProvider();
+    @Deprecated
+    CellDescriptionProvider<E> getCellDescriptionProvider();
 
     /**
      * Sets the {@code CellDescriptionProvider} instance for generating
@@ -952,7 +954,26 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param provider the description provider to use or {@code null} to remove a
      *                 previously set provider if any
      */
-    void setCellDescriptionProvider(CellDescriptionProvider<E> provider);
+    @Deprecated
+    void setCellDescriptionProvider(CellDescriptionProvider<? super E> provider);
+
+    /**
+     * A callback interface for generating optional descriptions (tooltips) for
+     * DataGrid rows and cells. If a description is generated for a row, it is used for
+     * all the cells in the row for which a {@link DescriptionProvider cell
+     * description} is not generated.
+     */
+    interface DescriptionProvider<E extends Entity> {
+
+        /**
+         * Called by DataGrid to generate a description (tooltip). The
+         * description may contain HTML markup.
+         *
+         * @param entity an entity instance represented by the current row
+         * @return the description or {@code null} for no description
+         */
+        String getDescription(E entity);
+    }
 
     /**
      * A callback interface for generating optional descriptions (tooltips) for
@@ -960,16 +981,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * all the cells in the row for which a {@link CellDescriptionProvider cell
      * description} is not generated.
      */
-    interface RowDescriptionProvider<E extends Entity> {
-
-        /**
-         * Called by DataGrid to generate a description (tooltip) for a row. The
-         * description may contain HTML markup.
-         *
-         * @param entity an entity instance represented by the current row
-         * @return the row description or {@code null} for no description
-         */
-        String getDescription(E entity);
+    interface RowDescriptionProvider<E extends Entity> extends DescriptionProvider<E> {
     }
 
     /**
@@ -978,7 +990,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      *
      * @return the description provider or {@code} null if no provider is set
      */
-    RowDescriptionProvider getRowDescriptionProvider();
+    DescriptionProvider<E> getRowDescriptionProvider();
 
     /**
      * Sets the {@code RowDescriptionProvider} instance for generating
@@ -990,7 +1002,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @param provider the description provider to use or {@code null} to remove a
      *                 previously set provider if any
      */
-    void setRowDescriptionProvider(RowDescriptionProvider<E> provider);
+    void setRowDescriptionProvider(DescriptionProvider<? super E> provider);
 
     /**
      * The root class from which all DataGrid event state objects shall be derived.
@@ -2727,6 +2739,23 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * @param styleProvider a style provider to set
          */
         void setStyleProvider(StyleProvider<? super E> styleProvider);
+
+        /**
+         * @return the description provider that is used for generating
+         * descriptions for cells in this column
+         */
+        DescriptionProvider<E> getDescriptionProvider();
+
+        /**
+         * Sets the description provider that is used for generating
+         * descriptions for cells in this column.
+         * <p>
+         * It has priority over {@link DataGrid#setCellDescriptionProvider(CellDescriptionProvider)}.
+         *
+         * @param descriptionProvider a description provider to set,
+         *                            or {@code null} to remove a previously set generator
+         */
+        void setDescriptionProvider(DescriptionProvider<? super E> descriptionProvider);
 
         /**
          * @return The DataGrid this column belongs to

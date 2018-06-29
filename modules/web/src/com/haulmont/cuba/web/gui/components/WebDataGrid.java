@@ -127,6 +127,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -928,7 +929,26 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public void dataGridSourceItemSetChanged(DataGridSource.ItemSetChangeEvent<E> event) {
-        // TODO: gg, #PL-2035, reload selection from ds
+        // #PL-2035, reload selection from ds
+        Set<E> selectedItems = getSelected();
+        Set<E> newSelection = new HashSet<>();
+        for (E item : selectedItems) {
+            //noinspection unchecked
+            if (event.getSource().containsItem(item)) {
+                newSelection.add(item);
+            }
+        }
+
+        if (event.getSource().getState() == BindingState.ACTIVE
+                && event.getSource().getSelectedItem() != null) {
+            newSelection.add(event.getSource().getSelectedItem());
+        }
+
+        if (newSelection.isEmpty()) {
+            setSelected((E) null);
+        } else {
+            setSelectedItems(newSelection);
+        }
 
         refreshActionsState();
     }
@@ -1522,17 +1542,14 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public void setSelected(Collection<E> items) {
-        DataGridSource<E> dataGridSource = getDataGridSource();
-        if (dataGridSource == null
-                || dataGridSource.getState() == BindingState.INACTIVE) {
-            throw new IllegalStateException("DataGridSource is not active");
-        }
+        DataGridSource<E> dataGridSource = getDataGridSourceNN();
 
         for (E item : items) {
-            if (!getDataGridSource().containsItem(item)) {
+            if (!dataGridSource.containsItem(item)) {
                 throw new IllegalStateException("Datasource doesn't contain items");
             }
         }
+
         setSelectedItems(items);
     }
 

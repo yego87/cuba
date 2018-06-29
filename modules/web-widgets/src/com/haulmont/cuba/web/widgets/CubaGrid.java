@@ -17,16 +17,11 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.grid.CubaGridState;
-import com.haulmont.cuba.web.widgets.data.SortableDataProvider;
-import com.vaadin.data.provider.DataProvider;
-import com.vaadin.data.provider.QuerySortOrder;
 import com.vaadin.event.Action;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 //import static com.haulmont.cuba.web.widgets.CubaGrid.BeforeEditorOpenListener.EDITOR_OPEN_METHOD;
@@ -64,11 +59,6 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
 
     public void setGridSelectionModel(GridSelectionModel<T> model) {
         setSelectionModel(model);
-    }
-
-    public void repaint() {
-        // TODO: gg, implement
-//        datasourceExtension.refreshCache();
     }
 
     @Override

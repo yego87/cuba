@@ -87,17 +87,6 @@ public class CubaGridWidget extends Grid<JsonObject> {
 //        return editor;
 //    }
 //
-//    @Override
-//    protected void sortWithSorter(Column<?, ?> column, boolean shiftKeyDown) {
-//        // ignore shiftKeyDown until datasources don't support multi-sorting
-//        super.sortWithSorter(column, false);
-//    }
-//
-//    @Override
-//    protected void sortAfterDelayWithSorter(int delay, boolean multisort) {
-//        // ignore shiftKeyDown until datasources don't support multi-sorting
-//        super.sortAfterDelayWithSorter(delay, false);
-//    }
 
     @Override
     protected boolean isWidgetAllowsClickHandling(Element targetElement) {
@@ -206,6 +195,23 @@ public class CubaGridWidget extends Grid<JsonObject> {
     @Override
     protected EscalatorUpdater createFooterUpdater() {
         return new CubaStaticSectionUpdater(getFooter(), getEscalator().getFooter());
+    }
+
+    @Override
+    protected UserSorter createUserSorter() {
+        return new CubaUserSorter();
+    }
+
+    protected class CubaUserSorter extends UserSorter {
+
+        protected CubaUserSorter() {
+        }
+
+        @Override
+        public void sort(Column<?, ?> column, boolean multisort) {
+            // ignore 'multisort' until datasources don't support multi-sorting
+            super.sort(column, false);
+        }
     }
 
     protected class CubaStaticSectionUpdater extends StaticSectionUpdater {

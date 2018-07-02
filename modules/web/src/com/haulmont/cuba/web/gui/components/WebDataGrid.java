@@ -3337,22 +3337,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         @Override
         public T join(String... columnIds) {
-            T cell = joinInternal(columnIds);
-
-            // TEST: gg, workaround for https://github.com/vaadin/framework/issues/8512
-            switch (cell.getCellType()) {
-                case HTML:
-                    cell.setHtml(cell.getHtml());
-                    break;
-                case TEXT:
-                    cell.setText(cell.getText());
-                    break;
-                case COMPONENT:
-                    cell.setComponent(cell.getComponent());
-                    break;
-            }
-
-            return cell;
+            return joinInternal(columnIds);
         }
 
         protected abstract T joinInternal(String... columnIds);

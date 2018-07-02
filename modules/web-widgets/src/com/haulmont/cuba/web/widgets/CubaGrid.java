@@ -93,6 +93,10 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
         }
     }
 
+    public void repaint() {
+        getDataCommunicator().reset();
+    }
+
     //    @Override
 //    protected void doEditItem() {
 //        clearFields(editorFields);

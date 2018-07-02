@@ -78,6 +78,36 @@ public final class WebWrapperUtils {
         }
     }
 
+    public static ContentMode toContentMode(com.vaadin.shared.ui.ContentMode contentMode) {
+        checkNotNullArgument(contentMode);
+
+        switch (contentMode) {
+            case TEXT:
+                return ContentMode.TEXT;
+            case PREFORMATTED:
+                return ContentMode.PREFORMATTED;
+            case HTML:
+                return ContentMode.HTML;
+            default:
+                throw new IllegalArgumentException("Unknown content mode: " + contentMode);
+        }
+    }
+
+    public static com.vaadin.shared.ui.ContentMode toVaadinContentMode(ContentMode contentMode) {
+        checkNotNullArgument(contentMode);
+
+        switch (contentMode) {
+            case TEXT:
+                return com.vaadin.shared.ui.ContentMode.TEXT;
+            case PREFORMATTED:
+                return com.vaadin.shared.ui.ContentMode.PREFORMATTED;
+            case HTML:
+                return com.vaadin.shared.ui.ContentMode.HTML;
+            default:
+                throw new IllegalArgumentException("Unknown content mode: " + contentMode);
+        }
+    }
+
     public static FilteringMode toVaadinFilterMode(FilterMode filterMode) {
         if (filterMode == null) {
             return null;
@@ -275,22 +305,18 @@ public final class WebWrapperUtils {
     }
 
     public static DataGridStaticCellType toDataGridStaticCellType(GridStaticCellType cellType) {
-        DataGridStaticCellType type;
+        checkNotNullArgument(cellType);
+
         switch (cellType) {
             case HTML:
-                type = DataGridStaticCellType.HTML;
-                break;
+                return DataGridStaticCellType.HTML;
             case TEXT:
-                type = DataGridStaticCellType.TEXT;
-                break;
+                return DataGridStaticCellType.TEXT;
             case WIDGET:
-                type = DataGridStaticCellType.COMPONENT;
-                break;
+                return DataGridStaticCellType.COMPONENT;
             default:
                 throw new UnsupportedOperationException("Unsupported GridStaticCellType");
         }
-
-        return type;
     }
 
     public static ResizeDirection toVaadinResizeDirection(ResizableTextArea.ResizeDirection direction) {
@@ -468,6 +494,8 @@ public final class WebWrapperUtils {
     }
 
     public static DataGrid.ColumnResizeMode convertToDataGridColumnResizeMode(ColumnResizeMode mode) {
+        checkNotNullArgument(mode);
+
         switch (mode) {
             case ANIMATED:
                 return DataGrid.ColumnResizeMode.ANIMATED;
@@ -479,6 +507,8 @@ public final class WebWrapperUtils {
     }
 
     public static ColumnResizeMode convertToGridColumnResizeMode(DataGrid.ColumnResizeMode mode) {
+        checkNotNullArgument(mode);
+
         switch (mode) {
             case ANIMATED:
                 return ColumnResizeMode.ANIMATED;
@@ -490,6 +520,8 @@ public final class WebWrapperUtils {
     }
 
     public static SortDirection convertToGridSortDirection(DataGrid.SortDirection sortDirection) {
+        checkNotNullArgument(sortDirection);
+
         switch (sortDirection) {
             case ASCENDING:
                 return SortDirection.ASCENDING;
@@ -501,6 +533,8 @@ public final class WebWrapperUtils {
     }
 
     public static DataGrid.SortDirection convertToDataGridSortDirection(SortDirection sortDirection) {
+        checkNotNullArgument(sortDirection);
+
         switch (sortDirection) {
             case ASCENDING:
                 return DataGrid.SortDirection.ASCENDING;
@@ -512,6 +546,8 @@ public final class WebWrapperUtils {
     }
 
     public static ScrollDestination convertToGridScrollDestination(DataGrid.ScrollDestination destination) {
+        checkNotNullArgument(destination);
+
         switch (destination) {
             case ANY:
                 return ScrollDestination.ANY;

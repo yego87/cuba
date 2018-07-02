@@ -36,13 +36,16 @@ import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.AbstractAction;
 import com.haulmont.cuba.gui.components.Action;
 import com.haulmont.cuba.gui.components.ButtonsPanel;
+import com.haulmont.cuba.gui.components.ContentMode;
 import com.haulmont.cuba.gui.components.DataGrid;
+import com.haulmont.cuba.gui.components.DescriptionProvider;
 import com.haulmont.cuba.gui.components.Formatter;
 import com.haulmont.cuba.gui.components.KeyCombination;
 import com.haulmont.cuba.gui.components.LookupComponent;
 import com.haulmont.cuba.gui.components.MouseEventDetails;
 import com.haulmont.cuba.gui.components.RowsCount;
 import com.haulmont.cuba.gui.components.SecuredActionsHolder;
+import com.haulmont.cuba.gui.components.StyleProvider;
 import com.haulmont.cuba.gui.components.VisibilityChangeNotifier;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.WindowDelegate;
@@ -101,6 +104,7 @@ import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.event.selection.MultiSelectionEvent;
+import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.grid.HeightMode;
 import com.vaadin.ui.Component;
@@ -709,7 +713,8 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         setupGridColumnProperties(gridColumn, column);
 
         gridColumn.setStyleGenerator(new CellStyleGeneratorAdapter<>(column));
-        gridColumn.setDescriptionGenerator(new CellDescriptionGeneratorAdapter<>(column));
+        gridColumn.setDescriptionGenerator(new CellDescriptionGeneratorAdapter<>(column),
+                WebWrapperUtils.toVaadinContentMode(column.getDescriptionContentMode()));
 
         component.setColumnOrder(getColumnOrder());
     }
@@ -788,8 +793,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected void addColumnId(Grid.Column<E, ?> gridColumn, Column<E> column) {
-        // TEST: gg, probably we need to use internalId
-        component.addColumnId(gridColumn.getId(), column.getId());
+        component.addColumnId(gridColumn.getState().internalId, column.getId());
     }
 
     protected void removeColumnId(Grid.Column<E, ?> gridColumn) {
@@ -1782,7 +1786,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public void repaint() {
-        component.markAsDirtyRecursive();
+        component.repaint();
     }
 
     protected boolean canBeSorted(@Nullable DataGridSource<E> dataGridSource) {
@@ -2177,10 +2181,16 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
     @Override
     public void setRowDescriptionProvider(DescriptionProvider<? super E> provider) {
+        setRowDescriptionProvider(provider, ContentMode.PREFORMATTED);
+    }
+
+    @Override
+    public void setRowDescriptionProvider(DescriptionProvider<? super E> provider, ContentMode contentMode) {
         this.rowDescriptionProvider = provider;
 
         if (provider != null) {
-            component.setDescriptionGenerator(createRowDescriptionGenerator());
+            component.setDescriptionGenerator(createRowDescriptionGenerator(),
+                    WebWrapperUtils.toVaadinContentMode(contentMode));
         } else {
             component.setDescriptionGenerator(null);
         }
@@ -2777,6 +2787,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         protected StyleProvider<? super E> styleProvider;
         protected DescriptionProvider<? super E> descriptionProvider;
+        protected ContentMode descriptionContentMode = ContentMode.PREFORMATTED;
 
         protected final Class type;
         protected Element element;
@@ -3266,8 +3277,24 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         @Override
         public void setDescriptionProvider(DescriptionProvider<? super E> descriptionProvider) {
+            setDescriptionProvider(descriptionProvider, ContentMode.PREFORMATTED);
+        }
+
+        @Override
+        public void setDescriptionProvider(DescriptionProvider<? super E> descriptionProvider,
+                                           ContentMode contentMode) {
             this.descriptionProvider = descriptionProvider;
+            this.descriptionContentMode = contentMode;
+
+            if (gridColumn != null) {
+                gridColumn.getState().tooltipContentMode = WebWrapperUtils.toVaadinContentMode(contentMode);
+            }
+
             owner.repaint();
+        }
+
+        public ContentMode getDescriptionContentMode() {
+            return descriptionContentMode;
         }
 
         public Grid.Column<E, ?> getGridColumn() {

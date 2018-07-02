@@ -104,7 +104,6 @@ import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.event.selection.MultiSelectionEvent;
-import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.grid.HeightMode;
 import com.vaadin.ui.Component;
@@ -1977,7 +1976,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     protected void applyColumnSettings(Element element, Collection<Column<E>> oldColumns) {
         final Element columnsElem = element.element("columns");
 
-        List<Column> newColumns = new ArrayList<>();
+        List<Column<E>> newColumns = new ArrayList<>();
 
         // add columns from saved settings
         for (Element colElem : Dom4j.elements(columnsElem, "columns")) {
@@ -2014,37 +2013,30 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             newColumns.get(0).setCollapsed(false);
         }
 
-        // VAADIN8: gg, implement
-        /*List<String> properties = newColumns.stream()
-                .map(Column::getId)
-                .collect(Collectors.toList());
         // We don't save settings for columns hidden by security permissions,
         // so we need to return them back to they initial positions
         columnsOrder = restoreColumnsOrder(newColumns);
-        component.setColumnOrder(properties.toArray(new String[0]));
+        component.setColumnOrder(newColumns.stream()
+                .map(Column::getId)
+                .toArray(String[]::new));
 
         if (isSortable()) {
             // apply sorting
             component.clearSortOrder();
-            String sortPropertyName = columnsElem.attributeValue("sortProperty");
-            if (!StringUtils.isEmpty(sortPropertyName)) {
-                EntityDataGridSource<E> entityDataGridSource = getEntityDataGridSource();
-                if (entityDataGridSource != null) {
-                    MetaPropertyPath sortProperty = entityDataGridSource.getEntityMetaClass()
-                            .getPropertyPath(sortPropertyName);
-                    if (sortProperty != null && properties.contains(sortProperty)) {
-
-                        String sortDirection = columnsElem.attributeValue("sortDirection");
-                        if (StringUtils.isNotEmpty(sortDirection)) {
-                            List<com.vaadin.v7.data.sort.SortOrder> sortOrders = Collections.singletonList(
-                                    new com.vaadin.v7.data.sort.SortOrder(sortProperty,
-                                            com.vaadin.shared.data.sort.SortDirection.valueOf(sortDirection)));
-                            component.setSortOrder(sortOrders);
-                        }
+            String sortColumnId = columnsElem.attributeValue("sortColumnId");
+            if (!StringUtils.isEmpty(sortColumnId)) {
+                Grid.Column<E, ?> column = component.getColumn(sortColumnId);
+                if (column != null) {
+                    String sortDirection = columnsElem.attributeValue("sortDirection");
+                    if (StringUtils.isNotEmpty(sortDirection)) {
+                        List<GridSortOrder<E>> sortOrders = Collections.singletonList(new GridSortOrder<>(column,
+                                com.vaadin.shared.data.sort.SortDirection.valueOf(sortDirection))
+                        );
+                        component.setSortOrder(sortOrders);
                     }
                 }
             }
-        }*/
+        }
     }
 
     @Override
@@ -2072,13 +2064,12 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             colElem.addAttribute("collapsed", Boolean.toString(column.isCollapsed()));
         }
 
-        // VAADIN8: gg, implement
-//        List<com.vaadin.v7.data.sort.SortOrder> sortOrders = component.getSortOrder();
-//        if (!sortOrders.isEmpty()) {
-//            com.vaadin.v7.data.sort.SortOrder sortOrder = sortOrders.get(0);
-//            columnsElem.addAttribute("sortProperty", sortOrder.getPropertyId().toString());
-//            columnsElem.addAttribute("sortDirection", sortOrder.getDirection().toString());
-//        }
+        List<GridSortOrder<E>> sortOrders = component.getSortOrder();
+        if (!sortOrders.isEmpty()) {
+            GridSortOrder<E> sortOrder = sortOrders.get(0);
+            columnsElem.addAttribute("sortColumnId", sortOrder.getSorted().getId());
+            columnsElem.addAttribute("sortDirection", sortOrder.getDirection().toString());
+        }
 
         return true;
     }

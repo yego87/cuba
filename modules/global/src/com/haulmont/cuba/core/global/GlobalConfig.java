@@ -118,7 +118,7 @@ public interface GlobalConfig extends Config {
      * @return true if in test mode
      */
     @Property("cuba.testMode")
-    @DefaultBoolean(false)
+    @DefaultBoolean(true)
     boolean getTestMode();
 
     /**

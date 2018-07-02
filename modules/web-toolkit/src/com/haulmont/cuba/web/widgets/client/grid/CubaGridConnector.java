@@ -16,11 +16,13 @@
 
 package com.haulmont.cuba.web.widgets.client.grid;
 
-import com.google.gson.JsonObject;
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.vaadin.client.connectors.grid.GridConnector;
+import com.vaadin.client.widgets.Grid.Column;
 import com.vaadin.shared.ui.Connect;
-import com.vaadin.ui.Grid;
+import elemental.json.JsonObject;
+
+import java.util.List;
 
 @Connect(CubaGrid.class)
 public class CubaGridConnector extends GridConnector {
@@ -35,10 +37,23 @@ public class CubaGridConnector extends GridConnector {
         return (CubaGridState) super.getState();
     }
 
-    /*@Override
-    protected void preUpdateColumnFromState(Grid.Column<?, JsonObject> column, GridColumnState columnState) {
-        if (getState().columnIds != null && getState().columnIds.containsKey(columnState.id)) {
-            getWidget().addColumnId(column, getState().columnIds.get(columnState.id));
+    @Override
+    protected void updateColumns() {
+        super.updateColumns();
+
+        if (getWidget().getColumnIds() != null) {
+            getWidget().setColumnIds(null);
         }
-    }*/
+
+        if (getState().columnIds != null) {
+            List<Column<?, JsonObject>> currentColumns = getWidget().getColumns();
+
+            for (Column<?, JsonObject> column : currentColumns) {
+                String id = getColumnId(column);
+                if (getState().columnIds.containsKey(id)) {
+                    getWidget().addColumnId(column, getState().columnIds.get(id));
+                }
+            }
+        }
+    }
 }

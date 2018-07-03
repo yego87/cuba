@@ -520,6 +520,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * @return the item that is currently being edited, or
      * {@code null} if no item is being edited at the moment
      */
+    @Nullable
     E getEditedItem();
 
     /**

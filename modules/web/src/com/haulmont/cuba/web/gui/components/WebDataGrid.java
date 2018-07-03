@@ -709,10 +709,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         setupGridColumnProperties(gridColumn, column);
 
-        gridColumn.setStyleGenerator(new CellStyleGeneratorAdapter<>(column));
-        gridColumn.setDescriptionGenerator(new CellDescriptionGeneratorAdapter<>(column),
-                WebWrapperUtils.toVaadinContentMode(column.getDescriptionContentMode()));
-
         component.setColumnOrder(getColumnOrder());
     }
 
@@ -755,6 +751,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         //noinspection unchecked
         gridColumn.setRenderer(getDefaultPresentationValueProvider(column), getDefaultRenderer(column));
+        gridColumn.setStyleGenerator(new CellStyleGeneratorAdapter<>(column));
+        gridColumn.setDescriptionGenerator(new CellDescriptionGeneratorAdapter<>(column),
+                WebWrapperUtils.toVaadinContentMode(((ColumnImpl) column).getDescriptionContentMode()));
 
         ((ColumnImpl<E>) column).setGridColumn(gridColumn);
     }
@@ -875,11 +874,10 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
             setVisibleColumns(visibleColumnsOrder);
 
-            // TEST: gg, why do we need this?
-            /*for (Column<E> column : visibleColumnsOrder) {
+            for (Column<E> column : visibleColumnsOrder) {
                 Grid.Column<E, ?> gridColumn = ((ColumnImpl<E>) column).getGridColumn();
                 setupGridColumnProperties(gridColumn, column);
-            }*/
+            }
 
             component.setColumnOrder(getColumnOrder());
 

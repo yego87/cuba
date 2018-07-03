@@ -5,7 +5,6 @@ import com.haulmont.bali.db.QueryRunner;
 import com.haulmont.cuba.core.EntityChangedEvent;
 import com.haulmont.cuba.core.Persistence;
 import com.haulmont.cuba.core.global.EntityStates;
-import com.haulmont.cuba.core.sys.AppContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -24,15 +23,12 @@ public class TestEntityChangedEventListener {
         public final boolean detached;
         public final boolean committedToDb;
         public final boolean inPersistenceContext;
-        public final boolean authorization;
 
-        public Info(EntityChangedEvent event, boolean detached, boolean committedToDb, boolean inPersistenceContext,
-                    boolean authorization) {
+        public Info(EntityChangedEvent event, boolean detached, boolean committedToDb, boolean inPersistenceContext) {
             this.event = event;
             this.detached = detached;
             this.committedToDb = committedToDb;
             this.inPersistenceContext = inPersistenceContext;
-            this.authorization = authorization;
         }
     }
 
@@ -45,21 +41,19 @@ public class TestEntityChangedEventListener {
     private EntityStates entityStates;
 
     @EventListener
-    void beforeCommitPurchaseItem(EntityChangedEvent<Order> event) {
+    void beforeCommit(EntityChangedEvent<Order> event) {
         received.add(new Info(event,
                 entityStates.isDetached(event.getEntity()),
                 isCommitted(event.getEntity()),
-                persistence.getEntityManager().getDelegate().contains(event.getEntity()),
-                AppContext.getSecurityContextNN().isAuthorizationRequired()));
+                persistence.getEntityManager().getDelegate().contains(event.getEntity())));
     }
 
     @TransactionalEventListener
-    void afterCommitPurchaseItem(EntityChangedEvent<Order> event) {
+    void afterCommit(EntityChangedEvent<Order> event) {
         received.add(new Info(event,
                 entityStates.isDetached(event.getEntity()),
                 isCommitted(event.getEntity()),
-                false,
-                AppContext.getSecurityContextNN().isAuthorizationRequired()));
+                false));
     }
 
     private boolean isCommitted(Order entity) {

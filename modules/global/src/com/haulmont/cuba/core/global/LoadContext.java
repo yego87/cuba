@@ -52,6 +52,7 @@ public class LoadContext<E extends Entity> implements DataLoadContext, Serializa
 
     protected boolean loadDynamicAttributes;
     protected boolean loadPartialEntities = true;
+    protected boolean authorizationRequired;
     protected boolean joinTransaction;
 
     protected Map<String, Object> dbHints; // lazy initialized map
@@ -251,6 +252,15 @@ public class LoadContext<E extends Entity> implements DataLoadContext, Serializa
         return this;
     }
 
+    public boolean isAuthorizationRequired() {
+        return authorizationRequired;
+    }
+
+    public LoadContext<E> setAuthorizationRequired(boolean authorizationRequired) {
+        this.authorizationRequired = authorizationRequired;
+        return this;
+    }
+
     public boolean isJoinTransaction() {
         return joinTransaction;
     }
@@ -281,6 +291,7 @@ public class LoadContext<E extends Entity> implements DataLoadContext, Serializa
             ctx.getDbHints().putAll(dbHints);
         }
         ctx.loadDynamicAttributes = loadDynamicAttributes;
+        ctx.authorizationRequired = authorizationRequired;
         ctx.joinTransaction = joinTransaction;
         return ctx;
     }

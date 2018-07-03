@@ -115,27 +115,6 @@ class EntityChangedEventTest extends Specification {
         assert info.detached && !info.inPersistenceContext
     }
 
-    def "no authorization inside event listeners"() {
-        Order order = metadata.create(Order)
-        order.setNumber('111')
-        order.setAmount(10)
-
-        when:
-
-        dataManager.secure().commit(order)
-
-        then:
-
-        listener.received.size() == 2
-
-        !listener.received[0].authorization
-        !listener.received[0].authorization
-
-        cleanup:
-
-        cont.deleteRecord(order)
-    }
-
     def "entity in event has correct view"() {
 
         Customer customer = metadata.create(Customer)

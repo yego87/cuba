@@ -2,6 +2,7 @@ package spec.cuba.core.data_manager
 
 import com.haulmont.cuba.core.Persistence
 import com.haulmont.cuba.core.Transaction
+import com.haulmont.cuba.core.TransactionalDataManager
 import com.haulmont.cuba.core.entity.BaseEntityInternalAccess
 import com.haulmont.cuba.core.global.*
 import com.haulmont.cuba.core.sys.listener.EntityListenerManager
@@ -21,7 +22,7 @@ class DataManagerTransactionalTest extends Specification {
     public TestContainer cont = TestContainer.Common.INSTANCE
 
     private Persistence persistence
-    private DataManager dataManager
+    private TransactionalDataManager dataManager
     private ViewRepository viewRepository
     private View baseView
     private Metadata metadata
@@ -30,7 +31,7 @@ class DataManagerTransactionalTest extends Specification {
     void setup() {
         metadata = cont.metadata()
         persistence = cont.persistence()
-        dataManager = AppBeans.get(DataManager)
+        dataManager = AppBeans.get(TransactionalDataManager)
         viewRepository = AppBeans.get(ViewRepository)
         baseView = viewRepository.getView(Customer, '_base')
         entityStates = AppBeans.get(EntityStates)
@@ -54,7 +55,7 @@ class DataManagerTransactionalTest extends Specification {
 
         when:
 
-        dataManager.transactional().commit(customer1)
+        dataManager.save(customer1)
 
 //        dataManager.commit(new CommitContext(customer1).setJoinTransaction(true))
 
@@ -70,7 +71,7 @@ class DataManagerTransactionalTest extends Specification {
 
         TestCustomerListenerBean.events.clear()
 
-        Customer customer = dataManager.transactional().load(Customer).id(customer1.id).one()
+        Customer customer = dataManager.load(Customer).id(customer1.id).one()
 
 //        LoadContext<Customer> loadContext = LoadContext.create(Customer).setId(customer1.id)
 //                .setJoinTransaction(true)
@@ -104,7 +105,7 @@ class DataManagerTransactionalTest extends Specification {
 
         Transaction tx = persistence.createTransaction()
         try {
-            dataManager.transactional().commit(customer1)
+            dataManager.save(customer1)
 
 //            dataManager.commit(new CommitContext(customer1).setJoinTransaction(true))
         } finally {
@@ -124,7 +125,7 @@ class DataManagerTransactionalTest extends Specification {
 
         when:
 
-        Customer customer = dataManager.transactional().commit(customer1)
+        Customer customer = dataManager.save(customer1)
 
         then:
 
@@ -141,14 +142,14 @@ class DataManagerTransactionalTest extends Specification {
     def "update returns detached entities"() {
         Customer customer1 = metadata.create(Customer)
         customer1.name = 'Smith'
-        Customer customer2 = dataManager.commit(customer1)
+        Customer customer2 = dataManager.save(customer1)
 
         Transaction tx = persistence.createTransaction()
 
         when:
 
         customer2.name = 'Johns'
-        Customer customer = dataManager.transactional().commit(customer2)
+        Customer customer = dataManager.save(customer2)
 
         then:
 
@@ -168,7 +169,7 @@ class DataManagerTransactionalTest extends Specification {
         Order order1 = new Order(customer: customer1, number: '111')
         def orderLine11 = new OrderLine(order: order1, product: 'abc')
         def orderLine12 = new OrderLine(order: order1, product: 'def')
-        dataManager.commit(customer1, order1, orderLine11, orderLine12)
+        dataManager.save(customer1, order1, orderLine11, orderLine12)
 
         View orderView = new View(Order)
                 .addProperty('number')
@@ -179,7 +180,7 @@ class DataManagerTransactionalTest extends Specification {
 
         when:
 
-        Order order = dataManager.transactional().load(Order).id(order1.id).view(orderView).one()
+        Order order = dataManager.load(Order).id(order1.id).view(orderView).one()
 
         then:
 
@@ -196,7 +197,7 @@ class DataManagerTransactionalTest extends Specification {
         Order order1 = new Order(customer: customer1, number: '111')
         def orderLine11 = new OrderLine(order: order1, product: 'abc')
         def orderLine12 = new OrderLine(order: order1, product: 'def')
-        dataManager.commit(customer1, order1, orderLine11, orderLine12)
+        dataManager.save(customer1, order1, orderLine11, orderLine12)
 
         View orderView = new View(Order)
                 .addProperty('number')
@@ -207,7 +208,7 @@ class DataManagerTransactionalTest extends Specification {
 
         when:
 
-        List<Order> orders = dataManager.transactional().load(Order)
+        List<Order> orders = dataManager.load(Order)
                 .query('select e from test$Order e where e.id = :id').parameter('id', order1.id)
                 .view(orderView).list()
 

@@ -193,9 +193,21 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     }
 
     /**
-     * Marks all the items in the current data provider as selected
+     * Marks all the items in the current data source as selected
      */
     void selectAll();
+
+    /**
+     * Deselects the given item. If the item is not currently selected, does nothing.
+     *
+     * @param item the item to deselect, not null
+     */
+    void deselect(E item);
+
+    /**
+     * Deselects all the items in the current data source
+     */
+    void deselectAll();
 
     /**
      * Sorts the DataGrid data for passed column id in the chosen sort direction.
@@ -246,9 +258,71 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * Sets the visibility of the header section.
      *
-     * @param headerVisible {@code true} to show header section, {@code false} to hide
+     * @param headerVisible {@code true} to show the header section, {@code false} to hide
      */
     void setHeaderVisible(boolean headerVisible);
+
+    /**
+     * Returns the visibility of the footer section.
+     *
+     * @return {@code true} if visible, {@code false} otherwise
+     */
+    boolean isFooterVisible();
+
+    /**
+     * Sets the visibility of the footer section.
+     *
+     * @param footerVisible {@code true} to show the footer section, {@code false} to hide
+     */
+    void setFooterVisible(boolean footerVisible);
+
+    /**
+     * Returns the current body row height.
+     *
+     * @return body row height, -1 if height is AUTO
+     */
+    double getBodyRowHeight();
+
+    /**
+     * Sets the height of a body row. If -1 (default), the row height is
+     * calculated based on the theme for an empty row before the DataGrid is
+     * displayed.
+     *
+     * @param rowHeight the height of a row in pixels or -1 for AUTO
+     */
+    void setBodyRowHeight(double rowHeight);
+
+    /**
+     * Returns the current header row height.
+     *
+     * @return header row height, -1 if height is AUTO
+     */
+    double getHeaderRowHeight();
+
+    /**
+     * Sets the body of a body row. If -1 (default), the row height is
+     * calculated based on the theme for an empty row before the DataGrid is
+     * displayed.
+     *
+     * @param rowHeight the height of a row in pixels or -1 for AUTO
+     */
+    void setHeaderRowHeight(double rowHeight);
+
+    /**
+     * Returns the current footer row height.
+     *
+     * @return footer row height, -1 if height is AUTO
+     */
+    double getFooterRowHeight();
+
+    /**
+     * Sets the body of a footer row. If -1 (default), the row height is
+     * calculated based on the theme for an empty row before the DataGrid is
+     * displayed.
+     *
+     * @param rowHeight the height of a row in pixels or -1 for AUTO
+     */
+    void setFooterRowHeight(double rowHeight);
 
     /**
      * @return {@code true} if context menu is enabled, {@code false} otherwise

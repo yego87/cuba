@@ -1467,6 +1467,46 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     @Override
+    public boolean isFooterVisible() {
+        return component.isFooterVisible();
+    }
+
+    @Override
+    public void setFooterVisible(boolean footerVisible) {
+        component.setFooterVisible(footerVisible);
+    }
+
+    @Override
+    public double getBodyRowHeight() {
+        return component.getBodyRowHeight();
+    }
+
+    @Override
+    public void setBodyRowHeight(double rowHeight) {
+        component.setBodyRowHeight(rowHeight);
+    }
+
+    @Override
+    public double getHeaderRowHeight() {
+        return component.getHeaderRowHeight();
+    }
+
+    @Override
+    public void setHeaderRowHeight(double rowHeight) {
+        component.setHeaderRowHeight(rowHeight);
+    }
+
+    @Override
+    public double getFooterRowHeight() {
+        return component.getFooterRowHeight();
+    }
+
+    @Override
+    public void setFooterRowHeight(double rowHeight) {
+        component.setFooterRowHeight(rowHeight);
+    }
+
+    @Override
     public boolean isContextMenuEnabled() {
         return contextMenu.isEnabled();
     }
@@ -1585,6 +1625,18 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         if (isMultiSelect()) {
             ((SelectionModel.Multi) component.getSelectionModel()).selectAll();
         }
+    }
+
+    @Override
+    public void deselect(E item) {
+        checkNotNullArgument(item);
+
+        component.deselect(item);
+    }
+
+    @Override
+    public void deselectAll() {
+        component.deselectAll();
     }
 
     @Override

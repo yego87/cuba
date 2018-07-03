@@ -143,7 +143,6 @@ import java.util.stream.Collectors;
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 import static com.haulmont.cuba.gui.ComponentsHelper.findActionById;
 
-@SuppressWarnings({"StatementWithEmptyBody", "RedundantThrows"})
 public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid<E>>
         implements DataGrid<E>, SecuredActionsHolder, LookupComponent.LookupSelectionChangeNotifier,
         DataGridSourceEventsDelegate<E>, InitializingBean {
@@ -319,7 +318,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         this.messages = messages;
     }
 
-    @SuppressWarnings("unused")
     @Inject
     public void setMessageTools(MessageTools messageTools) {
         this.messageTools = messageTools;
@@ -1079,7 +1077,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
-    @SuppressWarnings("unused")
     protected Datasource createItemDatasource(Entity item) {
         EntityDataGridSource<E> entityDataGridSource = getEntityDataGridSourceNN();
 
@@ -2803,7 +2800,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         }
     }
 
-    @SuppressWarnings("deprecation")
     protected static class ColumnImpl<E extends Entity> implements Column<E> {
 
         protected final String id;
@@ -2826,6 +2822,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         protected AbstractRenderer<E, ?> renderer;
         protected Function presentationProvider;
+        @SuppressWarnings("deprecation")
         protected Converter converter;
 
         protected StyleProvider<? super E> styleProvider;
@@ -3236,7 +3233,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return type;
         }
 
-        @SuppressWarnings("unused")
         public boolean isGenerated() {
             return generated;
         }
@@ -3854,12 +3850,10 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             getEventRouter().removeListener(CollectionDatasource.CollectionChangeListener.class, listener);
         }
 
-        @SuppressWarnings("unused")
         public void addItemChangeListener(Datasource.ItemChangeListener listener) {
             getEventRouter().addListener(Datasource.ItemChangeListener.class, listener);
         }
 
-        @SuppressWarnings("unused")
         public void removeItemChangeListener(Datasource.ItemChangeListener listener) {
             getEventRouter().removeListener(Datasource.ItemChangeListener.class, listener);
         }

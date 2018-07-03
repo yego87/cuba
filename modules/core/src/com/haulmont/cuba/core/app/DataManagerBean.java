@@ -67,7 +67,7 @@ public class DataManagerBean implements DataManager {
         DataStore storage = storeFactory.get(storeName);
         E entity = storage.load(context);
         if (entity != null)
-            readCrossDataStoreReferences(Collections.singletonList(entity), context.getView(), metaClass);
+            readCrossDataStoreReferences(Collections.singletonList(entity), context.getView(), metaClass, context.isJoinTransaction());
         return entity;
     }
 
@@ -82,7 +82,7 @@ public class DataManagerBean implements DataManager {
         }
         DataStore storage = storeFactory.get(storeName);
         List<E> entities = storage.loadList(context);
-        readCrossDataStoreReferences(entities, context.getView(), metaClass);
+        readCrossDataStoreReferences(entities, context.getView(), metaClass, context.isJoinTransaction());
         return entities;
     }
 
@@ -189,6 +189,7 @@ public class DataManagerBean implements DataManager {
             entityLog.processLoggingForCurrentThread(false);
             try {
                 CommitContext cc = new CommitContext();
+                cc.setJoinTransaction(context.isJoinTransaction());
                 for (Entity entity : result) {
                     if (toRepeat.contains(entity)) {
                         cc.addInstanceToCommit(entity, context.getViews().get(entity));
@@ -215,6 +216,11 @@ public class DataManagerBean implements DataManager {
         } else if (committedEntity instanceof BaseGenericIdEntity && metadataTools.isTransient(committedEntity.getClass())) {
             BaseEntityInternalAccess.setNew((BaseGenericIdEntity) committedEntity, false);
         }
+    }
+
+    @Override
+    public EntitySet commit(Entity... entities) {
+        return commit(new CommitContext(entities));
     }
 
     @Override
@@ -268,6 +274,7 @@ public class DataManagerBean implements DataManager {
         CommitContext newCtx = new CommitContext();
         newCtx.setSoftDeletion(context.isSoftDeletion());
         newCtx.setDiscardCommitted(context.isDiscardCommitted());
+        newCtx.setJoinTransaction(context.isJoinTransaction());
         return newCtx;
     }
 
@@ -282,6 +289,25 @@ public class DataManagerBean implements DataManager {
                     new SecureDataManagerInvocationHandler(this)
             );
         }
+    }
+
+    @Override
+    public <E extends Entity<K>, K> FluentLoader<E, K> load(Class<E> entityClass) {
+        return new FluentLoader<>(entityClass, wrappedDataManager());
+    }
+
+    @Override
+    public FluentValuesLoader loadValues(String queryString) {
+        return new FluentValuesLoader(queryString, wrappedDataManager());
+    }
+
+    @Override
+    public <T> FluentValueLoader<T> loadValue(String queryString, Class<T> valueClass) {
+        return new FluentValueLoader<>(queryString, valueClass, wrappedDataManager());
+    }
+
+    private DataManager wrappedDataManager() {
+        return AppContext.getSecurityContextNN().isAuthorizationRequired() ? secure() : this;
     }
 
     protected boolean writeCrossDataStoreReferences(Entity entity, Collection<Entity> allEntities) {
@@ -338,11 +364,13 @@ public class DataManagerBean implements DataManager {
         return repeatRequired;
     }
 
-    protected void readCrossDataStoreReferences(Collection<? extends Entity> entities, View view, MetaClass metaClass) {
+    protected void readCrossDataStoreReferences(Collection<? extends Entity> entities, View view, MetaClass metaClass,
+                                                boolean joinTransaction) {
         if (Stores.getAdditional().isEmpty() || entities.isEmpty() || view == null)
             return;
 
-        CrossDataStoreReferenceLoader crossDataStoreReferenceLoader = AppBeans.getPrototype(CrossDataStoreReferenceLoader.NAME, metaClass, view);
+        CrossDataStoreReferenceLoader crossDataStoreReferenceLoader = AppBeans.getPrototype(
+                CrossDataStoreReferenceLoader.NAME, metaClass, view, joinTransaction);
         crossDataStoreReferenceLoader.processEntities(entities);
     }
 

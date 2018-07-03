@@ -23,7 +23,6 @@ import com.haulmont.cuba.core.entity.KeyValueEntity;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Central interface to provide CRUD functionality. Can be used on both middle and client tiers.
@@ -113,6 +112,13 @@ public interface DataManager {
      * @return          set of committed instances
      */
     EntitySet commit(CommitContext context);
+
+    /**
+     * Commits new or detached entity instances to the data store.
+     * @param entities  entities to commit
+     * @return          set of committed instances
+     */
+    EntitySet commit(Entity... entities);
 
     /**
      * Commits the entity to the data store.

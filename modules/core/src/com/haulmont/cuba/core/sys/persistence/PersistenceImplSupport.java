@@ -193,6 +193,17 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         traverseEntities(getInstanceContainerResourceHolder(storeName), new OnFlushEntityVisitor(storeName), warnAboutImplicitFlush);
     }
 
+    protected void fireBeforeDetachEntityListener(BaseGenericIdEntity entity, String storeName) {
+        if (!BaseEntityInternalAccess.isDetached(entity)) {
+            CubaEntityFetchGroup.setAccessLocalUnfetched(false);
+            try {
+                entityListenerManager.fireListener(entity, EntityListenerType.BEFORE_DETACH, storeName);
+            } finally {
+                CubaEntityFetchGroup.setAccessLocalUnfetched(true);
+            }
+        }
+    }
+
     protected boolean isDeleted(BaseGenericIdEntity entity, AttributeChangeListener changeListener) {
         if ((entity instanceof SoftDelete)) {
             ObjectChangeSet changeSet = changeListener.getObjectChangeSet();
@@ -261,6 +272,36 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         }
     }
 
+    public void detach(EntityManager entityManager, Entity entity) {
+        UnitOfWork unitOfWork = entityManager.getDelegate().unwrap(UnitOfWork.class);
+        String storeName = getStorageName(unitOfWork);
+
+        if (entity instanceof BaseGenericIdEntity) {
+            fireBeforeDetachEntityListener((BaseGenericIdEntity) entity, storeName);
+
+            if (!BaseEntityInternalAccess.isNew((BaseGenericIdEntity) entity)) {
+                // do not unregister new entities because they must be made non-new in afterCompletion,
+                // so we need to keep them in the holder until the transaction ends
+                getInstanceContainerResourceHolder(storeName).unregisterInstance(entity, unitOfWork);
+            }
+        }
+
+        makeDetached(entity);
+    }
+
+    protected void makeDetached(Object instance) {
+        if (instance instanceof BaseGenericIdEntity) {
+            BaseEntityInternalAccess.setManaged((BaseGenericIdEntity) instance, false);
+            BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, true);
+        }
+        if (instance instanceof FetchGroupTracker) {
+            ((FetchGroupTracker) instance)._persistence_setSession(null);
+        }
+        if (instance instanceof ChangeTracker) {
+            ((ChangeTracker) instance)._persistence_setPropertyChangeListener(null);
+        }
+    }
+
     public interface EntityVisitor {
         boolean visit(BaseGenericIdEntity entity);
     }
@@ -296,6 +337,13 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                 unitOfWorkMap.put(unitOfWork, instances);
             }
             instances.add(instance);
+        }
+
+        protected void unregisterInstance(Entity instance, UnitOfWork unitOfWork) {
+            Set<Entity> instances = unitOfWorkMap.get(unitOfWork);
+            if (instances != null) {
+                instances.remove(instance);
+            }
         }
 
         protected Collection<Entity> getInstances(UnitOfWork unitOfWork) {
@@ -373,15 +421,11 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                             fetchGroupTracker._persistence_setFetchGroup(new CubaEntityFetchGroup(fetchGroup));
                     }
 
-                    if (PersistenceHelper.isNew(entity)) {
-                        typeNames.add(entity.getMetaClass().getName());
-                    }
-
-                    CubaEntityFetchGroup.setAccessLocalUnfetched(false);
-                    try {
-                        entityListenerManager.fireListener(entity, EntityListenerType.BEFORE_DETACH, container.getStoreName());
-                    } finally {
-                        CubaEntityFetchGroup.setAccessLocalUnfetched(true);
+                    if (entity instanceof BaseGenericIdEntity) {
+                        if (BaseEntityInternalAccess.isNew((BaseGenericIdEntity) entity)) {
+                            typeNames.add(entity.getMetaClass().getName());
+                        }
+                        fireBeforeDetachEntityListener((BaseGenericIdEntity) entity, container.getStoreName());
                     }
                 }
             }
@@ -413,9 +457,8 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                                 // new instances become not new and detached only if the transaction was committed
                                 BaseEntityInternalAccess.setNew((BaseGenericIdEntity) instance, false);
                             }
-                        } else {
-                            // commit failed
-                            detachInstance(instance); // if the transaction was committed, it was performed in beforeCommit
+                        } else { // commit failed or the transaction was rolled back
+                            makeDetached(instance);
                             if (BaseEntityInternalAccess.isNew((BaseGenericIdEntity) instance)) {
                                 // make new entities non-detached again
                                 BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, false);
@@ -432,25 +475,13 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         }
 
         private void detachAll() {
-            persistence.getEntityManager().getDelegate().flush();
-            persistence.getEntityManager().getDelegate().clear();
+            javax.persistence.EntityManager jpaEm = persistence.getEntityManager().getDelegate();
+            jpaEm.flush();
+            jpaEm.clear();
 
             Collection<Entity> instances = container.getAllInstances();
             for (Object instance : instances) {
-                detachInstance(instance);
-            }
-        }
-
-        private void detachInstance(Object instance) {
-            if (instance instanceof BaseGenericIdEntity) {
-                BaseEntityInternalAccess.setManaged((BaseGenericIdEntity) instance, false);
-                BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, true);
-            }
-            if (instance instanceof FetchGroupTracker) {
-                ((FetchGroupTracker) instance)._persistence_setSession(null);
-            }
-            if (instance instanceof ChangeTracker) {
-                ((ChangeTracker) instance)._persistence_setPropertyChangeListener(null);
+                makeDetached(instance);
             }
         }
 
@@ -504,8 +535,24 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         }
 
         private void publishEntityChangedEvents(List<EntityChangedEvent> collectedEvents) {
+            if (collectedEvents.isEmpty())
+                return;
+
+            List<TransactionSynchronization> synchronizationsBefore = new ArrayList<>(
+                    TransactionSynchronizationManager.getSynchronizations());
+
             for (EntityChangedEvent event : collectedEvents) {
                 events.publish(event);
+            }
+
+            List<TransactionSynchronization> synchronizations = new ArrayList<>(
+                    TransactionSynchronizationManager.getSynchronizations());
+
+            if (synchronizations.size() > synchronizationsBefore.size()) {
+                synchronizations.removeAll(synchronizationsBefore);
+                for (TransactionSynchronization synchronization : synchronizations) {
+                    synchronization.beforeCommit(false);
+                }
             }
         }
 

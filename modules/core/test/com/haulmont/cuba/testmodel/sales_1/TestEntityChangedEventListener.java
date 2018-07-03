@@ -1,11 +1,11 @@
-package com.haulmont.cuba.data_events;
+package com.haulmont.cuba.testmodel.sales_1;
 
 import com.haulmont.bali.db.ArrayHandler;
 import com.haulmont.bali.db.QueryRunner;
-import com.haulmont.cuba.core.Persistence;
 import com.haulmont.cuba.core.EntityChangedEvent;
+import com.haulmont.cuba.core.Persistence;
 import com.haulmont.cuba.core.global.EntityStates;
-import com.haulmont.cuba.testmodel.data_events.PurchaseItem;
+import com.haulmont.cuba.core.sys.AppContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -24,12 +24,15 @@ public class TestEntityChangedEventListener {
         public final boolean detached;
         public final boolean committedToDb;
         public final boolean inPersistenceContext;
+        public final boolean authorization;
 
-        public Info(EntityChangedEvent event, boolean detached, boolean committedToDb, boolean inPersistenceContext) {
+        public Info(EntityChangedEvent event, boolean detached, boolean committedToDb, boolean inPersistenceContext,
+                    boolean authorization) {
             this.event = event;
             this.detached = detached;
             this.committedToDb = committedToDb;
             this.inPersistenceContext = inPersistenceContext;
+            this.authorization = authorization;
         }
     }
 
@@ -42,27 +45,29 @@ public class TestEntityChangedEventListener {
     private EntityStates entityStates;
 
     @EventListener
-    void beforeCommitPurchaseItem(EntityChangedEvent<PurchaseItem> event) {
+    void beforeCommitPurchaseItem(EntityChangedEvent<Order> event) {
         received.add(new Info(event,
                 entityStates.isDetached(event.getEntity()),
                 isCommitted(event.getEntity()),
-                persistence.getEntityManager().getDelegate().contains(event.getEntity())));
+                persistence.getEntityManager().getDelegate().contains(event.getEntity()),
+                AppContext.getSecurityContextNN().isAuthorizationRequired()));
     }
 
     @TransactionalEventListener
-    void afterCommitPurchaseItem(EntityChangedEvent<PurchaseItem> event) {
+    void afterCommitPurchaseItem(EntityChangedEvent<Order> event) {
         received.add(new Info(event,
                 entityStates.isDetached(event.getEntity()),
                 isCommitted(event.getEntity()),
-                false));
+                false,
+                AppContext.getSecurityContextNN().isAuthorizationRequired()));
     }
 
-    private boolean isCommitted(PurchaseItem entity) {
+    private boolean isCommitted(Order entity) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Boolean> future = executor.submit(() -> {
             QueryRunner runner = new QueryRunner(persistence.getDataSource());
             try {
-                Object[] row = runner.query("select id from TEST_PURCHASE_ITEM where id = ?",
+                Object[] row = runner.query("select id from SALES1_ORDER where id = ?",
                         entity.getId().toString(),
                         new ArrayHandler());
                 return row != null;

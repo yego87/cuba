@@ -28,14 +28,21 @@ public class FluentLoader<E extends Entity<K>, K> {
     private Class<E> entityClass;
 
     private DataManager dataManager;
+    private boolean transactional;
 
     private View view;
     private String viewName;
     private boolean softDeletion = true;
 
-    FluentLoader(Class<E> entityClass, DataManager dataManager) {
+    public FluentLoader(Class<E> entityClass, DataManager dataManager) {
         this.entityClass = entityClass;
         this.dataManager = dataManager;
+    }
+
+    public FluentLoader(Class<E> entityClass, DataManager dataManager, boolean transactional) {
+        this.entityClass = entityClass;
+        this.dataManager = dataManager;
+        this.transactional = transactional;
     }
 
     LoadContext<E> createLoadContext() {
@@ -50,6 +57,8 @@ public class FluentLoader<E extends Entity<K>, K> {
     }
 
     private void initCommonLoadContextParameters(LoadContext<E> loadContext) {
+        loadContext.setJoinTransaction(transactional);
+
         if (view != null)
             loadContext.setView(view);
         else if (!Strings.isNullOrEmpty(viewName))

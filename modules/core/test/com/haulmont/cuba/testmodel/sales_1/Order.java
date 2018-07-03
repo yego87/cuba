@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.testmodel.sales;
+package com.haulmont.cuba.testmodel.sales_1;
 
 import com.haulmont.chile.core.annotations.Composition;
 import com.haulmont.chile.core.annotations.NamePattern;
@@ -29,9 +29,10 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-@Entity(name = "test$Order")
-@Table(name = "TEST_ORDER")
+@Entity(name = "sales1$Order")
+@Table(name = "SALES1_ORDER")
 @NamePattern("No %s for %s|number,customer")
+@PublishEntityChangedEvents(view = "with-customer")
 public class Order extends StandardEntity {
 
     @Column(name = "NUM")

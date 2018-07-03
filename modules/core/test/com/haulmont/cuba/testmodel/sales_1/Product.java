@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.testmodel.data_events;
+package com.haulmont.cuba.testmodel.sales_1;
 
 import com.haulmont.chile.core.annotations.NamePattern;
 import com.haulmont.cuba.core.entity.StandardEntity;
@@ -24,8 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.math.BigDecimal;
 
-@Entity(name = "test$Product")
-@Table(name = "TEST_PRODUCT")
+@Entity(name = "sales1$Product")
+@Table(name = "SALES1_PRODUCT")
 @NamePattern("%s|name")
 public class Product extends StandardEntity {
 
@@ -33,7 +33,7 @@ public class Product extends StandardEntity {
     private String name;
 
     @Column(name = "QUANTITY")
-    private BigDecimal quantity;
+    private Integer quantity;
 
     public String getName() {
         return name;
@@ -43,11 +43,11 @@ public class Product extends StandardEntity {
         this.name = name;
     }
 
-    public BigDecimal getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(BigDecimal quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 }

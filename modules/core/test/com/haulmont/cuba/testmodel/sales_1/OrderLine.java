@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2016 Haulmont.
+ * Copyright (c) 2008-2018 Haulmont.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,36 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.testmodel.data_events;
+package com.haulmont.cuba.testmodel.sales_1;
 
-import com.haulmont.chile.core.annotations.NamePattern;
 import com.haulmont.cuba.core.entity.StandardEntity;
 import com.haulmont.cuba.core.entity.annotation.PublishEntityChangedEvents;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 
-@Entity(name = "test$PurchaseItem")
-@Table(name = "TEST_PURCHASE_ITEM")
-@NamePattern("%s|name")
-@PublishEntityChangedEvents(view = "with-product")
-public class PurchaseItem extends StandardEntity {
-
-    @Column(name = "NUM")
-    private String number;
+@Table(name = "SALES1_ORDER_LINE")
+@Entity(name = "sales1$OrderLine")
+@PublishEntityChangedEvents
+public class OrderLine extends StandardEntity {
+    private static final long serialVersionUID = 5682981871475199801L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PRODUCT_ID")
-    private Product product;
+    protected Product product;
 
     @Column(name = "QUANTITY")
-    private BigDecimal quantity;
+    protected Integer quantity;
 
-    public String getNumber() {
-        return number;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ORDER_ID")
+    protected Order order;
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
+    public Order getOrder() {
+        return order;
     }
 
     public Product getProduct() {
@@ -55,11 +54,11 @@ public class PurchaseItem extends StandardEntity {
         this.product = product;
     }
 
-    public BigDecimal getQuantity() {
-        return quantity;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
-    public void setQuantity(BigDecimal quantity) {
-        this.quantity = quantity;
+    public Integer getQuantity() {
+        return quantity;
     }
 }

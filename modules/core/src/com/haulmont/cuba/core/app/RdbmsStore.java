@@ -63,6 +63,9 @@ public class RdbmsStore implements DataStore {
     protected Metadata metadata;
 
     @Inject
+    protected MetadataTools metadataTools;
+
+    @Inject
     protected ViewRepository viewRepository;
 
     @Inject
@@ -117,7 +120,7 @@ public class RdbmsStore implements DataStore {
 
         E result = null;
         boolean needToApplyConstraints = needToApplyByPredicate(context);
-        try (Transaction tx = createLoadTransaction()) {
+        try (Transaction tx = getLoadTransaction(context.isJoinTransaction())) {
             final EntityManager em = persistence.getEntityManager(storeName);
 
             if (!context.isSoftDeletion())
@@ -155,6 +158,11 @@ public class RdbmsStore implements DataStore {
                 attributeSecurity.onLoad(result, view);
             }
 
+            if (context.isJoinTransaction()) {
+                em.flush();
+                detachEntity(em, result, view);
+            }
+
             tx.commit();
         }
 
@@ -189,7 +197,7 @@ public class RdbmsStore implements DataStore {
 
         List<E> resultList;
         boolean needToApplyConstraints = needToApplyByPredicate(context);
-        try (Transaction tx = createLoadTransaction()) {
+        try (Transaction tx = getLoadTransaction(context.isJoinTransaction())) {
             EntityManager em = persistence.getEntityManager(storeName);
             em.setSoftDeletion(context.isSoftDeletion());
             persistence.getEntityManagerContext(storeName).setDbHints(context.getDbHints());
@@ -220,6 +228,13 @@ public class RdbmsStore implements DataStore {
             }
 
             attributeSecurity.onLoad(resultList, view);
+
+            if (context.isJoinTransaction()) {
+                em.flush();
+                for (E entity : resultList) {
+                    detachEntity(em, entity, view);
+                }
+            }
 
             tx.commit();
         }
@@ -252,7 +267,7 @@ public class RdbmsStore implements DataStore {
         if (security.hasInMemoryConstraints(metaClass, ConstraintOperationType.READ, ConstraintOperationType.ALL)) {
             context = context.copy();
             List resultList;
-            try (Transaction tx = createLoadTransaction()) {
+            try (Transaction tx = getLoadTransaction(context.isJoinTransaction())) {
                 EntityManager em = persistence.getEntityManager(storeName);
                 em.setSoftDeletion(context.isSoftDeletion());
                 persistence.getEntityManagerContext(storeName).setDbHints(context.getDbHints());
@@ -284,7 +299,7 @@ public class RdbmsStore implements DataStore {
             context.getQuery().setQueryString(transformer.getResult());
 
             Number result;
-            try (Transaction tx = createLoadTransaction()) {
+            try (Transaction tx = getLoadTransaction(context.isJoinTransaction())) {
                 EntityManager em = persistence.getEntityManager(storeName);
                 em.setSoftDeletion(context.isSoftDeletion());
                 persistence.getEntityManagerContext(storeName).setDbHints(context.getDbHints());
@@ -311,7 +326,7 @@ public class RdbmsStore implements DataStore {
         List<BaseGenericIdEntity> identityEntitiesToStoreDynamicAttributes = new ArrayList<>();
         List<CategoryAttributeValue> attributeValuesToRemove = new ArrayList<>();
 
-        try (Transaction tx = persistence.createTransaction(storeName)) {
+        try (Transaction tx = getSaveTransaction(storeName, context.isJoinTransaction())) {
             EntityManager em = persistence.getEntityManager(storeName);
             checkPermissions(context);
 
@@ -422,11 +437,18 @@ public class RdbmsStore implements DataStore {
                 security.calculateFilteredData(res);
             }
 
+            if (context.isJoinTransaction()) {
+                em.flush();
+                for (Entity entity : res) {
+                    em.detach(entity);
+                }
+            }
+
             tx.commit();
         }
 
         if (!attributeValuesToRemove.isEmpty()) {
-            try (Transaction tx = persistence.createTransaction()) {
+            try (Transaction tx = getSaveTransaction(Stores.MAIN, context.isJoinTransaction())) {
                 EntityManager em = persistence.getEntityManager();
                 for (CategoryAttributeValue entity : attributeValuesToRemove) {
                     em.remove(entity);
@@ -435,7 +457,7 @@ public class RdbmsStore implements DataStore {
             }
         }
 
-        try (Transaction tx = persistence.createTransaction(storeName)) {
+        try (Transaction tx = getSaveTransaction(storeName, context.isJoinTransaction())) {
             for (BaseGenericIdEntity entity : identityEntitiesToStoreDynamicAttributes) {
                 dynamicAttributesManagerAPI.storeDynamicAttributes(entity);
             }
@@ -477,7 +499,7 @@ public class RdbmsStore implements DataStore {
 
         List<KeyValueEntity> entities = new ArrayList<>();
 
-        try (Transaction tx = createLoadTransaction()) {
+        try (Transaction tx = getLoadTransaction(context.isJoinTransaction())) {
             EntityManager em = persistence.getEntityManager(storeName);
             em.setSoftDeletion(context.isSoftDeletion());
 
@@ -872,7 +894,7 @@ public class RdbmsStore implements DataStore {
                     if (value != null) {
                         if (value.getId().equals(refEntity.getId())) {
                             if (entity instanceof AbstractInstance) {
-                                if (property.isReadOnly() && metadata.getTools().isNotPersistent(property)) {
+                                if (property.isReadOnly() && metadataTools.isNotPersistent(property)) {
                                     continue;
                                 }
                                 ((AbstractInstance) entity).setValue(property.getName(), refEntity, false);
@@ -943,11 +965,39 @@ public class RdbmsStore implements DataStore {
         return classes;
     }
 
-    protected Transaction createLoadTransaction() {
+    protected Transaction getLoadTransaction(boolean useCurrentTransaction) {
         TransactionParams txParams = new TransactionParams();
         if (serverConfig.getUseReadOnlyTransactionForLoad()) {
             txParams.setReadOnly(true);
         }
-        return persistence.createTransaction(storeName, txParams);
+        return useCurrentTransaction ?
+                persistence.getTransaction(storeName) : persistence.createTransaction(storeName, txParams);
+    }
+
+    protected Transaction getSaveTransaction(String storeName, boolean useCurrentTransaction) {
+        return useCurrentTransaction ?
+                persistence.getTransaction(storeName) : persistence.createTransaction(storeName);
+    }
+
+    protected <E extends Entity> void detachEntity(EntityManager em, @Nullable E rootEntity, View view) {
+        if (rootEntity == null)
+            return;
+        em.detach(rootEntity);
+        metadataTools.traverseAttributesByView(view, rootEntity, (entity, property) -> {
+            if (property.getRange().isClass()) {
+                Object value = entity.getValue(property.getName());
+                if (value != null) {
+                    if (property.getRange().getCardinality().isMany()) {
+                        @SuppressWarnings("unchecked")
+                        Collection<Entity> collection = (Collection<Entity>) value;
+                        for (Entity element : collection) {
+                            em.detach(element);
+                        }
+                    } else {
+                        em.detach((Entity) value);
+                    }
+                }
+            }
+        });
     }
 }

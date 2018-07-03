@@ -2,10 +2,10 @@ package spec.cuba.core.data_events
 
 import com.haulmont.cuba.core.EntityChangedEvent
 import com.haulmont.cuba.core.global.*
-import com.haulmont.cuba.data_events.TestEntityChangedEventListener
-import com.haulmont.cuba.data_events.TestEntityChangedEventListener.Info
-import com.haulmont.cuba.testmodel.data_events.Product
-import com.haulmont.cuba.testmodel.data_events.PurchaseItem
+import com.haulmont.cuba.testmodel.sales_1.TestEntityChangedEventListener
+import com.haulmont.cuba.testmodel.sales_1.TestEntityChangedEventListener.Info
+import com.haulmont.cuba.testmodel.sales_1.Customer
+import com.haulmont.cuba.testmodel.sales_1.Order
 import com.haulmont.cuba.testsupport.TestContainer
 import org.junit.ClassRule
 import spock.lang.Shared
@@ -38,13 +38,13 @@ class EntityChangedEventTest extends Specification {
 
     def "create/update/delete entity"() {
 
-        PurchaseItem item = metadata.create(PurchaseItem)
-        item.setNumber('111')
-        item.setQuantity(10)
+        Order order = metadata.create(Order)
+        order.setNumber('111')
+        order.setAmount(10)
 
         when:
 
-        PurchaseItem item1 = dataManager.commit(item)
+        Order order1 = dataManager.commit(order)
 
         then:
 
@@ -56,8 +56,8 @@ class EntityChangedEventTest extends Specification {
         !listener.received[0].committedToDb
         listener.received[1].committedToDb
 
-        listener.received[0].event.getEntity() == item
-        listener.received[1].event.getEntity() == item
+        listener.received[0].event.getEntity() == order
+        listener.received[1].event.getEntity() == order
 
         listener.received[0].event.getType() == EntityChangedEvent.Type.CREATED
         listener.received[1].event.getType() == EntityChangedEvent.Type.CREATED
@@ -66,8 +66,8 @@ class EntityChangedEventTest extends Specification {
 
         listener.received.clear()
 
-        item1.setQuantity(20)
-        PurchaseItem item2 = dataManager.commit(item1)
+        order1.setAmount(20)
+        Order order2 = dataManager.commit(order1)
 
         then:
 
@@ -76,22 +76,22 @@ class EntityChangedEventTest extends Specification {
         checkEventInfo(listener.received[0])
         checkEventInfo(listener.received[1])
 
-        listener.received[0].event.getEntity() == item
-        listener.received[1].event.getEntity() == item
+        listener.received[0].event.getEntity() == order
+        listener.received[1].event.getEntity() == order
 
         listener.received[0].event.getType() == EntityChangedEvent.Type.UPDATED
         listener.received[1].event.getType() == EntityChangedEvent.Type.UPDATED
 
-        listener.received[0].event.getChanges().attributes.contains('quantity')
-        listener.received[0].event.getChanges().getOldValue('quantity') == 10
-        listener.received[1].event.getChanges().attributes.contains('quantity')
-        listener.received[1].event.getChanges().getOldValue('quantity') == 10
+        listener.received[0].event.getChanges().attributes.contains('amount')
+        listener.received[0].event.getChanges().getOldValue('amount') == 10
+        listener.received[1].event.getChanges().attributes.contains('amount')
+        listener.received[1].event.getChanges().getOldValue('amount') == 10
 
         when:
 
         listener.received.clear()
 
-        PurchaseItem item3 = dataManager.remove(item2)
+        Order order3 = dataManager.remove(order2)
 
         then:
 
@@ -100,43 +100,68 @@ class EntityChangedEventTest extends Specification {
         checkEventInfo(listener.received[0])
         checkEventInfo(listener.received[1])
 
-        listener.received[0].event.getEntity() == item
-        listener.received[1].event.getEntity() == item
+        listener.received[0].event.getEntity() == order
+        listener.received[1].event.getEntity() == order
 
         listener.received[0].event.getType() == EntityChangedEvent.Type.DELETED
         listener.received[1].event.getType() == EntityChangedEvent.Type.DELETED
+
+        cleanup:
+
+        cont.deleteRecord(order)
     }
 
     private void checkEventInfo(Info info) {
         assert info.detached && !info.inPersistenceContext
     }
 
-    def "entity in event has correct view"() {
-
-        Product product = metadata.create(Product)
-        product.name = 'foo'
-
-        PurchaseItem item = metadata.create(PurchaseItem)
-        item.setNumber('111')
-        item.setQuantity(10)
-        item.setProduct(product)
-
-        dataManager.commit(new CommitContext(product, item))
-
-        PurchaseItem item1 = dataManager.load(PurchaseItem).id(item.id).one()
-
-        listener.received.clear()
+    def "no authorization inside event listeners"() {
+        Order order = metadata.create(Order)
+        order.setNumber('111')
+        order.setAmount(10)
 
         when:
 
-        item1.setQuantity(20)
-        dataManager.commit(item1)
+        dataManager.secure().commit(order)
 
         then:
 
         listener.received.size() == 2
 
-        entityStates.isLoadedWithView(listener.received[0].event.entity, 'with-product')
-        entityStates.isLoadedWithView(listener.received[1].event.entity, 'with-product')
+        !listener.received[0].authorization
+        !listener.received[0].authorization
+
+        cleanup:
+
+        cont.deleteRecord(order)
+    }
+
+    def "entity in event has correct view"() {
+
+        Customer customer = metadata.create(Customer)
+        customer.name = 'foo'
+
+        Order order = metadata.create(Order)
+        order.setNumber('111')
+        order.setAmount(10)
+        order.setCustomer(customer)
+
+        dataManager.commit(new CommitContext(customer, order))
+
+        Order order1 = dataManager.load(Order).id(order.id).one()
+
+        listener.received.clear()
+
+        when:
+
+        order1.setAmount(20)
+        dataManager.commit(order1)
+
+        then:
+
+        listener.received.size() == 2
+
+        entityStates.isLoadedWithView(listener.received[0].event.entity, 'with-customer')
+        entityStates.isLoadedWithView(listener.received[1].event.entity, 'with-customer')
     }
 }

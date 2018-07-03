@@ -2291,7 +2291,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     protected void copyColumnProperties(Column<E> column, Column<E> existingColumn) {
-        // TEST: gg, check for new methods
         column.setCaption(existingColumn.getCaption());
         column.setVisible(existingColumn.isVisible());
         column.setCollapsed(existingColumn.isCollapsed());
@@ -2304,6 +2303,9 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
         column.setResizable(existingColumn.isResizable());
         //noinspection unchecked
         column.setFormatter(existingColumn.getFormatter());
+        column.setStyleProvider(existingColumn.getStyleProvider());
+        column.setDescriptionProvider(existingColumn.getDescriptionProvider(),
+                ((ColumnImpl) existingColumn).getDescriptionContentMode());
     }
 
     @Override

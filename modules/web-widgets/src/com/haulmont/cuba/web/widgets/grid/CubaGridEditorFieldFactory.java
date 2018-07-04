@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.widgets;
+package com.haulmont.cuba.web.widgets.grid;
+
+import com.haulmont.cuba.web.widgets.CubaGrid;
+import com.vaadin.data.HasValue;
 
 import javax.annotation.Nullable;
 
 /**
  * Factory that generates components for {@link CubaGrid} editor.
  */
-public interface CubaGridEditorFieldFactory {
+public interface CubaGridEditorFieldFactory<T> {
 
     /**
      * Generates component for {@link CubaGrid} editor.
      *
-     * @param itemId     editing item id
-     * @param propertyId editing item property id
+     * @param item     editing item
+     * @param columnId editing column id
      * @return generated component or {@code null}
      */
     @Nullable
-    com.vaadin.v7.ui.Field<?> createField(Object itemId, Object propertyId);
+    HasValue<?> createField(T item, String columnId);
 }

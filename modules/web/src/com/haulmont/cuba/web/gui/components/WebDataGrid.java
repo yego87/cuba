@@ -35,10 +35,13 @@ import com.haulmont.cuba.core.global.View;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.AbstractAction;
 import com.haulmont.cuba.gui.components.Action;
+import com.haulmont.cuba.gui.components.Buffered;
 import com.haulmont.cuba.gui.components.ButtonsPanel;
 import com.haulmont.cuba.gui.components.ContentMode;
 import com.haulmont.cuba.gui.components.DataGrid;
+import com.haulmont.cuba.gui.components.DataGridEditorFieldFactory;
 import com.haulmont.cuba.gui.components.DescriptionProvider;
+import com.haulmont.cuba.gui.components.Field;
 import com.haulmont.cuba.gui.components.Formatter;
 import com.haulmont.cuba.gui.components.KeyCombination;
 import com.haulmont.cuba.gui.components.LookupComponent;
@@ -94,6 +97,7 @@ import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.haulmont.cuba.web.widgets.data.SortableDataProvider;
 import com.haulmont.cuba.web.widgets.grid.CubaGridContextMenu;
+import com.haulmont.cuba.web.widgets.grid.CubaGridEditorFieldFactory;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiCheckSelectionModel;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
@@ -104,10 +108,13 @@ import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.event.selection.MultiSelectionEvent;
+import com.vaadin.server.ErrorMessage;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.grid.HeightMode;
+import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.CustomField;
 import com.vaadin.ui.DescriptionGenerator;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
@@ -463,7 +470,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                     return;
                 }
 
-                Column<E> column = getColumnById(item.getId());
+                Column<E> column = getColumnByGridColumn(e.getColumn());
 
                 ItemClickEvent<E> event = new ItemClickEvent<>(WebDataGrid.this,
                         mouseEventDetails, item, item.getId(), column != null ? column.getId() : null);
@@ -629,14 +636,6 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     protected RowStyleGeneratorAdapter<E> createRowStyleGenerator() {
         return new RowStyleGeneratorAdapter<>();
     }
-
-//    protected CellStyleGeneratorAdapter createCellStyleGenerator() {
-//        return new CellStyleGeneratorAdapter();
-//    }
-
-    /*protected CubaGridEditorFieldFactory createEditorFieldFactory() {
-        return new WebDataGridEditorFieldFactory(this);
-    }*/
 
     @Override
     public List<Column<E>> getColumns() {
@@ -1284,8 +1283,12 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 //        }
     }
 
+    protected CubaGridEditorFieldFactory createEditorFieldFactory() {
+        return new WebDataGridEditorFieldFactory(this);
+    }
+
     // VAADIN8: gg, implement
-    /*protected static class WebDataGridEditorFieldFactory implements CubaGridEditorFieldFactory {
+    protected static class WebDataGridEditorFieldFactory<E extends Entity> implements CubaGridEditorFieldFactory<E> {
 
         protected WebDataGrid<?> dataGrid;
         protected DataGridEditorFieldFactory fieldFactory = AppBeans.get(DataGridEditorFieldFactory.NAME);
@@ -1296,25 +1299,27 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
         @Nullable
         @Override
-        public com.vaadin.v7.ui.Field<?> createField(Object itemId, Object propertyId) {
-            Column column = dataGrid.getColumnByPropertyId(propertyId);
-            if (column != null && !column.isEditable()) {
+        public com.vaadin.data.HasValue<?> createField(E item, String columnId) {
+            Column column = dataGrid.getColumnById(columnId);
+            if (column == null || !column.isEditable()) {
                 return null;
             }
 
-            //noinspection unchecked
-            Entity entity = dataGrid.getDatasource().getItem(itemId);
-            Datasource fieldDatasource = dataGrid.createItemDatasource(entity);
-            String fieldPropertyId = String.valueOf(propertyId);
+            Datasource fieldDatasource = dataGrid.createItemDatasource(item);
+            MetaPropertyPath propertyPath = column.getPropertyPath();
 
-            Field columnComponent = column != null && column.getEditorFieldGenerator() != null
+            if (propertyPath == null) {
+                return null;
+            }
+            String fieldPropertyId = String.valueOf(propertyPath.toPathString());
+
+            Field columnComponent = column.getEditorFieldGenerator() != null
                     ? column.getEditorFieldGenerator().createField(fieldDatasource, fieldPropertyId)
                     : fieldFactory.createField(fieldDatasource, fieldPropertyId);
             columnComponent.setParent(dataGrid);
             columnComponent.setFrame(dataGrid.getFrame());
 
-//            return createCustomField(columnComponent);
-            return null;
+            return createCustomField(columnComponent);
         }
 
         protected CustomField createCustomField(final Field columnComponent) {
@@ -1325,30 +1330,28 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
 
             AbstractField<?> content = (AbstractField<?>) WebComponentsHelper.getComposition(columnComponent);
 
-//            CustomField wrapper = new DataGridEditorCustomField(columnComponent) {
-//                @Override
-//                protected Component initContent() {
-//                    return content;
-//                }
-//            };
-//
+            CustomField wrapper = new DataGridEditorCustomField(columnComponent) {
+                @Override
+                protected Component initContent() {
+                    return content;
+                }
+            };
+
             //noinspection unchecked
 //            wrapper.setConverter(new ObjectToObjectConverter());
-//            wrapper.setFocusDelegate(content);
-//
-//            wrapper.setReadOnly(content.isReadOnly());
+            wrapper.setFocusDelegate(content);
+
+            wrapper.setReadOnly(content.isReadOnly());
 //            wrapper.setRequired(content.isRequired());
 //            wrapper.setRequiredError(content.getRequiredError());
 
-//            columnComponent.addValueChangeListener(event -> wrapper.markAsDirty());
-//
-//            return wrapper;
-            return null;
-        }
-    }*/
+            columnComponent.addValueChangeListener(event -> wrapper.markAsDirty());
 
-    // VAADIN8: gg, implement
-    /*protected static abstract class DataGridEditorCustomField extends CustomField {
+            return wrapper;
+        }
+    }
+
+    protected static abstract class DataGridEditorCustomField extends CustomField {
 
         protected Field columnComponent;
 
@@ -1365,65 +1368,32 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
             return columnComponent;
         }
 
-        //        @Override
-//        public Class getType() {
-//            return Object.class;
-//        }
-//
-//        @Override
-//        protected void setInternalValue(Object newValue) {
-//            columnComponent.setValue(newValue);
-//        }
-//
-//        @Override
-//        protected Object getInternalValue() {
-//            return columnComponent.getValue();
-//        }
-//
+        @Override
+        protected Component initContent() {
+            // TODO: gg,
+            return null;
+        }
+
+        @Override
+        protected void doSetValue(Object value) {
+            columnComponent.setValue(value);
+        }
+
+        @Override
+        public Object getValue() {
+            return columnComponent.getValue();
+        }
+
         @Override
         public ErrorMessage getErrorMessage() {
-//            try {
-//                validate();
-//            } catch (Validator.InvalidValueException ignore) {
-//            }
+            // TODO: gg,
+            /*try {
+                validate();
+            } catch (Validator.InvalidValueException ignore) {
+            }*/
             return getContent().getErrorMessage();
         }
 
-//        @Override
-//        public boolean isBuffered() {
-//            return ((Buffered) columnComponent).isBuffered();
-//        }
-//
-//        @Override
-//        public void setBuffered(boolean buffered) {
-//            ((Buffered) columnComponent).setBuffered(buffered);
-//        }
-//
-//        @Override
-//        public void commit() throws com.vaadin.v7.data.Buffered.SourceException, Validator.InvalidValueException {
-//            validate();
-//            ((Buffered) columnComponent).commit();
-//        }
-//
-//        @Override
-//        public void validate() throws Validator.InvalidValueException {
-//            try {
-//                columnComponent.validate();
-//            } catch (ValidationException e) {
-//                throw new Validator.InvalidValueException(e.getDetailsMessage());
-//            }
-//        }
-
-        //        @Override
-//        public void discard() throws com.vaadin.v7.data.Buffered.SourceException {
-//            ((Buffered) columnComponent).discard();
-//        }
-//
-//        @Override
-//        public boolean isModified() {
-//            return ((Buffered) columnComponent).isModified();
-//        }
-//
         @Override
         public void setWidth(float width, Unit unit) {
             super.setWidth(width, unit);
@@ -1449,7 +1419,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
                 }
             }
         }
-    }*/
+    }
 
     @Override
     public boolean isHeaderVisible() {
@@ -2132,7 +2102,7 @@ public class WebDataGrid<E extends Entity> extends WebAbstractComponent<CubaGrid
     }
 
     @Nullable
-    protected Column<E> getColumnById(Object id) {
+    protected Column<E> getColumnById(String id) {
         for (Column<E> column : getColumns()) {
             String columnId = column.getId();
             if (Objects.equals(columnId, id)) {

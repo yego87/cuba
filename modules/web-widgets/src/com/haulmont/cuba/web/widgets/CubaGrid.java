@@ -31,14 +31,13 @@ import java.util.Map;
 
 public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
 
-//    protected CubaGridEditorFieldFactory editorFieldFactory;
+//    protected CubaGridEditorFieldFactory<T> editorFieldFactory;
+
+    //    protected Collection<Field<?>> editorFields = new ArrayList<>();
 //
-//    protected Collection<Field<?>> editorFields = new ArrayList<>();
-//
-//    public CubaGrid(CubaGridEditorFieldFactory editorFieldFactory) {
-//        this(null, null, editorFieldFactory);
-//    }
-//
+    public CubaGrid() {
+    }
+
 //    public CubaGrid(String caption, Container.Indexed dataSource, CubaGridEditorFieldFactory editorFieldFactory) {
 //        super(caption, dataSource);
 //
@@ -47,14 +46,6 @@ public class CubaGrid<T> extends Grid<T> implements Action.ShortcutNotifier {
 //
 //        // FIXME: gg, workaround for https://github.com/vaadin/framework/issues/9040
 //        addEditorCloseListener(event -> focus());
-//    }
-//
-//    public CubaGridEditorFieldFactory getCubaEditorFieldFactory() {
-//        return editorFieldFactory;
-//    }
-//
-//    public void setCubaEditorFieldFactory(CubaGridEditorFieldFactory editorFieldFactory) {
-//        this.editorFieldFactory = editorFieldFactory;
 //    }
 
     public void setGridSelectionModel(GridSelectionModel<T> model) {

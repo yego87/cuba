@@ -18,6 +18,7 @@ package com.haulmont.cuba.web.widgets.grid;
 
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.vaadin.data.HasValue;
+import com.vaadin.ui.Grid.Column;
 
 import javax.annotation.Nullable;
 
@@ -29,10 +30,10 @@ public interface CubaGridEditorFieldFactory<T> {
     /**
      * Generates component for {@link CubaGrid} editor.
      *
-     * @param item     editing item
-     * @param columnId editing column id
+     * @param item   editing item
+     * @param column editing column
      * @return generated component or {@code null}
      */
     @Nullable
-    HasValue<?> createField(T item, String columnId);
+    HasValue<?> createField(T item, Column<T, ?> column);
 }

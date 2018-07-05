@@ -2,6 +2,7 @@ package com.haulmont.cuba.core.sys;
 
 import com.haulmont.cuba.core.TransactionalDataManager;
 import com.haulmont.cuba.core.entity.Entity;
+import com.haulmont.cuba.core.entity.contracts.Id;
 import com.haulmont.cuba.core.global.*;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,11 @@ public class TransactionalDataManagerBean implements TransactionalDataManager {
     @Override
     public <E extends Entity<K>, K> FluentLoader<E, K> load(Class<E> entityClass) {
         return new FluentLoader<>(entityClass, dataManager, true);
+    }
+
+    @Override
+    public <E extends Entity<K>, K> FluentLoader.ById<E, K> load(Id<E, K> entityId) {
+        return new FluentLoader<>(entityId.getEntityClass(), dataManager).id(entityId.getValue());
     }
 
     @Override

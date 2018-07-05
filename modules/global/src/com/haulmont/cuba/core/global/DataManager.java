@@ -20,6 +20,7 @@ package com.haulmont.cuba.core.global;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.entity.KeyValueEntity;
+import com.haulmont.cuba.core.entity.contracts.Id;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -183,6 +184,10 @@ public interface DataManager {
      */
     default <E extends Entity<K>, K> FluentLoader<E, K> load(Class<E> entityClass) {
         return new FluentLoader<>(entityClass, this);
+    }
+
+    default <E extends Entity<K>, K> FluentLoader.ById<E, K> load(Id<E, K> entityId) {
+        return new FluentLoader<>(entityId.getEntityClass(), this).id(entityId.getValue());
     }
 
     /**

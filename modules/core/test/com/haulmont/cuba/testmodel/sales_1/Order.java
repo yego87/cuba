@@ -19,8 +19,10 @@ package com.haulmont.cuba.testmodel.sales_1;
 import com.haulmont.chile.core.annotations.Composition;
 import com.haulmont.chile.core.annotations.NamePattern;
 import com.haulmont.cuba.core.entity.StandardEntity;
+import com.haulmont.cuba.core.entity.annotation.Listeners;
 import com.haulmont.cuba.core.entity.annotation.OnDelete;
 import com.haulmont.cuba.core.entity.annotation.PublishEntityChangedEvents;
+import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.DeletePolicy;
 import com.haulmont.cuba.security.entity.User;
 
@@ -32,7 +34,8 @@ import java.util.List;
 @Entity(name = "sales1$Order")
 @Table(name = "SALES1_ORDER")
 @NamePattern("No %s for %s|number,customer")
-@PublishEntityChangedEvents(view = "with-customer")
+@PublishEntityChangedEvents
+@Listeners("test_EntityChangedEventListener")
 public class Order extends StandardEntity {
 
     @Column(name = "NUM")
@@ -56,6 +59,48 @@ public class Order extends StandardEntity {
     @OnDelete(DeletePolicy.CASCADE)
     @OneToMany(mappedBy = "order")
     protected List<OrderLine> orderLines;
+
+    @PrePersist
+    public void prePersist() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PrePersist", this));
+    }
+
+    @PostPersist
+    public void postPersist() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PostPersist", this));
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PreUpdate", this));
+    }
+
+    @PostUpdate
+    public void postUpdate() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PostUpdate", this));
+    }
+
+    @PreRemove
+    public void preRemove() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PreRemove", this));
+    }
+
+    @PostRemove
+    public void postRemove() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PostRemove", this));
+    }
+
+    @PostLoad
+    public void postLoad() {
+        TestEntityChangedEventListener listener = AppBeans.get(TestEntityChangedEventListener.class);
+        listener.allEvents.add(new TestEntityChangedEventListener.EventInfo("JPA PostLoad", this));
+    }
 
     public String getNumber() {
         return number;

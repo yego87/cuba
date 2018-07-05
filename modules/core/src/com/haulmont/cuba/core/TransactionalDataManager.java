@@ -1,6 +1,7 @@
 package com.haulmont.cuba.core;
 
 import com.haulmont.cuba.core.entity.Entity;
+import com.haulmont.cuba.core.entity.contracts.Id;
 import com.haulmont.cuba.core.global.*;
 
 import javax.annotation.Nullable;
@@ -25,6 +26,8 @@ public interface TransactionalDataManager {
     String NAME = "cuba_TransactionalDataManager";
 
     <E extends Entity<K>, K> FluentLoader<E, K> load(Class<E> entityClass);
+
+    <E extends Entity<K>, K> FluentLoader.ById<E, K> load(Id<E, K> entityId);
 
     FluentValuesLoader loadValues(String queryString);
 

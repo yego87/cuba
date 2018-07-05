@@ -38,7 +38,6 @@ class DataManagerTransactionalTest extends Specification {
     }
 
     void cleanup() {
-//        cont.deleteRecord(customer)
     }
 
     def "create and load in one transaction"() {
@@ -131,7 +130,7 @@ class DataManagerTransactionalTest extends Specification {
 
         !BaseEntityInternalAccess.isManaged(customer)
         BaseEntityInternalAccess.isDetached(customer)
-        BaseEntityInternalAccess.isNew(customer)
+        !BaseEntityInternalAccess.isNew(customer)
 
         cleanup:
 

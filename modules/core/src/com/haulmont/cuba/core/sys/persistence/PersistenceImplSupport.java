@@ -20,14 +20,12 @@ package com.haulmont.cuba.core.sys.persistence;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.haulmont.bali.util.StackTrace;
-import com.haulmont.chile.core.model.MetaClass;
-import com.haulmont.cuba.core.EntityChangedEvent;
 import com.haulmont.cuba.core.EntityManager;
 import com.haulmont.cuba.core.Persistence;
 import com.haulmont.cuba.core.app.FtsSender;
 import com.haulmont.cuba.core.app.MiddlewareStatisticsAccumulator;
+import com.haulmont.cuba.core.app.events.EntityChangedEvent;
 import com.haulmont.cuba.core.entity.*;
-import com.haulmont.cuba.core.entity.annotation.PublishEntityChangedEvents;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.core.listener.AfterCompleteTransactionListener;
 import com.haulmont.cuba.core.listener.BeforeCommitTransactionListener;
@@ -101,6 +99,9 @@ public class PersistenceImplSupport implements ApplicationContextAware {
 
     @Inject
     protected MiddlewareStatisticsAccumulator statisticsAccumulator;
+
+    @Inject
+    protected EntityChangedEventManager entityChangedEventManager;
 
     protected List<BeforeCommitTransactionListener> beforeCommitTxListeners;
 
@@ -204,7 +205,7 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         }
     }
 
-    protected boolean isDeleted(BaseGenericIdEntity entity, AttributeChangeListener changeListener) {
+    protected static boolean isDeleted(BaseGenericIdEntity entity, AttributeChangeListener changeListener) {
         if ((entity instanceof SoftDelete)) {
             ObjectChangeSet changeSet = changeListener.getObjectChangeSet();
             return changeSet != null
@@ -279,10 +280,10 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         if (entity instanceof BaseGenericIdEntity) {
             fireBeforeDetachEntityListener((BaseGenericIdEntity) entity, storeName);
 
-            if (!BaseEntityInternalAccess.isNew((BaseGenericIdEntity) entity)) {
-                // do not unregister new entities because they must be made non-new in afterCompletion,
-                // so we need to keep them in the holder until the transaction ends
-                getInstanceContainerResourceHolder(storeName).unregisterInstance(entity, unitOfWork);
+            ContainerResourceHolder container = getInstanceContainerResourceHolder(storeName);
+            container.unregisterInstance(entity, unitOfWork);
+            if (BaseEntityInternalAccess.isNew((BaseGenericIdEntity) entity)) {
+                container.getNewDetachedInstances().add(entity);
             }
         }
 
@@ -291,6 +292,7 @@ public class PersistenceImplSupport implements ApplicationContextAware {
 
     protected void makeDetached(Object instance) {
         if (instance instanceof BaseGenericIdEntity) {
+            BaseEntityInternalAccess.setNew((BaseGenericIdEntity) instance, false);
             BaseEntityInternalAccess.setManaged((BaseGenericIdEntity) instance, false);
             BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, true);
         }
@@ -311,6 +313,8 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         protected Map<UnitOfWork, Set<Entity>> unitOfWorkMap = new HashMap<>();
 
         protected Set<Entity> savedInstances = createEntitySet();
+
+        protected Set<Entity> newDetachedInstances = createEntitySet();
 
         protected String storeName;
 
@@ -364,6 +368,10 @@ public class PersistenceImplSupport implements ApplicationContextAware {
 
         protected Collection<Entity> getSavedInstances() {
             return savedInstances;
+        }
+
+        public Set<Entity> getNewDetachedInstances() {
+            return newDetachedInstances;
         }
 
         @Override
@@ -436,7 +444,7 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                     transactionListener.beforeCommit(persistence.getEntityManager(container.getStoreName()), allInstances);
                 }
                 queryCacheManager.invalidate(typeNames, true);
-                List<EntityChangedEvent> collectedEvents = collectEntityChangedEvents();
+                List<EntityChangedEvent> collectedEvents = entityChangedEventManager.collect(container.getAllInstances());
                 detachAll();
                 publishEntityChangedEvents(collectedEvents);
             } else {
@@ -459,9 +467,9 @@ public class PersistenceImplSupport implements ApplicationContextAware {
                             }
                         } else { // commit failed or the transaction was rolled back
                             makeDetached(instance);
-                            if (BaseEntityInternalAccess.isNew((BaseGenericIdEntity) instance)) {
-                                // make new entities non-detached again
-                                BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) instance, false);
+                            for (Entity entity : container.getNewDetachedInstances()) {
+                                BaseEntityInternalAccess.setNew((BaseGenericIdEntity) entity, true);
+                                BaseEntityInternalAccess.setDetached((BaseGenericIdEntity) entity, false);
                             }
                         }
                     }
@@ -475,63 +483,21 @@ public class PersistenceImplSupport implements ApplicationContextAware {
         }
 
         private void detachAll() {
+            Collection<Entity> instances = container.getAllInstances();
+            for (Object instance : instances) {
+                if (instance instanceof BaseGenericIdEntity &&
+                        BaseEntityInternalAccess.isNew((BaseGenericIdEntity) instance)) {
+                    container.getNewDetachedInstances().add((Entity) instance);
+                }
+            }
+
             javax.persistence.EntityManager jpaEm = persistence.getEntityManager().getDelegate();
             jpaEm.flush();
             jpaEm.clear();
 
-            Collection<Entity> instances = container.getAllInstances();
             for (Object instance : instances) {
                 makeDetached(instance);
             }
-        }
-
-        private List<EntityChangedEvent> collectEntityChangedEvents() {
-            List<EntityChangedEvent> list = new ArrayList<>();
-            for (Entity entity : container.getAllInstances()) {
-                MetaClass metaClass = metadata.getClassNN(entity.getClass());
-
-                Map attrMap = (Map) metaClass.getAnnotations().get(PublishEntityChangedEvents.class.getName());
-                if (attrMap != null) {
-                    if (!(entity instanceof BaseGenericIdEntity)) {
-                        log.warn("Cannot publish EntityChangedEvent for {} because it is not a BaseGenericIdEntity", entity);
-                        continue;
-                    }
-
-                    boolean onCreated = (boolean) attrMap.get("created");
-                    boolean onUpdated = (boolean) attrMap.get("updated");
-                    boolean onDeleted = (boolean) attrMap.get("deleted");
-                    String viewName = (String) attrMap.get("view");
-
-                    EntityChangedEvent.Type type = null;
-                    EntityAttributeChanges changes = new EntityAttributeChanges();
-                    if (onCreated && BaseEntityInternalAccess.isNew((BaseGenericIdEntity) entity)) {
-                        type = EntityChangedEvent.Type.CREATED;
-                    } else {
-                        if (onUpdated || onDeleted) {
-                            AttributeChangeListener changeListener =
-                                    (AttributeChangeListener) ((ChangeTracker) entity)._persistence_getPropertyChangeListener();
-                            if (changeListener == null) {
-                                log.warn("Cannot publish EntityChangedEvent for {} because its AttributeChangeListener is null", entity);
-                                continue;
-                            }
-                            if (onDeleted && isDeleted((BaseGenericIdEntity) entity, changeListener)) {
-                                type = EntityChangedEvent.Type.DELETED;
-                            } else if (onUpdated && changeListener.hasChanges()) {
-                                type = EntityChangedEvent.Type.UPDATED;
-                                changes.addChanges(changeListener.getObjectChangeSet());
-                            }
-                        }
-                    }
-                    if (type != null) {
-                        if (!Strings.isNullOrEmpty(viewName)) {
-                            entityFetcher.fetch(entity, viewName);
-                        }
-                        EntityChangedEvent event = new EntityChangedEvent<Entity>(this, entity, type, changes);
-                        list.add(event);
-                    }
-                }
-            }
-            return list;
         }
 
         private void publishEntityChangedEvents(List<EntityChangedEvent> collectedEvents) {
@@ -541,9 +507,7 @@ public class PersistenceImplSupport implements ApplicationContextAware {
             List<TransactionSynchronization> synchronizationsBefore = new ArrayList<>(
                     TransactionSynchronizationManager.getSynchronizations());
 
-            for (EntityChangedEvent event : collectedEvents) {
-                events.publish(event);
-            }
+            entityChangedEventManager.publish(collectedEvents);
 
             List<TransactionSynchronization> synchronizations = new ArrayList<>(
                     TransactionSynchronizationManager.getSynchronizations());

@@ -1,11 +1,13 @@
 package com.haulmont.cuba.core;
 
 import com.haulmont.bali.db.QueryRunner;
+import com.haulmont.cuba.core.app.events.AttributeChanges;
+import com.haulmont.cuba.core.app.events.EntityChangedEvent;
 import com.haulmont.cuba.core.entity.contracts.Id;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.DataManager;
 import com.haulmont.cuba.core.global.Metadata;
-import com.haulmont.cuba.core.sys.persistence.EntityAttributeChanges;
+import com.haulmont.cuba.core.global.View;
 import com.haulmont.cuba.testmodel.sales_1.OrderLine;
 import com.haulmont.cuba.testmodel.sales_1.Product;
 import com.haulmont.cuba.testsupport.TestContainer;
@@ -64,21 +66,25 @@ public class DataManagerTransactionalUsageTest {
 
         @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 //        @EventListener
-        public void onChanged(EntityChangedEvent<OrderLine> event) {
-            OrderLine orderLine = dataManager.load(OrderLine.class).id(event.getEntity().getId())
+        public void onChanged(EntityChangedEvent<OrderLine, UUID> event) {
+            OrderLine orderLine = dataManager.load(OrderLine.class).id(event.getEntityId())
                     .view("with-product").one();
 
             Product product = orderLine.getProduct();
 
             if (event.getType() == EntityChangedEvent.Type.UPDATED) {
-                EntityAttributeChanges changes = event.getChanges();
+                AttributeChanges changes = event.getChanges();
 
                 if (changes.isChanged("product")) {
-                    Product oldProduct = changes.getOldValue("product");
-                    oldProduct.setQuantity(oldProduct.getQuantity() + orderLine.getQuantity());
+                    Id<Product, UUID> oldProductId = changes.getOldReferenceId("product");
+                    if (oldProductId != null) {
+                        Product oldProduct = dataManager.load(oldProductId).one();
+                        oldProduct.setQuantity(oldProduct.getQuantity() + orderLine.getQuantity());
+                        dataManager.save(oldProduct);
+                    }
 
                     product.setQuantity(product.getQuantity() - orderLine.getQuantity());
-                    dataManager.save(oldProduct, product);
+                    dataManager.save(product);
 
                 } else if (changes.isChanged("quantity")) {
                     product.setQuantity(product.getQuantity() - orderLine.getQuantity());
@@ -119,10 +125,26 @@ public class DataManagerTransactionalUsageTest {
         SaleProcessor processor = AppBeans.get("test_SaleProcessor");
         Id<OrderLine, UUID> orderLineId = processor.sell("abc", 10);
 
-        Product product = dataManager.load(Product.class)
+        Product product1 = dataManager.load(Product.class)
                 .query("select p from sales1$Product p where p.name = :name")
                 .parameter("name", "abc")
                 .one();
-        assertEquals(90, (int) product.getQuantity());
+        assertEquals(90, (int) product1.getQuantity());
+
+        Product product2 = metadata.create(Product.class);
+        product2.setName("def");
+        product2.setQuantity(100);
+        dataManager.commit(product2);
+
+        OrderLine orderLine = dataManager.load(orderLineId).view("with-product").one();
+        orderLine.setProduct(product2);
+        dataManager.commit(orderLine);
+
+        Product changedProduct1 = dataManager.load(Id.of(product1)).one();
+        assertEquals(100, (int) changedProduct1.getQuantity());
+
+        Product changedProduct2 = dataManager.load(Id.of(product2)).one();
+        assertEquals(90, (int) changedProduct2.getQuantity());
+
     }
 }

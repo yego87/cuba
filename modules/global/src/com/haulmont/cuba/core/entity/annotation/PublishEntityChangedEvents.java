@@ -13,6 +13,4 @@ public @interface PublishEntityChangedEvents {
     boolean created() default true;
     boolean updated() default true;
     boolean deleted() default true;
-
-    String view() default "";
 }

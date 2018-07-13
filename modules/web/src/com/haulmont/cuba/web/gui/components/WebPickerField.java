@@ -46,7 +46,7 @@ import java.util.*;
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 import static com.haulmont.cuba.gui.ComponentsHelper.findActionById;
 
-public class WebPickerField<V extends Entity> extends WebAbstractField<CubaPickerField, V>
+public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPickerField<V>, V, V>
         implements PickerField<V>, SecuredActionsHolder {
 
     protected CaptionMode captionMode = CaptionMode.ITEM;
@@ -65,8 +65,9 @@ public class WebPickerField<V extends Entity> extends WebAbstractField<CubaPicke
     public WebPickerField() {
         component = new Picker(this);
 
-        component.setInvalidAllowed(false);
-        component.setInvalidCommitted(true);
+        // VAADIN8: gg,
+//        component.setInvalidAllowed(false);
+//        component.setInvalidCommitted(true);
         component.setCaptionFormatter(new StringToEntityConverter() {
             @Override
             public String convertToPresentation(Entity value, Class<? extends String> targetType, Locale locale)
@@ -86,16 +87,16 @@ public class WebPickerField<V extends Entity> extends WebAbstractField<CubaPicke
             }
         });
 
-        attachListener(component);
+//        attachListener(component);
 
         initActionHandler();
     }
 
-    public WebPickerField(CubaPickerField component) {
+    /*public WebPickerField(CubaPickerField component) {
         this.component = component;
         attachListener(component);
         initActionHandler();
-    }
+    }*/
 
     @Override
     public MetaClass getMetaClass() {
@@ -398,7 +399,8 @@ public class WebPickerField<V extends Entity> extends WebAbstractField<CubaPicke
         }
 
         public Picker(PickerField owner, AbstractComponent field) {
-            super(field);
+            // VAADIN8: gg,
+//            super(field);
             this.owner = owner;
         }
 

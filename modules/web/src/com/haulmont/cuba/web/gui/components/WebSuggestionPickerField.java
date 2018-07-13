@@ -45,7 +45,8 @@ public class WebSuggestionPickerField<V extends Entity> extends WebSuggestionFie
         WebPickerField.Picker picker = new WebPickerField.Picker(this, component);
 
         //noinspection IncorrectCreateGuiComponent
-        pickerField = new WebPickerField(picker);
+        // VAADIN8: gg,
+        pickerField = new WebPickerField();
 
         initValueSync(picker);
     }
@@ -108,7 +109,8 @@ public class WebSuggestionPickerField<V extends Entity> extends WebSuggestionFie
             updateComponentValue = true;
             if (!Objects.equals(component.getValue(), picker.getValue())) {
                 //noinspection unchecked
-                picker.setValueIgnoreReadOnly(component.getValue());
+                // VAADIN8: gg,
+//                picker.setValueIgnoreReadOnly(component.getValue());
             }
             updateComponentValue = false;
         });

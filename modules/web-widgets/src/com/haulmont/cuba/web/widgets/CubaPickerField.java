@@ -17,9 +17,8 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.vaadin.event.Action;
-import com.vaadin.server.AbstractErrorMessage;
-import com.vaadin.server.CompositeErrorMessage;
 import com.vaadin.server.ErrorMessage;
+import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TextField;
@@ -28,11 +27,14 @@ import com.vaadin.v7.data.util.converter.Converter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Action.Container {
+public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements Action.Container {
 
-    protected Component field;
+    protected T valueInternal;
+
+    protected AbstractField<?> field;
     protected Converter captionFormatter;
 
     protected List<Button> buttons = new ArrayList<>(4);
@@ -45,26 +47,26 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
 
     public CubaPickerField() {
         init();
-
-        initTextField();
+        initField();
         initLayout();
     }
 
-    public CubaPickerField(com.vaadin.ui.AbstractComponent field) {
+    /*public CubaPickerField(com.vaadin.ui.AbstractComponent field) {
         init();
 
         this.field = field;
         this.useCustomField = true;
         initLayout();
-    }
+    }*/
 
     protected void init() {
         setPrimaryStyleName("c-pickerfield");
         setSizeUndefined();
 
-        setValidationVisible(false);
-        setShowBufferedSourceException(false);
-        setShowErrorForDisabledState(false);
+        // VAADIN8: gg,
+//        setValidationVisible(false);
+//        setShowBufferedSourceException(false);
+//        setShowErrorForDisabledState(false);
     }
 
     @Override
@@ -87,10 +89,10 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
         }
         */
 
-        setFocusDelegate((Focusable) field);
+        setFocusDelegate(field);
     }
 
-    protected void initTextField() {
+    protected void initField() {
         CubaTextField field = new CubaTextField();
         field.setStyleName("c-pickerfield-text");
         field.setReadOnlyFocusable(true);
@@ -99,13 +101,55 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
 //        vaadin8
 //        field.setNullRepresentation("");
 
-        addValueChangeListener(event -> {
+        // TEST: gg, do we need this?
+        /*addValueChangeListener(event -> {
             if (!suppressTextChangeListener) {
                 updateTextRepresentation();
             }
-        });
+        });*/
 
         this.field = field;
+    }
+
+    protected void updateTextRepresentation() {
+        CubaTextField textField = (CubaTextField) field;
+
+        suppressTextChangeListener = true;
+
+        String value = getStringRepresentation();
+        textField.setValue(value);
+
+        suppressTextChangeListener = false;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected String getStringRepresentation() {
+        // TODO: gg, reimplement
+        if (captionFormatter != null) {
+            return (String) captionFormatter.convertToPresentation(getValue(), String.class, getLocale());
+        }
+
+        T value = getValue();
+        return value != null
+                ? String.valueOf(value)
+                : getEmptyStringRepresentation();
+    }
+
+    protected String getEmptyStringRepresentation() {
+        return "";
+    }
+
+    @Override
+    protected void doSetValue(T value) {
+        // TODO: gg, implement
+        valueInternal = value;
+        updateTextRepresentation();
+    }
+
+    @Override
+    public T getValue() {
+        // TODO: gg, implement
+        return valueInternal;
     }
 
     public boolean isFieldReadOnly() {
@@ -115,22 +159,19 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
     public void setFieldReadOnly(boolean fieldReadOnly) {
         this.fieldReadOnly = fieldReadOnly;
 
-        if (!useCustomField) {
-//            vaadin8
-//            getField().setReadOnly(isReadOnly() || fieldReadOnly);
-        }
+//        if (!useCustomField) {
+        getField().setReadOnly(isReadOnly() || fieldReadOnly);
+//        }
     }
 
     @Override
     public void setReadOnly(boolean readOnly) {
         super.setReadOnly(readOnly);
 
-        if (!useCustomField) {
-//            vaadin8
-//            getField().setReadOnly(readOnly || fieldReadOnly);
-
-//            ((CubaTextField) getField()).setReadOnlyFocusable(!readOnly && fieldReadOnly);
-        }
+//        if (!useCustomField) {
+        getField().setReadOnly(readOnly || fieldReadOnly);
+        ((CubaTextField) getField()).setReadOnlyFocusable(!readOnly && fieldReadOnly);
+//        }
     }
 
     @Override
@@ -177,26 +218,6 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
         }
     }
 
-    protected void updateTextRepresentation() {
-        CubaTextField textField = (CubaTextField) field;
-
-        suppressTextChangeListener = true;
-
-        String value = getStringRepresentation();
-        textField.setValue(value != null ? value : "");
-
-        suppressTextChangeListener = false;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected String getStringRepresentation() {
-        if (captionFormatter != null) {
-            return (String) captionFormatter.convertToPresentation(getValue(), String.class, getLocale());
-        }
-
-        return String.valueOf(getValue());
-    }
-
     public List<Button> getButtons() {
         return Collections.unmodifiableList(buttons);
     }
@@ -214,16 +235,17 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
         container.removeComponent(button);
     }
 
-    public Component getField() {
+    public AbstractField<?> getField() {
         return field;
     }
 
     public void addFieldListener(BiConsumer<String, Object> listener) {
-        /* vaadin8
         field.addValueChangeListener(event -> {
-            String text = (String) event.getProperty().getValue();
+            // TODO: gg, test
+            String text = (String) event.getValue();
 
-            if (!suppressTextChangeListener && !Objects.equals(getStringRepresentation(), text)) {
+            if (!suppressTextChangeListener &&
+                    !Objects.equals(getStringRepresentation(), text)) {
                 suppressTextChangeListener = true;
 
                 listener.accept(text, getValue());
@@ -235,17 +257,12 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
                     updateTextRepresentation();
                 }
             }
-        });*/
-    }
-
-    @Override
-    public Class getType() {
-        return Object.class;
+        });
     }
 
     @Override
     public void focus() {
-        ((Focusable)field).focus();
+        field.focus();
     }
 
     @Override
@@ -260,7 +277,8 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
 
     @Override
     public ErrorMessage getErrorMessage() {
-        ErrorMessage superError = super.getErrorMessage();
+        // TODO: gg, implement
+        /*ErrorMessage superError = super.getErrorMessage();
         if (!isReadOnly() && isRequired() && isEmpty()) {
             ErrorMessage error = AbstractErrorMessage.getErrorMessageForException(
                     new com.vaadin.v7.data.Validator.EmptyValueException(getRequiredError()));
@@ -269,7 +287,8 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
             }
         }
 
-        return superError;
+        return superError;*/
+        return super.getErrorMessage();
     }
 
     @Override
@@ -287,18 +306,18 @@ public class CubaPickerField extends com.vaadin.v7.ui.CustomField implements Act
 
     @Override
     public void setTabIndex(int tabIndex) {
-        ((Focusable)field).setTabIndex(tabIndex);
+        field.setTabIndex(tabIndex);
     }
 
     @Override
     public int getTabIndex() {
-        return ((Focusable)field).getTabIndex();
+        return field.getTabIndex();
     }
 
-    @Override
+    /*@Override
     protected boolean fieldValueEquals(Object value1, Object value2) {
         // only if instance the same,
         // we can set instance of entity with the same id but different property values
         return value1 == value2;
-    }
+    }*/
 }

@@ -71,7 +71,8 @@ public class WebSearchPickerField<V extends Entity> extends WebSearchField<V> im
                 updateComponentValue = true;
                 if (!Objects.equals(selectComponent.getValue(), picker.getValue())) {
                     //noinspection unchecked
-                    picker.setValueIgnoreReadOnly(selectComponent.getValue());
+                    // VAADIN8: gg,
+//                    picker.setValueIgnoreReadOnly(selectComponent.getValue());
                 }
                 updateComponentValue = false;
             }

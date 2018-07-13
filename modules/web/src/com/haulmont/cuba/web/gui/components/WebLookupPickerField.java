@@ -47,13 +47,14 @@ public class WebLookupPickerField<V extends Entity> extends WebLookupField<V> im
 
         CComboBox selectComponent = component;
         WebPickerField.Picker picker = new WebPickerField.Picker(this, component) {
-            @Override
+            // VAADIN8: gg,
+            /*@Override
             public void setRequired(boolean required) {
                 super.setRequired(required);
                 selectComponent.setEmptySelectionAllowed(!required);
-            }
+            }*/
         };
-        pickerField = new WebPickerField(picker); // vaadin8 fix this
+        pickerField = new WebPickerField(); // vaadin8 fix this
     }
 
 /* vaadin8
@@ -95,7 +96,8 @@ public class WebLookupPickerField<V extends Entity> extends WebLookupField<V> im
 
             updateComponentValue = true;
             if (!Objects.equals(selectComponent.getValue(), picker.getValue())) {
-                picker.setValueIgnoreReadOnly(selectComponent.getValue());
+                // VAADIN8: gg,
+//                picker.setValueIgnoreReadOnly(selectComponent.getValue());
             }
             updateComponentValue = false;
         });

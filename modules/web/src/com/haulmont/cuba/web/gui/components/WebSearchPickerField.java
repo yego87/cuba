@@ -26,6 +26,7 @@ import com.haulmont.cuba.gui.components.SecuredActionsHolder;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
+import com.haulmont.cuba.web.widgets.CubaPickerField;
 import com.vaadin.ui.Component;
 import com.vaadin.v7.data.Property;
 import com.vaadin.v7.ui.ComboBox;
@@ -61,7 +62,7 @@ public class WebSearchPickerField<V extends Entity> extends WebSearchField<V> im
         initValueSync(selectComponent, picker);*/
     }
 
-    protected void initValueSync(final ComboBox selectComponent, final WebPickerField.Picker picker) {
+    protected void initValueSync(final ComboBox selectComponent, final CubaPickerField picker) {
         selectComponent.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
             public void valueChange(Property.ValueChangeEvent event) {

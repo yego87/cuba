@@ -30,24 +30,38 @@ import com.haulmont.cuba.gui.components.Action;
 import com.haulmont.cuba.gui.components.CaptionMode;
 import com.haulmont.cuba.gui.components.PickerField;
 import com.haulmont.cuba.gui.components.SecuredActionsHolder;
+import com.haulmont.cuba.gui.components.data.EntityValueSource;
+import com.haulmont.cuba.gui.components.data.ValueSource;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.web.AppUI;
-import com.haulmont.cuba.web.gui.components.converters.StringToEntityConverter;
+import com.haulmont.cuba.web.gui.components.valueproviders.EntityNameValueProvider;
+import com.haulmont.cuba.web.gui.icons.IconResolver;
+import com.haulmont.cuba.web.widgets.CubaButton;
 import com.haulmont.cuba.web.widgets.CubaPickerField;
-import com.vaadin.ui.AbstractComponent;
+import com.vaadin.data.ValueProvider;
+import com.vaadin.server.Resource;
+import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.beans.PropertyChangeListener;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 import static com.haulmont.cuba.gui.ComponentsHelper.findActionById;
 
 public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPickerField<V>, V, V>
-        implements PickerField<V>, SecuredActionsHolder {
+        implements PickerField<V>, SecuredActionsHolder, InitializingBean {
+
+    /* Beans */
+    protected Metadata metadata;
+    protected MetadataTools metadataTools;
+    protected IconResolver iconResolver;
 
     protected CaptionMode captionMode = CaptionMode.ITEM;
     protected String captionProperty;
@@ -58,51 +72,73 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
     protected WebPickerFieldActionHandler actionHandler;
 
-    protected Metadata metadata = AppBeans.get(Metadata.NAME);
-
     protected final ActionsPermissions actionsPermissions = new ActionsPermissions(this);
 
     public WebPickerField() {
-        component = new Picker(this);
+        component = createComponent();
 
-        // VAADIN8: gg,
-//        component.setInvalidAllowed(false);
-//        component.setInvalidCommitted(true);
-        component.setCaptionFormatter(new StringToEntityConverter() {
+        attachValueChangeListener(this.component);
+    }
+
+    protected CubaPickerField<V> createComponent() {
+        return new CubaPickerField<>();
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initComponent(component);
+        initActionHandler(component);
+    }
+
+    protected void initComponent(CubaPickerField<V> component) {
+        component.setTestFieldValueProvider(createTextFieldValueProvider());
+    }
+
+    protected ValueProvider<V, String> createTextFieldValueProvider() {
+        return new EntityNameValueProvider<V>(metadataTools) {
             @Override
-            public String convertToPresentation(Entity value, Class<? extends String> targetType, Locale locale)
-                    throws ConversionException {
+            public String apply(V entity) {
                 if (captionMode == CaptionMode.PROPERTY
                         && StringUtils.isNotEmpty(captionProperty)
-                        && (value != null)) {
+                        && (entity != null)) {
 
-                    Object propertyValue = value.getValue(captionProperty);
+                    Object propertyValue = entity.getValue(captionProperty);
 
-                    MetaClass metaClass = metadata.getClassNN(value.getClass());
+                    MetaClass metaClass = metadata.getClassNN(entity.getClass());
                     MetaProperty property = metaClass.getProperty(captionProperty);
                     return metadata.getTools().format(propertyValue, property);
                 }
 
-                return super.convertToPresentation(value, targetType, locale);
+                return super.apply(entity);
             }
-        });
-
-//        attachListener(component);
-
-        initActionHandler();
+        };
     }
 
-    /*public WebPickerField(CubaPickerField component) {
-        this.component = component;
-        attachListener(component);
-        initActionHandler();
-    }*/
+    protected void initActionHandler(CubaPickerField<V> component) {
+        actionHandler = new WebPickerFieldActionHandler(this);
+        component.addActionHandler(actionHandler);
+    }
+
+    @Inject
+    public void setMetadata(Metadata metadata) {
+        this.metadata = metadata;
+    }
+
+    @Inject
+    public void setMetadataTools(MetadataTools metadataTools) {
+        this.metadataTools = metadataTools;
+    }
+
+    @Inject
+    public void setIconResolver(IconResolver iconResolver) {
+        this.iconResolver = iconResolver;
+    }
 
     @Override
     public MetaClass getMetaClass() {
-        final Datasource ds = getDatasource();
-        if (ds != null) {
-            return getMetaProperty().getRange().asClass();
+        final ValueSource<V> valueSource = getValueSource();
+        if (valueSource instanceof EntityValueSource) {
+            return((EntityValueSource) valueSource).getMetaPropertyPath().getMetaProperty().getRange().asClass();
         } else {
             return metaClass;
         }
@@ -110,33 +146,11 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
     @Override
     public void setMetaClass(MetaClass metaClass) {
-        final Datasource ds = getDatasource();
-        if (ds != null) {
-            throw new IllegalStateException("Datasource is not null");
+        final ValueSource<V> valueSource = getValueSource();
+        if (valueSource != null) {
+            throw new IllegalStateException("ValueSource is not null");
         }
         this.metaClass = metaClass;
-    }
-
-    @Override
-    public void setValue(V value) {
-        if (value != null) {
-            if (getDatasource() == null && metaClass == null) {
-                throw new IllegalStateException("Datasource or metaclass must be set for field");
-            }
-
-            Class fieldClass = getMetaClass().getJavaClass();
-            Class<?> valueClass = value.getClass();
-            //noinspection unchecked
-            if (!fieldClass.isAssignableFrom(valueClass)) {
-                throw new IllegalArgumentException(
-                        String.format("Could not set value with class %s to field with class %s",
-                                fieldClass.getCanonicalName(),
-                                valueClass.getCanonicalName())
-                );
-            }
-        }
-
-        super.setValue(value);
     }
 
     @Override
@@ -169,6 +183,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
         return metaPropertyPath;
     }
 
+    // todo remove
     public void checkDatasourceProperty(Datasource datasource, String property) {
         Preconditions.checkNotNullArgument(datasource);
         Preconditions.checkNotNullArgument(property);
@@ -224,11 +239,8 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
         actions.add(index, action);
         actionHandler.addAction(action, index);
 
-        PickerButton pButton = new PickerButton();
-        pButton.setAction(action);
-        // no captions for picker buttons
-        Button vButton = (Button) pButton.getComponent();
-        vButton.setCaption("");
+        CubaButton vButton = new CubaButton();
+        setPickerButtonAction(vButton, action);
 
         component.addButton(vButton, index);
 
@@ -239,10 +251,69 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
         if (StringUtils.isNotEmpty(getDebugId())) {
             TestIdManager testIdManager = AppUI.getCurrent().getTestIdManager();
-            pButton.setDebugId(testIdManager.getTestId(getDebugId() + "_" + action.getId()));
+            // Set debug id
+            vButton.setId(testIdManager.getTestId(getDebugId() + "_" + action.getId()));
         }
 
         actionsPermissions.apply(action);
+    }
+
+    protected void setPickerButtonAction(CubaButton button, Action action) {
+        String description = action.getDescription();
+        if (description == null && action.getShortcutCombination() != null) {
+            description = action.getShortcutCombination().format();
+        }
+        if (description != null) {
+            button.setDescription(description);
+        }
+
+        button.setEnabled(action.isEnabled());
+        button.setVisible(action.isVisible());
+
+        if (action.getIcon() != null) {
+            setPickerButtonIcon(button, action.getIcon());
+        }
+
+        action.addPropertyChangeListener(createButtonPropertyChangeListener(button, action));
+
+        button.setClickHandler(createPickerButtonClickHandler(action));
+    }
+
+    protected void setPickerButtonIcon(CubaButton button, String icon) {
+        if (!StringUtils.isEmpty(icon)) {
+            Resource iconResource = iconResolver.getIconResource(icon);
+            button.setIcon(iconResource);
+            button.addStyleName(ICON_STYLE);
+        } else {
+            button.setIcon(null);
+            button.removeStyleName(ICON_STYLE);
+        }
+    }
+
+    protected PropertyChangeListener createButtonPropertyChangeListener(CubaButton button, Action action) {
+        return evt -> {
+            if (Action.PROP_ICON.equals(evt.getPropertyName())) {
+                setPickerButtonIcon(button, action.getIcon());
+            } else if (Action.PROP_CAPTION.equals(evt.getPropertyName())) {
+                button.setCaption(action.getCaption());
+            } else if (Action.PROP_DESCRIPTION.equals(evt.getPropertyName())) {
+                button.setDescription(action.getDescription());
+            } else if (Action.PROP_ENABLED.equals(evt.getPropertyName())) {
+                button.setEnabled(action.isEnabled());
+            } else if (Action.PROP_VISIBLE.equals(evt.getPropertyName())) {
+                button.setVisible(action.isVisible());
+            } else if (action instanceof PickerField.StandardAction
+                    && PickerField.StandardAction.PROP_EDITABLE.equals(evt.getPropertyName())) {
+                button.setVisible(((StandardAction) action).isEditable());
+            }
+        };
+    }
+
+    protected Consumer<MouseEventDetails> createPickerButtonClickHandler(Action action) {
+        return event -> {
+            WebPickerField.this.focus();
+            action.actionPerform(null);
+        };
     }
 
     @Override
@@ -254,6 +325,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
             TestIdManager testIdManager = AppUI.getCurrent().getTestIdManager();
 
+            // TODO: gg, reimplement
             for (Action action : actions) {
                 if (action.getOwner() != null && action.getOwner() instanceof WebButton) {
                     WebButton button = (WebButton) action.getOwner();
@@ -269,7 +341,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     public void removeAction(@Nullable Action action) {
         if (actions.remove(action)) {
             actionHandler.removeAction(action);
-            //noinspection ConstantConditions
+            // TODO: gg, reimplement
             if (action.getOwner() != null && action.getOwner() instanceof WebButton) {
                 WebButton vButton = (WebButton) action.getOwner();
                 vButton.setAction(null);
@@ -320,11 +392,6 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
         return null;
     }
 
-    protected void initActionHandler() {
-        actionHandler = new WebPickerFieldActionHandler(this);
-        component.addActionHandler(actionHandler);
-    }
-
     @Override
     public ActionsPermissions getActionsPermissions() {
         return actionsPermissions;
@@ -347,12 +414,23 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
     @Override
     public int getTabIndex() {
-        return ((Component.Focusable) component.getField()).getTabIndex();
+        return component.getField().getTabIndex();
     }
 
     @Override
     public void setTabIndex(int tabIndex) {
-        ((Component.Focusable) component.getField()).setTabIndex(tabIndex);
+        component.getField().setTabIndex(tabIndex);
+    }
+
+    @Override
+    public void setEditable(boolean editable) {
+        super.setEditable(editable);
+
+        for (Action action : getActions()) {
+            if (action instanceof StandardAction) {
+                ((StandardAction) action).setEditable(editable);
+            }
+        }
     }
 
     @Override
@@ -378,41 +456,5 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     @Override
     public boolean isModified() {
         return super.isModified();
-    }
-
-    // todo use Vaadin button instead
-    protected class PickerButton extends WebButton {
-        public PickerButton() {
-        }
-
-        @Override
-        protected void beforeActionPerformed() {
-            WebPickerField.this.focus();
-        }
-    }
-
-    public static class Picker extends CubaPickerField {
-        protected PickerField owner;
-
-        public Picker(PickerField owner) {
-            this.owner = owner;
-        }
-
-        public Picker(PickerField owner, AbstractComponent field) {
-            // VAADIN8: gg,
-//            super(field);
-            this.owner = owner;
-        }
-
-        @Override
-        public void setReadOnly(boolean readOnly) {
-            super.setReadOnly(readOnly);
-
-            for (Action action : owner.getActions()) {
-                if (action instanceof StandardAction) {
-                    ((StandardAction) action).setEditable(!readOnly);
-                }
-            }
-        }
     }
 }

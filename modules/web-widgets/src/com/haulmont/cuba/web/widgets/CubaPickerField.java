@@ -16,13 +16,12 @@
 
 package com.haulmont.cuba.web.widgets;
 
+import com.vaadin.data.ValueProvider;
 import com.vaadin.event.Action;
-import com.vaadin.server.ErrorMessage;
 import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TextField;
-import com.vaadin.v7.data.util.converter.Converter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,12 +38,11 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     protected T valueInternal;
 
     protected AbstractField<?> field;
-    protected Converter captionFormatter;
+    protected ValueProvider<T, String> testFieldValueProvider;
 
     protected List<Button> buttons = new ArrayList<>(4);
     protected CubaCssActionsLayout container;
 
-    protected boolean useCustomField = false;
     protected boolean fieldReadOnly = true;
 
     protected boolean suppressTextChangeListener = false;
@@ -116,9 +114,8 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     @SuppressWarnings("unchecked")
     protected String getStringRepresentation() {
-        // TODO: gg, reimplement
-        if (captionFormatter != null) {
-            return (String) captionFormatter.convertToPresentation(getValue(), String.class, getLocale());
+        if (testFieldValueProvider != null) {
+            return testFieldValueProvider.apply(getValue());
         }
 
         T value = getValue();
@@ -291,14 +288,12 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
         return getValue() == null;
     }
 
-    @Deprecated
-    public Converter getCaptionFormatter() {
-        return captionFormatter;
+    public ValueProvider<T, String> getTestFieldValueProvider() {
+        return testFieldValueProvider;
     }
 
-    @Deprecated
-    public void setCaptionFormatter(Converter captionFormatter) {
-        this.captionFormatter = captionFormatter;
+    public void setTestFieldValueProvider(ValueProvider<T, String> testFieldValueProvider) {
+        this.testFieldValueProvider = testFieldValueProvider;
     }
 
     @Override
@@ -311,10 +306,15 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
         return field.getTabIndex();
     }
 
+    // TODO: gg, remove
     /*@Override
     protected boolean fieldValueEquals(Object value1, Object value2) {
         // only if instance the same,
         // we can set instance of entity with the same id but different property values
         return value1 == value2;
     }*/
+
+    public static class PickerButton extends CubaButton {
+
+    }
 }

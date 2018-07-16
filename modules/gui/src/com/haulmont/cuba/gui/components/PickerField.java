@@ -67,7 +67,16 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
     String getCaptionProperty();
     void setCaptionProperty(String captionProperty);
 
+    /**
+     * @deprecated there is no need to define a MetaClass explicitly
+     */
+    @Deprecated
     MetaClass getMetaClass();
+
+    /**
+     * @deprecated there is no need to define a MetaClass explicitly
+     */
+    @Deprecated
     void setMetaClass(MetaClass metaClass);
 
     /**
@@ -161,7 +170,11 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
 
     abstract class StandardAction extends BaseAction {
 
+        public static final String PROP_EDITABLE = "editable";
+
         protected PickerField pickerField;
+
+        protected boolean editable = true;
 
         protected ClientConfig clientConfig = AppBeans.<Configuration>get(Configuration.NAME).getConfig(ClientConfig.class);
 
@@ -170,10 +183,15 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
             this.pickerField = pickerField;
         }
 
+        public boolean isEditable() {
+            return editable;
+        }
+
         public void setEditable(boolean editable) {
-            ActionOwner owner = getOwner();
-            if (owner != null && owner instanceof Component) {
-                ((Component) owner).setVisible(editable);
+            boolean oldValue = this.editable;
+            if (oldValue != editable) {
+                this.editable = editable;
+                firePropertyChange(PROP_EDITABLE, oldValue, editable);
             }
         }
 

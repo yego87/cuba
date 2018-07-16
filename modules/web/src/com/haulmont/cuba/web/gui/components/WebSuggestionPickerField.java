@@ -21,6 +21,7 @@ import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.Datasource;
+import com.haulmont.cuba.web.widgets.CubaPickerField;
 import com.vaadin.ui.Component;
 
 import javax.annotation.Nullable;
@@ -42,7 +43,7 @@ public class WebSuggestionPickerField<V extends Entity> extends WebSuggestionFie
         component.setInvalidAllowed(false);
         component.setInvalidCommitted(true);
 
-        WebPickerField.Picker picker = new WebPickerField.Picker(this, component);
+        CubaPickerField picker = new CubaPickerField();
 
         //noinspection IncorrectCreateGuiComponent
         // VAADIN8: gg,
@@ -101,7 +102,7 @@ public class WebSuggestionPickerField<V extends Entity> extends WebSuggestionFie
         pickerField.setContextHelpIconClickHandler(handler);
     }
 
-    protected void initValueSync(WebPickerField.Picker picker) {
+    protected void initValueSync(CubaPickerField picker) {
         component.addValueChangeListener(e -> {
             if (updateComponentValue)
                 return;

@@ -27,6 +27,7 @@ import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.web.widgets.CComboBox;
+import com.haulmont.cuba.web.widgets.CubaPickerField;
 import com.vaadin.ui.Component;
 import com.vaadin.v7.ui.ComboBox;
 
@@ -46,7 +47,7 @@ public class WebLookupPickerField<V extends Entity> extends WebLookupField<V> im
     public WebLookupPickerField() {
 
         CComboBox selectComponent = component;
-        WebPickerField.Picker picker = new WebPickerField.Picker(this, component) {
+        CubaPickerField picker = new CubaPickerField() {
             // VAADIN8: gg,
             /*@Override
             public void setRequired(boolean required) {
@@ -76,7 +77,7 @@ public class WebLookupPickerField<V extends Entity> extends WebLookupField<V> im
         component.setCustomValueEquals(InstanceUtils::propertyValueEquals);
 
         ComboBox selectComponent = component;
-        WebPickerField.Picker picker = new WebPickerField.Picker(this, component) {
+        CubaPickerField picker = new CubaPickerField(this, component) {
             @Override
             public void setRequired(boolean required) {
                 super.setRequired(required);
@@ -89,7 +90,7 @@ public class WebLookupPickerField<V extends Entity> extends WebLookupField<V> im
         initValueSync(selectComponent, picker);
     }*/
 
-    protected void initValueSync(ComboBox selectComponent, WebPickerField.Picker picker) {
+    protected void initValueSync(ComboBox selectComponent, CubaPickerField picker) {
         selectComponent.addValueChangeListener(event -> {
             if (updateComponentValue)
                 return;

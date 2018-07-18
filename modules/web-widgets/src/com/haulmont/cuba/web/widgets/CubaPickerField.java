@@ -293,12 +293,4 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     public int getTabIndex() {
         return field.getTabIndex();
     }
-
-    // TODO: gg, remove
-    /*@Override
-    protected boolean fieldValueEquals(Object value1, Object value2) {
-        // only if instance the same,
-        // we can set instance of entity with the same id but different property values
-        return value1 == value2;
-    }*/
 }

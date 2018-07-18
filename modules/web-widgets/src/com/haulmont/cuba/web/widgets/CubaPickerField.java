@@ -89,26 +89,17 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 //        vaadin8
 //        field.setNullRepresentation("");
 
-        // TEST: gg, do we need this?
-        /*addValueChangeListener(event -> {
-            if (!suppressTextChangeListener) {
-                updateTextRepresentation();
-            }
-        });*/
-
         this.field = field;
     }
 
     protected void updateTextRepresentation() {
         CubaTextField textField = (CubaTextField) field;
 
-        // TEST: gg, do we need this?
         suppressTextChangeListener = true;
 
         String value = getStringRepresentation();
         textField.setValue(value);
 
-        // TEST: gg, do we need this?
         suppressTextChangeListener = false;
     }
 
@@ -167,12 +158,10 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     @Override
     public void attach() {
-        // TEST: gg, do we need this?
         suppressTextChangeListener = true;
 
         super.attach();
 
-        // TEST: gg, do we need this?
         suppressTextChangeListener = false;
 
         // update text representation manually
@@ -234,7 +223,6 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     public void addFieldListener(BiConsumer<String, Object> listener) {
         field.addValueChangeListener(event -> {
-            // TEST: gg,
             String text = (String) event.getValue();
 
             if (!suppressTextChangeListener &&
@@ -313,8 +301,4 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
         // we can set instance of entity with the same id but different property values
         return value1 == value2;
     }*/
-
-    public static class PickerButton extends CubaButton {
-
-    }
 }

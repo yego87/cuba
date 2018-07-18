@@ -331,7 +331,6 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     @Override
     public void setDebugId(String id) {
         super.setDebugId(id);
-
         if (id != null) {
             String debugId = getDebugId();
 

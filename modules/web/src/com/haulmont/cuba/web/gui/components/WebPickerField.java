@@ -16,6 +16,7 @@
  */
 package com.haulmont.cuba.web.gui.components;
 
+import com.google.common.base.Strings;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaProperty;
@@ -42,14 +43,19 @@ import com.haulmont.cuba.web.widgets.CubaPickerField;
 import com.vaadin.data.ValueProvider;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.MouseEventDetails;
-import com.vaadin.ui.Button;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.beans.PropertyChangeListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
@@ -68,7 +74,10 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
     protected MetaClass metaClass;
 
+    // FIXME: gg, lazy?
     protected List<Action> actions = new ArrayList<>();
+    protected Map<String, CubaButton> actionButtons = new HashMap<>();
+    protected Map<String, PropertyChangeListener> actionPropertyChangeListeners = new HashMap<>();
 
     protected WebPickerFieldActionHandler actionHandler;
 
@@ -138,7 +147,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     public MetaClass getMetaClass() {
         final ValueSource<V> valueSource = getValueSource();
         if (valueSource instanceof EntityValueSource) {
-            return((EntityValueSource) valueSource).getMetaPropertyPath().getMetaProperty().getRange().asClass();
+            return ((EntityValueSource) valueSource).getMetaPropertyPath().getMetaProperty().getRange().asClass();
         } else {
             return metaClass;
         }
@@ -243,6 +252,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
         setPickerButtonAction(vButton, action);
 
         component.addButton(vButton, index);
+        actionButtons.put(action.getId(), vButton);
 
         // apply Editable after action owner is set
         if (action instanceof StandardAction) {
@@ -274,7 +284,9 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
             setPickerButtonIcon(button, action.getIcon());
         }
 
-        action.addPropertyChangeListener(createButtonPropertyChangeListener(button, action));
+        PropertyChangeListener actionPropertyChangeListener = createActionPropertyChangeListener(button, action);
+        action.addPropertyChangeListener(actionPropertyChangeListener);
+        actionPropertyChangeListeners.put(action.getId(), actionPropertyChangeListener);
 
         button.setClickHandler(createPickerButtonClickHandler(action));
     }
@@ -290,7 +302,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
         }
     }
 
-    protected PropertyChangeListener createButtonPropertyChangeListener(CubaButton button, Action action) {
+    protected PropertyChangeListener createActionPropertyChangeListener(CubaButton button, Action action) {
         return evt -> {
             if (Action.PROP_ICON.equals(evt.getPropertyName())) {
                 setPickerButtonIcon(button, action.getIcon());
@@ -325,13 +337,10 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
             TestIdManager testIdManager = AppUI.getCurrent().getTestIdManager();
 
-            // TODO: gg, reimplement
             for (Action action : actions) {
-                if (action.getOwner() != null && action.getOwner() instanceof WebButton) {
-                    WebButton button = (WebButton) action.getOwner();
-                    if (StringUtils.isEmpty(button.getDebugId())) {
-                        button.setDebugId(testIdManager.getTestId(debugId + "_" + action.getId()));
-                    }
+                CubaButton button = actionButtons.get(action.getId());
+                if (button != null && Strings.isNullOrEmpty(button.getId())) {
+                    button.setId(testIdManager.getTestId(debugId + "_" + action.getId()));
                 }
             }
         }
@@ -341,12 +350,13 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     public void removeAction(@Nullable Action action) {
         if (actions.remove(action)) {
             actionHandler.removeAction(action);
-            // TODO: gg, reimplement
-            if (action.getOwner() != null && action.getOwner() instanceof WebButton) {
-                WebButton vButton = (WebButton) action.getOwner();
-                vButton.setAction(null);
-                Button button = (Button) vButton.getComponent();
+
+            if (action != null) {
+                CubaButton button = actionButtons.remove(action.getId());
                 component.removeButton(button);
+
+                PropertyChangeListener listener = actionPropertyChangeListeners.remove(action.getId());
+                action.removePropertyChangeListener(listener);
             }
         }
     }

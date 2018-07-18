@@ -484,7 +484,7 @@ public class RdbmsStore implements DataStore {
             List<String> keys = context.getProperties();
 
             DataServiceQueryBuilder queryBuilder = AppBeans.get(DataServiceQueryBuilder.NAME);
-            queryBuilder.init(contextQuery.getQueryString(), contextQuery.getParameters(), contextQuery.getNoConversionParams(),
+            queryBuilder.init(contextQuery.getQueryString(), contextQuery.getFilter(), contextQuery.getParameters(), contextQuery.getNoConversionParams(),
                     null, metadata.getClassNN(KeyValueEntity.class).getName());
             Query query = queryBuilder.getQuery(em);
 
@@ -568,6 +568,7 @@ public class RdbmsStore implements DataStore {
         DataServiceQueryBuilder queryBuilder = AppBeans.get(DataServiceQueryBuilder.NAME);
         queryBuilder.init(
                 contextQuery == null ? null : contextQuery.getQueryString(),
+                contextQuery == null ? null : contextQuery.getFilter(),
                 contextQuery == null ? null : contextQuery.getParameters(),
                 contextQuery == null ? null : contextQuery.getNoConversionParams(),
                 context.getId(), context.getMetaClass()

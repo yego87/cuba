@@ -26,6 +26,7 @@ import com.haulmont.cuba.core.PersistenceSecurity;
 import com.haulmont.cuba.core.Query;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
+import com.haulmont.cuba.core.global.filter.QueryFilter;
 import com.haulmont.cuba.core.sys.QueryMacroHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -59,12 +60,13 @@ public class DataServiceQueryBuilder {
     @Inject
     private PersistenceSecurity security;
 
-    public void init(String queryString, Map<String, Object> queryParams, String[] noConversionParams,
+    public void init(String queryString, QueryFilter filter, Map<String, Object> queryParams, String[] noConversionParams,
                      Object id, String entityName)
     {
         this.entityName = entityName;
+        String qs;
         if (!StringUtils.isBlank(queryString)) {
-            this.queryString = queryString;
+            qs = queryString;
             this.queryParams = queryParams;
             this.noConversionParams = noConversionParams;
         } else {
@@ -72,9 +74,14 @@ public class DataServiceQueryBuilder {
             String pkName = metadata.getTools().getPrimaryKeyName(metaClass);
             if (pkName == null)
                 throw new IllegalStateException(String.format("Entity %s has no primary key", entityName));
-            this.queryString = "select e from " + entityName + " e where e." + pkName + " = :entityId";
+            qs = "select e from " + entityName + " e where e." + pkName + " = :entityId";
             this.queryParams = new HashMap<>();
             this.queryParams.put("entityId", id);
+        }
+        if (filter != null) {
+            this.queryString = filter.processQuery(queryString, queryParams);
+        } else {
+            this.queryString = qs;
         }
     }
 

@@ -18,14 +18,15 @@ package com.haulmont.cuba.core.global.filter;
 
 import com.haulmont.cuba.core.global.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrBuilder;
 import org.dom4j.Element;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-public class QueryFilter extends FilterParser {
+public class QueryFilter extends FilterParser implements Serializable {
 
     protected boolean enableSessionParams = AppBeans.get(Configuration.class)
             .getConfig(GlobalConfig.class).getEnableSessionParamsInQueryFilter();
@@ -72,7 +73,7 @@ public class QueryFilter extends FilterParser {
                 if (!StringUtils.isBlank(where)) {
                     Set<String> joins = refined.getJoins();
                     if (!joins.isEmpty()) {
-                        String joinsStr = new StrBuilder().appendWithSeparators(joins, " ").toString();
+                        String joinsStr = joins.stream().collect(Collectors.joining(" "));
                         transformer.addJoinAndWhere(joinsStr, where);
                     } else {
                         transformer.addWhere(where);

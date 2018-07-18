@@ -23,6 +23,7 @@ import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.Metadata;
 import com.haulmont.cuba.core.global.MetadataTools;
 import com.haulmont.cuba.core.global.ViewRepository;
+import com.haulmont.cuba.core.global.filter.QueryFilter;
 import com.haulmont.cuba.gui.model.*;
 import org.dom4j.Element;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -150,12 +151,8 @@ public class ScreenDataImpl implements ScreenData {
         loader.setDataContext(dataContext);
         loader.setContainer(container);
 
-        Element queryEl = element.element("query");
-        if (queryEl != null) {
-            loader.setQuery(loadQuery(queryEl));
-        }
-
         loadSoftDeletion(element, loader);
+        loadQuery(element, loader);
         loadEntityId(element, loader);
 
         String loaderId = element.attributeValue("id");
@@ -169,11 +166,7 @@ public class ScreenDataImpl implements ScreenData {
         loader.setDataContext(dataContext);
         loader.setContainer(container);
 
-        Element queryEl = element.element("query");
-        if (queryEl != null) {
-            loader.setQuery(loadQuery(queryEl));
-        }
-
+        loadQuery(element, loader);
         loadSoftDeletion(element, loader);
         loadFirstResult(element, loader);
         loadMaxResults(element, loader);
@@ -197,7 +190,19 @@ public class ScreenDataImpl implements ScreenData {
         }
     }
 
-    protected String loadQuery(Element queryEl) {
+    protected void loadQuery(Element element, DataLoader loader) {
+        Element queryEl = element.element("query");
+        if (queryEl != null) {
+            loader.setQuery(loadQueryText(queryEl));
+            Element filterEl = queryEl.element("filter");
+            if (filterEl != null) {
+                QueryFilter queryFilter = new QueryFilter(filterEl);
+                loader.setQueryFilter(queryFilter);
+            }
+        }
+    }
+
+    protected String loadQueryText(Element queryEl) {
         return queryEl.getText().trim();
     }
 

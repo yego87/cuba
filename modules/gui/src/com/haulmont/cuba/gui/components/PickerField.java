@@ -196,7 +196,7 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
         }
 
         protected Datasource getPropertyDatasource() {
-            // TODO: gg, fix
+            // TODO: gg, use value source
             if (pickerField.getDatasource() == null
                     || pickerField.getMetaPropertyPath() == null
                     || pickerField.getMetaPropertyPath().getMetaProperty().getType() != MetaProperty.Type.COMPOSITION
@@ -497,7 +497,7 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
                 if (value instanceof Entity
                         && entityValueSource.getMetaPropertyPath() != null
                         && entityValueSource.getMetaPropertyPath().getMetaProperty().getType() == MetaProperty.Type.COMPOSITION) {
-                    // TODO: gg, fixme
+                    // TODO: gg, use value source
                     Datasource propertyDatasource = getPropertyDatasource();
                     if (propertyDatasource != null) {
                         for (Datasource datasource : propertyDatasource.getDsContext().getAll()) {

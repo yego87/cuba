@@ -38,7 +38,7 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     protected T valueInternal;
 
     protected AbstractField<?> field;
-    protected ValueProvider<T, String> testFieldValueProvider;
+    protected ValueProvider<T, String> textFieldValueProvider;
 
     protected List<Button> buttons = new ArrayList<>(4);
     protected CubaCssActionsLayout container;
@@ -105,8 +105,8 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     @SuppressWarnings("unchecked")
     protected String getStringRepresentation() {
-        if (testFieldValueProvider != null) {
-            return testFieldValueProvider.apply(getValue());
+        if (textFieldValueProvider != null) {
+            return textFieldValueProvider.apply(getValue());
         }
 
         T value = getValue();
@@ -276,12 +276,12 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
         return getValue() == null;
     }
 
-    public ValueProvider<T, String> getTestFieldValueProvider() {
-        return testFieldValueProvider;
+    public ValueProvider<T, String> getTextFieldValueProvider() {
+        return textFieldValueProvider;
     }
 
-    public void setTestFieldValueProvider(ValueProvider<T, String> testFieldValueProvider) {
-        this.testFieldValueProvider = testFieldValueProvider;
+    public void setTextFieldValueProvider(ValueProvider<T, String> textFieldValueProvider) {
+        this.textFieldValueProvider = textFieldValueProvider;
     }
 
     @Override

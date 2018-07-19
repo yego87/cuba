@@ -74,7 +74,6 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
     protected MetaClass metaClass;
 
-    // FIXME: gg, lazy?
     protected List<Action> actions = new ArrayList<>();
     protected Map<String, CubaButton> actionButtons = new HashMap<>();
     protected Map<String, PropertyChangeListener> actionPropertyChangeListeners = new HashMap<>();
@@ -100,7 +99,7 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     }
 
     protected void initComponent(CubaPickerField<V> component) {
-        component.setTestFieldValueProvider(createTextFieldValueProvider());
+        component.setTextFieldValueProvider(createTextFieldValueProvider());
     }
 
     protected ValueProvider<V, String> createTextFieldValueProvider() {

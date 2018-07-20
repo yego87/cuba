@@ -21,7 +21,7 @@ import com.haulmont.cuba.core.global.DataManager;
 import com.haulmont.cuba.core.global.LoadContext;
 import com.haulmont.cuba.core.global.View;
 import com.haulmont.cuba.core.global.ViewRepository;
-import com.haulmont.cuba.core.global.filter.QueryFilter;
+import com.haulmont.cuba.core.global.queryconditions.Condition;
 import com.haulmont.cuba.gui.model.DataContext;
 import com.haulmont.cuba.gui.model.InstanceContainer;
 import com.haulmont.cuba.gui.model.InstanceLoader;
@@ -42,7 +42,7 @@ public class StandardInstanceLoader<E extends Entity> implements InstanceLoader<
     private DataContext dataContext;
     private InstanceContainer<E> container;
     private String query;
-    private QueryFilter queryFilter;
+    private Condition condition;
     private Map<String, Object> parameters = new HashMap<>();
     private Object entityId;
     private boolean softDeletion = true;
@@ -84,7 +84,7 @@ public class StandardInstanceLoader<E extends Entity> implements InstanceLoader<
             loadContext.setId(entityId);
         } else {
             LoadContext.Query query = loadContext.setQueryString(this.query);
-            query.setFilter(queryFilter);
+            query.setCondition(condition);
             query.setParameters(parameters);
         }
 
@@ -124,13 +124,13 @@ public class StandardInstanceLoader<E extends Entity> implements InstanceLoader<
     }
 
     @Override
-    public QueryFilter getQueryFilter() {
-        return queryFilter;
+    public Condition getCondition() {
+        return condition;
     }
 
     @Override
-    public void setQueryFilter(QueryFilter queryFilter) {
-        this.queryFilter = queryFilter;
+    public void setCondition(Condition condition) {
+        this.condition = condition;
     }
 
     @Override

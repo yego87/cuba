@@ -21,7 +21,7 @@ import com.haulmont.cuba.core.entity.KeyValueEntity;
 import com.haulmont.cuba.core.global.DataManager;
 import com.haulmont.cuba.core.global.Stores;
 import com.haulmont.cuba.core.global.ValueLoadContext;
-import com.haulmont.cuba.core.global.filter.QueryFilter;
+import com.haulmont.cuba.core.global.queryconditions.Condition;
 import com.haulmont.cuba.gui.model.DataContext;
 import com.haulmont.cuba.gui.model.KeyValueCollectionContainer;
 import com.haulmont.cuba.gui.model.KeyValueCollectionLoader;
@@ -43,7 +43,7 @@ public class StandardKeyValueCollectionLoader implements KeyValueCollectionLoade
     private DataContext dataContext;
     private KeyValueCollectionContainer container;
     private String query;
-    private QueryFilter queryFilter;
+    private Condition condition;
     private Map<String, Object> parameters = new HashMap<>();
     private int firstResult = 0;
     private int maxResults = Integer.MAX_VALUE;
@@ -86,7 +86,7 @@ public class StandardKeyValueCollectionLoader implements KeyValueCollectionLoade
 
         ValueLoadContext.Query query = loadContext.setQueryString(this.query);
 
-        query.setFilter(queryFilter);
+        query.setCondition(condition);
         query.setParameters(parameters);
 
         if (maxResults > 0)
@@ -126,13 +126,13 @@ public class StandardKeyValueCollectionLoader implements KeyValueCollectionLoade
     }
 
     @Override
-    public QueryFilter getQueryFilter() {
-        return queryFilter;
+    public Condition getCondition() {
+        return condition;
     }
 
     @Override
-    public void setQueryFilter(QueryFilter queryFilter) {
-        this.queryFilter = queryFilter;
+    public void setCondition(Condition condition) {
+        this.condition = condition;
     }
 
     @Override

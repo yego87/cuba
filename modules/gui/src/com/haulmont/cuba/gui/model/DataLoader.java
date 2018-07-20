@@ -16,7 +16,7 @@
 
 package com.haulmont.cuba.gui.model;
 
-import com.haulmont.cuba.core.global.filter.QueryFilter;
+import com.haulmont.cuba.core.global.queryconditions.Condition;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -37,9 +37,9 @@ public interface DataLoader {
 
     void setQuery(String query);
 
-    QueryFilter getQueryFilter();
+    Condition getCondition();
 
-    void setQueryFilter(QueryFilter filter);
+    void setCondition(Condition condition);
 
     Map<String, Object> getParameters();
 

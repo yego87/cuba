@@ -19,7 +19,7 @@ package com.haulmont.cuba.core.global;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.Entity;
-import com.haulmont.cuba.core.global.filter.QueryFilter;
+import com.haulmont.cuba.core.global.queryconditions.Condition;
 
 import javax.annotation.Nullable;
 import javax.persistence.TemporalType;
@@ -296,7 +296,7 @@ public class LoadContext<E extends Entity> implements DataLoadContext, Serializa
         private int firstResult;
         private int maxResults;
         private boolean cacheable;
-        private QueryFilter filter;
+        private Condition condition;
 
         /**
          * @param queryString JPQL query string. Only named parameters are supported.
@@ -395,14 +395,12 @@ public class LoadContext<E extends Entity> implements DataLoadContext, Serializa
             return this;
         }
 
-        @Override
-        public QueryFilter getFilter() {
-            return filter;
+        public Condition getCondition() {
+            return condition;
         }
 
-        @Override
-        public DataLoadContextQuery setFilter(QueryFilter filter) {
-            this.filter = filter;
+        public Query setCondition(Condition condition) {
+            this.condition = condition;
             return this;
         }
 

@@ -35,6 +35,7 @@ import com.haulmont.cuba.core.entity.AppFolder;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.core.global.filter.*;
+import com.haulmont.cuba.core.global.queryconditions.JpqlCondition;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.WindowManager;
 import com.haulmont.cuba.gui.WindowManagerProvider;
@@ -1369,16 +1370,13 @@ public class FilterDelegateImpl implements FilterDelegate {
     @Override
     public void setDataLoader(CollectionLoader dataLoader) {
         this.dataLoader = dataLoader;
-        this.dsQueryFilter = dataLoader.getQueryFilter();
         this.adapter = new LoaderAdapter(dataLoader, filter);
+        this.adapter.setDataLoaderCondition(dataLoader.getCondition());
 
         if (getResultingManualApplyRequired()) {
             // set initial denying condition to get empty datasource before explicit filter applying
-            QueryFilter queryFilter = new QueryFilter(new DenyingClause());
-            if (dsQueryFilter != null) {
-                queryFilter = QueryFilter.merge(dsQueryFilter, queryFilter);
-            }
-            this.dataLoader.setQueryFilter(queryFilter);
+            JpqlCondition denyingCondition = new JpqlCondition("0<>0");
+            this.dataLoader.setCondition(denyingCondition);
         }
 
         if (useMaxResults) {
@@ -2805,6 +2803,7 @@ public class FilterDelegateImpl implements FilterDelegate {
         int getFirstResult();
         void setFirstResult(int firstResult);
         void setQueryFilter(QueryFilter filter);
+        void setDataLoaderCondition(com.haulmont.cuba.core.global.queryconditions.Condition dataLoaderCondition);
         Map<String, Object> getLastRefreshParameters();
         void refresh(Map<String, Object> parameters);
         void refreshIfNotSuspended(Map<String, Object> parameters);
@@ -2812,14 +2811,18 @@ public class FilterDelegateImpl implements FilterDelegate {
         void pinQuery();
         void unpinAllQuery();
         String getQuery();
-
     }
 
     protected static class LoaderAdapter implements Adapter {
 
         protected CollectionLoader loader;
         protected Filter filter;
-        private QueryFilter queryFilter;
+        protected QueryFilter queryFilter;
+
+        /**
+         * Condition which was set on DataLoader before applying the filter
+         */
+        protected com.haulmont.cuba.core.global.queryconditions.Condition dataLoaderCondition;
 
         protected static final Pattern PARAM_PATTERN = Pattern.compile("(:)component\\$([\\w.]+)");
 
@@ -2862,6 +2865,11 @@ public class FilterDelegateImpl implements FilterDelegate {
         }
 
         @Override
+        public void setDataLoaderCondition(com.haulmont.cuba.core.global.queryconditions.Condition dataLoaderCondition) {
+            this.dataLoaderCondition = dataLoaderCondition;
+        }
+
+        @Override
         public Map<String, Object> getLastRefreshParameters() {
             return loader.getParameters();
         }
@@ -2894,7 +2902,18 @@ public class FilterDelegateImpl implements FilterDelegate {
                     }
                 }
 
-                loader.setQueryFilter(queryFilter);
+                com.haulmont.cuba.core.global.queryconditions.Condition condition = queryFilter.toQueryCondition();
+
+                if (dataLoaderCondition != null) {
+                    com.haulmont.cuba.core.global.queryconditions.LogicalCondition combined = new com.haulmont.cuba.core.global.queryconditions.LogicalCondition(com.haulmont.cuba.core.global.queryconditions.LogicalCondition.Type.AND);
+                    combined.add(dataLoaderCondition);
+                    combined.add(condition);
+                    condition = combined;
+                }
+
+                loader.setCondition(condition);
+            } else {
+                loader.setCondition(dataLoaderCondition);
             }
 
             loader.load();
@@ -2986,6 +3005,10 @@ public class FilterDelegateImpl implements FilterDelegate {
         @Override
         public void setQueryFilter(QueryFilter filter) {
             datasource.setQueryFilter(filter);
+        }
+
+        @Override
+        public void setDataLoaderCondition(com.haulmont.cuba.core.global.queryconditions.Condition dataLoaderCondition) {
         }
 
         @Override

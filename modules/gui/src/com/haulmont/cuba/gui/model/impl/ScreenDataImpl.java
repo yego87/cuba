@@ -24,6 +24,8 @@ import com.haulmont.cuba.core.global.Metadata;
 import com.haulmont.cuba.core.global.MetadataTools;
 import com.haulmont.cuba.core.global.ViewRepository;
 import com.haulmont.cuba.core.global.filter.QueryFilter;
+import com.haulmont.cuba.core.global.queryconditions.Condition;
+import com.haulmont.cuba.core.global.queryconditions.ConditionXmlLoader;
 import com.haulmont.cuba.gui.model.*;
 import org.dom4j.Element;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -51,6 +53,9 @@ public class ScreenDataImpl implements ScreenData {
 
     @Inject
     protected MetadataTools metadataTools;
+
+    @Inject
+    protected ConditionXmlLoader conditionXmlLoader;
 
     protected DataContext dataContext;
 
@@ -194,10 +199,16 @@ public class ScreenDataImpl implements ScreenData {
         Element queryEl = element.element("query");
         if (queryEl != null) {
             loader.setQuery(loadQueryText(queryEl));
-            Element filterEl = queryEl.element("filter");
-            if (filterEl != null) {
-                QueryFilter queryFilter = new QueryFilter(filterEl);
-                loader.setQueryFilter(queryFilter);
+            Element conditionEl = queryEl.element("condition");
+            if (conditionEl != null) {
+                if (!conditionEl.elements().isEmpty()) {
+                    if (conditionEl.elements().size() == 1) {
+                        Condition condition = conditionXmlLoader.fromXml(conditionEl.elements().get(0));
+                        loader.setCondition(condition);
+                    } else {
+                        throw new IllegalStateException("'condition' element must have exactly one nested element");
+                    }
+                }
             }
         }
     }

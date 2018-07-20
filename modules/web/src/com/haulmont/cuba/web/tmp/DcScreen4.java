@@ -74,7 +74,6 @@ public class DcScreen4 extends AbstractWindow {
 
         CollectionLoader<User> usersLoader = screenData.getLoader("usersLoader");
         usersLoader.setParameter("groupId", UUID.fromString("0fa2b1a5-1d68-4d69-9fbd-dff348347f93"));
-        usersLoader.load();
 
         usersContainer = screenData.getContainer("usersCont");
         usersTable.setTableSource(new CollectionContainerTableSource<>(usersContainer));

@@ -24,6 +24,7 @@ import com.haulmont.cuba.core.global.UserSessionSource;
 import com.haulmont.cuba.gui.components.LookupPickerField;
 import com.haulmont.cuba.gui.components.OptionsStyleProvider;
 import com.haulmont.cuba.gui.components.SecuredActionsHolder;
+import com.haulmont.cuba.gui.components.data.EntityOptionsSource;
 import com.haulmont.cuba.gui.components.data.EntityValueSource;
 import com.haulmont.cuba.gui.components.data.OptionsBinding;
 import com.haulmont.cuba.gui.components.data.OptionsSource;
@@ -74,7 +75,14 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
 
     @Override
     protected CubaPickerField<V> createComponent() {
-        return new CComboBoxPickerField<>();
+        return new CComboBoxPickerField<V>() {
+            // VAADIN8: gg, implement and move to the component
+            /*@Override
+            public void setRequired(boolean required) {
+                super.setRequired(required);
+                this.setEmptySelectionAllowed(!required);
+            }*/
+        };
     }
 
     @Override
@@ -169,6 +177,16 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     public void setNewOptionAllowed(boolean newOptionAllowed) {
         // VAADIN8: gg, implement
 //        component.setNewItemsAllowed(newItemAllowed);
+    }
+
+    @Override
+    public void addFieldListener(FieldListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setFieldEditable(boolean editable) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -315,6 +333,11 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
             OptionsBinder optionsBinder = applicationContext.getBean(OptionsBinder.NAME, OptionsBinder.class);
             this.optionsBinding = optionsBinder.bind(optionsSource, this, this::setItemsToPresentation);
             this.optionsBinding.activate();
+
+            if (getMetaClass() == null
+                    && optionsSource instanceof EntityOptionsSource) {
+                setMetaClass(((EntityOptionsSource<V>) optionsSource).getEntityMetaClass());
+            }
         }
     }
 

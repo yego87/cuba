@@ -34,6 +34,7 @@ public class CComboBoxPickerField<T> extends CubaPickerField<T> {
         super.init();
 
         addStyleName(COMBOBOX_PICKERFIELD_STYLENAME);
+        fieldReadOnly = false;
     }
 
     @Override
@@ -57,7 +58,6 @@ public class CComboBoxPickerField<T> extends CubaPickerField<T> {
     @Override
     protected void doSetValue(T value) {
         getFieldInternal().setValue(value);
-
     }
 
     @Override

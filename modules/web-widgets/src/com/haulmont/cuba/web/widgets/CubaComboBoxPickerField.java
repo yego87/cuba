@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.web.widgets;
 
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.IconGenerator;
 import com.vaadin.ui.ItemCaptionGenerator;
@@ -24,7 +25,7 @@ import java.util.Collection;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-public class CComboBoxPickerField<T> extends CubaPickerField<T> {
+public class CubaComboBoxPickerField<T> extends CubaPickerField<T> {
 
     protected static final String COMBOBOX_PICKERFIELD_STYLENAME = "c-combobox-pickerfield";
     protected static final String COMBOBOX_FIELD_STYLENAME = "c-pickerfield-combobox";
@@ -76,6 +77,11 @@ public class CComboBoxPickerField<T> extends CubaPickerField<T> {
             T value = event.getValue();
             listener.accept(String.valueOf(value), getValue());
         });
+    }
+
+    @Override
+    public Registration addValueChangeListener(ValueChangeListener<T> listener) {
+        return getFieldInternal().addValueChangeListener(listener);
     }
 
     public void setItems(T... items) {

@@ -31,7 +31,7 @@ import com.haulmont.cuba.gui.components.data.OptionsSource;
 import com.haulmont.cuba.gui.components.data.options.OptionsBinder;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
-import com.haulmont.cuba.web.widgets.CComboBoxPickerField;
+import com.haulmont.cuba.web.widgets.CubaComboBoxPickerField;
 import com.haulmont.cuba.web.widgets.CubaPickerField;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.Resource;
@@ -75,7 +75,7 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
 
     @Override
     protected CubaPickerField<V> createComponent() {
-        return new CComboBoxPickerField<V>() {
+        return new CubaComboBoxPickerField<V>() {
             // VAADIN8: gg, implement and move to the component
             /*@Override
             public void setRequired(boolean required) {
@@ -86,9 +86,9 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public CComboBoxPickerField<V> getComponent() {
+    public CubaComboBoxPickerField<V> getComponent() {
         //noinspection unchecked
-        return (CComboBoxPickerField<V>) super.getComponent();
+        return (CubaComboBoxPickerField<V>) super.getComponent();
     }
 
     @Override
@@ -107,7 +107,7 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
 
     @Override
     protected void initComponent(CubaPickerField<V> component) {
-        ((CComboBoxPickerField<V>) component)
+        ((CubaComboBoxPickerField<V>) component)
                 .setItemCaptionGenerator(this::generateDefaultItemCaption);
 
         component.addShortcutListener(new ShortcutListenerDelegate("clearShortcut",

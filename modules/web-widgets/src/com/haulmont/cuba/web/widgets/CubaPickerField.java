@@ -16,9 +16,10 @@
 
 package com.haulmont.cuba.web.widgets;
 
+import com.vaadin.data.HasValue;
 import com.vaadin.data.ValueProvider;
 import com.vaadin.event.Action;
-import com.vaadin.ui.AbstractField;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TextField;
@@ -31,13 +32,14 @@ import java.util.function.BiConsumer;
 
 public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements Action.Container {
 
+    protected static final String PRIMARY_STYLENAME = "c-pickerfield";
     protected static final String LAYOUT_STYLENAME = "c-pickerfield-layout";
     protected static final String TEXT_FIELD_STYLENAME = "c-pickerfield-text";
     protected static final String BUTTON_STYLENAME = "c-pickerfield-button";
 
     protected T valueInternal;
 
-    protected AbstractField<?> field;
+    protected AbstractComponent field;
     protected ValueProvider<T, String> textFieldValueProvider;
 
     protected List<Button> buttons = new ArrayList<>(4);
@@ -54,7 +56,7 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     }
 
     protected void init() {
-        setPrimaryStyleName("c-pickerfield");
+        setPrimaryStyleName(PRIMARY_STYLENAME);
         setSizeUndefined();
 
         // VAADIN8: gg,
@@ -77,7 +79,7 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
         container.addComponent(field);
 
-        setFocusDelegate(field);
+        setFocusDelegate((Focusable) field);
     }
 
     protected void initField() {
@@ -90,6 +92,10 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 //        field.setNullRepresentation("");
 
         this.field = field;
+    }
+
+    public AbstractComponent getField() {
+        return field;
     }
 
     protected void updateTextRepresentation() {
@@ -149,7 +155,7 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     }
 
     protected void updateFieldReadOnly() {
-        getField().setReadOnly(isReadOnly() || fieldReadOnly);
+        ((HasValue) getField()).setReadOnly(isReadOnly() || fieldReadOnly);
     }
 
     protected void updateFieldReadOnlyFocusable() {
@@ -217,13 +223,9 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
         container.removeComponent(button);
     }
 
-    public AbstractField<?> getField() {
-        return field;
-    }
-
     public void addFieldListener(BiConsumer<String, Object> listener) {
-        field.addValueChangeListener(event -> {
-            String text = (String) event.getValue();
+        ((CubaTextField) field).addValueChangeListener(event -> {
+            String text = event.getValue();
 
             if (!suppressTextChangeListener &&
                     !Objects.equals(getStringRepresentation(), text)) {
@@ -243,7 +245,17 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     @Override
     public void focus() {
-        field.focus();
+        ((Focusable) field).focus();
+    }
+
+    @Override
+    public void setTabIndex(int tabIndex) {
+        ((Focusable) field).setTabIndex(tabIndex);
+    }
+
+    @Override
+    public int getTabIndex() {
+        return ((Focusable) field).getTabIndex();
     }
 
     @Override
@@ -282,15 +294,5 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     public void setTextFieldValueProvider(ValueProvider<T, String> textFieldValueProvider) {
         this.textFieldValueProvider = textFieldValueProvider;
-    }
-
-    @Override
-    public void setTabIndex(int tabIndex) {
-        field.setTabIndex(tabIndex);
-    }
-
-    @Override
-    public int getTabIndex() {
-        return field.getTabIndex();
     }
 }

@@ -766,6 +766,7 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
 
         @Override
         public void setEditable(boolean editable) {
+            super.setEditable(editable);
             setIcon(getEditableIcon(icon, editable));
         }
 

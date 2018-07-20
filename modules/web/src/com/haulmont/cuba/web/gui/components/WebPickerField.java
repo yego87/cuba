@@ -422,12 +422,12 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
 
     @Override
     public int getTabIndex() {
-        return component.getField().getTabIndex();
+        return component.getTabIndex();
     }
 
     @Override
     public void setTabIndex(int tabIndex) {
-        component.getField().setTabIndex(tabIndex);
+        component.setTabIndex(tabIndex);
     }
 
     @Override

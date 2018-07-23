@@ -446,7 +446,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     public void setOptionsStyleProvider(OptionsStyleProvider optionsStyleProvider) {
         this.optionsStyleProvider = optionsStyleProvider;
 
-//        vaadin8 | the same for the WebLookupPickerField
+//        vaadin8 | the same for the WebLookupPickerField, WebSearchPickerField
         /*if (optionsStyleProvider != null) {
             component.setItemStyleGenerator((comboBox, item) ->
                     optionsStyleProvider.getItemStyleName(this, item));
@@ -465,7 +465,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
         this.filterPredicate = filterPredicate;
 
         if (filterPredicate != null) {
-//            vaadin8 | the same for the WebLookupPickerField
+//            vaadin8 | the same for the WebLookupPickerField, WebSearchPickerField
 //            component.setFilterPredicate(filterPredicate::test);
         } else {
 //            component.setFilterPredicate(null);

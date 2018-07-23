@@ -22,32 +22,35 @@ import com.vaadin.ui.IconGenerator;
 import com.vaadin.ui.ItemCaptionGenerator;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class CubaComboBoxPickerField<T> extends CubaPickerField<T> {
+public class CubaSearchSelectPickerField<T> extends CubaPickerField<T> {
 
-    protected static final String COMBOBOX_PICKERFIELD_STYLENAME = "c-combobox-pickerfield";
-    protected static final String COMBOBOX_FIELD_STYLENAME = "c-pickerfield-combobox";
+    protected static final String SEARCHSELECT_PICKERFIELD_STYLENAME = "c-searchselect-pickerfield";
+    protected static final String SEARCHSELECT_FIELD_STYLENAME = "c-pickerfield-searchselect";
 
     @Override
     protected void init() {
         super.init();
 
-        addStyleName(COMBOBOX_PICKERFIELD_STYLENAME);
+        addStyleName(SEARCHSELECT_PICKERFIELD_STYLENAME);
         fieldReadOnly = false;
     }
 
     @Override
     protected void initField() {
-        CComboBox<T> field = new CComboBox<>();
-        field.addStyleName(COMBOBOX_FIELD_STYLENAME);
+        CubaSearchSelect<T> field = new CubaSearchSelect<>();
+        field.addStyleName(SEARCHSELECT_FIELD_STYLENAME);
 
         this.field = field;
     }
 
-    protected CComboBox<T> getFieldInternal() {
+    protected CubaSearchSelect<T> getFieldInternal() {
         //noinspection unchecked
-        return (CComboBox<T>) field;
+        return (CubaSearchSelect<T>) field;
     }
 
     @Override

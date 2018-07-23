@@ -38,7 +38,7 @@ public class CubaSuggestionPickerField<T> extends CubaPickerField<T> {
     @Override
     protected void initField() {
         CubaSuggestionField<T> field = new CubaSuggestionField<>();
-        field.setStyleName(SUGGESTION_FIELD_STYLENAME);
+        field.addStyleName(SUGGESTION_FIELD_STYLENAME);
 
         this.field = field;
     }

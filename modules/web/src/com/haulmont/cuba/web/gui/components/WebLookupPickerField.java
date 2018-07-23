@@ -202,8 +202,8 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public void setNewOptionHandler(NewOptionHandler newItemHandler) {
-        this.newOptionHandler = newItemHandler;
+    public void setNewOptionHandler(NewOptionHandler newOptionHandler) {
+        this.newOptionHandler = newOptionHandler;
     }
 
     @Override

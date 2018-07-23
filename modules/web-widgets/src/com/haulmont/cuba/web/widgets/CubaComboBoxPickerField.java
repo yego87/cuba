@@ -22,7 +22,6 @@ import com.vaadin.ui.IconGenerator;
 import com.vaadin.ui.ItemCaptionGenerator;
 
 import java.util.Collection;
-import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 public class CubaComboBoxPickerField<T> extends CubaPickerField<T> {
@@ -46,11 +45,6 @@ public class CubaComboBoxPickerField<T> extends CubaPickerField<T> {
         this.field = field;
     }
 
-    @Override
-    public void setWidth(float width, Unit unit) {
-        super.setWidth(width, unit);
-    }
-
     protected CComboBox<T> getFieldInternal() {
         //noinspection unchecked
         return (CComboBox<T>) field;
@@ -69,14 +63,6 @@ public class CubaComboBoxPickerField<T> extends CubaPickerField<T> {
     @Override
     protected void updateFieldReadOnlyFocusable() {
         // do nothing
-    }
-
-    public void addFieldListener(BiConsumer<String, Object> listener) {
-        // TODO: gg, reimplement
-        getFieldInternal().addValueChangeListener(event -> {
-            T value = event.getValue();
-            listener.accept(String.valueOf(value), getValue());
-        });
     }
 
     @Override

@@ -29,7 +29,6 @@ import com.haulmont.cuba.gui.components.data.EntityValueSource;
 import com.haulmont.cuba.gui.components.data.OptionsBinding;
 import com.haulmont.cuba.gui.components.data.OptionsSource;
 import com.haulmont.cuba.gui.components.data.options.OptionsBinder;
-import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.widgets.CubaComboBoxPickerField;
 import com.haulmont.cuba.web.widgets.CubaPickerField;
@@ -62,8 +61,6 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     protected OptionsBinding<V> optionsBinding;
 
     protected boolean refreshOptionsOnLookupClose = false;
-
-    protected final ActionsPermissions actionsPermissions = new ActionsPermissions(this);
 
     protected Locale locale;
 
@@ -381,10 +378,5 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     @Override
     public boolean isRefreshOptionsOnLookupClose() {
         return refreshOptionsOnLookupClose;
-    }
-
-    @Override
-    public ActionsPermissions getActionsPermissions() {
-        return actionsPermissions;
     }
 }

@@ -37,7 +37,7 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     protected static final String TEXT_FIELD_STYLENAME = "c-pickerfield-text";
     protected static final String BUTTON_STYLENAME = "c-pickerfield-button";
 
-    protected T valueInternal;
+    protected T internalValue;
 
     protected AbstractComponent field;
     protected ValueProvider<T, String> textFieldValueProvider;
@@ -127,13 +127,13 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
 
     @Override
     protected void doSetValue(T value) {
-        valueInternal = value;
+        internalValue = value;
         updateTextRepresentation();
     }
 
     @Override
     public T getValue() {
-        return valueInternal;
+        return internalValue;
     }
 
     public boolean isFieldReadOnly() {

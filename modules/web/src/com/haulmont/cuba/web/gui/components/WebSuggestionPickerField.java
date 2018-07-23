@@ -20,6 +20,7 @@ import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.components.OptionsStyleProvider;
 import com.haulmont.cuba.gui.components.SecuredActionsHolder;
 import com.haulmont.cuba.gui.components.SuggestionPickerField;
+import com.haulmont.cuba.gui.executors.BackgroundTask;
 import com.haulmont.cuba.gui.executors.BackgroundTaskHandler;
 import com.haulmont.cuba.gui.executors.BackgroundWorker;
 import com.haulmont.cuba.web.widgets.CubaPickerField;
@@ -68,8 +69,7 @@ public class WebSuggestionPickerField<V extends Entity> extends WebPickerField<V
 
     @Override
     protected void initComponent(CubaPickerField<V> component) {
-        // TODO: gg, wait for WebSuggestionField implementation
-//        getComponent().setTextViewConverter(this::convertToTextView);
+        getComponent().setTextViewConverter(this::convertToTextView);
 
         getComponent().setSearchExecutor(query -> {
             cancelSearch();
@@ -77,6 +77,11 @@ public class WebSuggestionPickerField<V extends Entity> extends WebPickerField<V
         });
 
         getComponent().setCancelSearchHandler(this::cancelSearch);
+    }
+
+    protected String convertToTextView(V value) {
+        // TODO: gg, wait for WebSuggestionField implementation
+        return metadataTools.format(value);
     }
 
     protected void cancelSearch() {
@@ -89,12 +94,16 @@ public class WebSuggestionPickerField<V extends Entity> extends WebPickerField<V
     }
 
     protected void searchSuggestions(final String query) {
+        BackgroundTask<Long, List<?>> task = getSearchSuggestionsTask(query);
+        if (task != null) {
+            handler = backgroundWorker.handle(task);
+            handler.execute();
+        }
+    }
+
+    protected BackgroundTask<Long, List<?>> getSearchSuggestionsTask(final String query) {
         // TODO: gg, wait for WebSuggestionField implementation
-//        BackgroundTask<Long, List<?>> task = getSearchSuggestionsTask(query);
-//        if (task != null) {
-//            handler = backgroundWorker.handle(task);
-//            handler.execute();
-//        }
+        return null;
     }
 
     @Override

@@ -395,10 +395,17 @@ public class LoadContext<E extends Entity> implements DataLoadContext, Serializa
             return this;
         }
 
+        /**
+         * @return root query condition
+         */
         public Condition getCondition() {
             return condition;
         }
 
+        /**
+         * @param condition root query condition
+         * @return this query instance for chaining
+         */
         public Query setCondition(Condition condition) {
             this.condition = condition;
             return this;

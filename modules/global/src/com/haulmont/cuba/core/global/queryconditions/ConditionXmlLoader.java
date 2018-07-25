@@ -10,6 +10,12 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Loads the tree of {@link Condition}s from XML.
+ * <p>
+ * Use {@link #addFactory(String, Function)} method to add your own functions creating conditions from XML elements.
+ * By default, {@link LogicalCondition} and {@link JpqlCondition} are supported.
+ */
 @Component(ConditionXmlLoader.NAME)
 public class ConditionXmlLoader {
 
@@ -54,19 +60,33 @@ public class ConditionXmlLoader {
         });
     }
 
+    /**
+     * Adds a function creating a condition from XML element.
+     * @param name      name that can be used later in {@link #removeFactory(String)} method to remove the function
+     * @param factory   function creating a condition from XML element
+     */
     public void addFactory(String name, Function<Element, Condition> factory) {
         factories.put(name, factory);
     }
 
+    /**
+     * Removes a factory by its name.
+     */
     public void removeFactory(String name) {
         factories.remove(name);
     }
 
+    /**
+     * Creates a conditions tree from XML string.
+     */
     public Condition fromXml(String xml) {
         Element element = Dom4j.readDocument(xml).getRootElement();
         return fromXml(element);
     }
 
+    /**
+     * Creates a conditions tree from XML element.
+     */
     public Condition fromXml(Element element) {
         for (Function<Element, Condition> factory : factories.values()) {
             Condition condition = factory.apply(element);

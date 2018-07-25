@@ -4,6 +4,13 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * Condition that contains parts of a query. The parts are stored as named values and can be obtained by
+ * {@link #getValue(String)} method.
+ * <p>
+ * {@link #getParameters()} method returns parameters parsed from the query parts by the {@link #parseParameters()}
+ * method.
+ */
 public abstract class PropertyCondition implements Condition {
 
     public static class Entry implements Serializable {

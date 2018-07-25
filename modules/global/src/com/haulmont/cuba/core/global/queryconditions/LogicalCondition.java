@@ -3,6 +3,11 @@ package com.haulmont.cuba.core.global.queryconditions;
 import javax.annotation.Nullable;
 import java.util.*;
 
+/**
+ * Logical condition (AND, OR) which contains other conditions.
+ * <p>
+ * {@link #getParameters()} returns parameters of nested conditions.
+ */
 public class LogicalCondition implements Condition {
 
     public enum Type {

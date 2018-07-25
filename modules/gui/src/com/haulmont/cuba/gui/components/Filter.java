@@ -68,8 +68,14 @@ public interface Filter extends HasMargin, Component.BelongToFrame, HasNamedComp
 
     void setAfterFilterAppliedHandler(AfterFilterAppliedHandler afterFilterAppliedHandler);
 
+    /**
+     * Returns {@link DataLoader} which the filter is applied to.
+     */
     CollectionLoader getDataLoader();
 
+    /**
+     * Sets {@link DataLoader} which the filter is applied to.
+     */
     void setDataLoader(CollectionLoader loader);
 
     CollectionDatasource getDatasource();

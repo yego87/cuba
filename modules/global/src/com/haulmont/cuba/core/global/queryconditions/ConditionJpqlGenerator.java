@@ -11,6 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Modifies JPQL query according to the tree of conditions. See {@link #processQuery(String, Condition)} method.
+ */
 @Component(ConditionJpqlGenerator.NAME)
 public class ConditionJpqlGenerator {
 
@@ -19,6 +22,11 @@ public class ConditionJpqlGenerator {
     @Inject
     private QueryTransformerFactory queryTransformerFactory;
 
+    /**
+     * Returns a JPQL query modified according to the given tree of conditions.
+     * @param query JPQL query
+     * @param condition root condition. If null, the query is returned as is.
+     */
     public String processQuery(String query, @Nullable Condition condition) {
         if (condition == null) {
             return query;

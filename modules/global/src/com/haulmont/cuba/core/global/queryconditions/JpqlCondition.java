@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Condition that represents parts of a JPQL query: "where" and optional "join".
+ */
 public class JpqlCondition extends PropertyCondition {
 
     public static final Pattern PARAMETER_PATTERN = Pattern.compile(":([\\w.$]+)");

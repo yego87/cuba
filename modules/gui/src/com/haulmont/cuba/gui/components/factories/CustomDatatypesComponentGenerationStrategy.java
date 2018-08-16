@@ -30,8 +30,8 @@ import javax.inject.Inject;
 
 /**
  * This generation strategy is intended for generating a default field corresponding to a datatype for which other
- * generation strategies didn't create a field. For instance, then a datatype is custom and doesn't match any type
- * for witch {@link DefaultComponentGenerationStrategy} creates fields.
+ * generation strategies didn't create a field. For instance, when a datatype is custom and doesn't match any type
+ * for which {@link DefaultComponentGenerationStrategy} creates fields.
  */
 @org.springframework.stereotype.Component(CustomDatatypesComponentGenerationStrategy.NAME)
 public class CustomDatatypesComponentGenerationStrategy extends AbstractComponentGenerationStrategy implements Ordered {

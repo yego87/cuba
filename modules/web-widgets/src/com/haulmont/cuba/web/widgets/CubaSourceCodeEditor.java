@@ -19,7 +19,9 @@ package com.haulmont.cuba.web.widgets;
 import com.haulmont.cuba.web.widgets.addons.aceeditor.AceEditor;
 import com.haulmont.cuba.web.widgets.client.sourcecodeeditor.CubaSourceCodeEditorClientRpc;
 import com.haulmont.cuba.web.widgets.client.sourcecodeeditor.CubaSourceCodeEditorState;
+import com.vaadin.server.CompositeErrorMessage;
 import com.vaadin.server.ErrorMessage;
+import com.vaadin.server.UserError;
 
 public class CubaSourceCodeEditor extends AceEditor {
 
@@ -48,17 +50,16 @@ public class CubaSourceCodeEditor extends AceEditor {
 
     @Override
     public ErrorMessage getErrorMessage() {
-        ErrorMessage superError = super.getErrorMessage();
-        /* vaadin8 reimplement
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = AbstractErrorMessage.getErrorMessageForException(
-                    new com.vaadin.v7.data.Validator.EmptyValueException(getRequiredError()));
-            if (error != null) {
-                return new CompositeErrorMessage(superError, error);
-            }
-        }
-        */
+        return getComponentError();
+    }
 
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
         return superError;
     }
 

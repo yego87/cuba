@@ -20,8 +20,7 @@ import com.haulmont.cuba.web.widgets.client.textfield.CubaTextFieldState;
 import com.vaadin.event.Action;
 import com.vaadin.event.ActionManager;
 import com.vaadin.event.ShortcutListener;
-import com.vaadin.server.PaintException;
-import com.vaadin.server.PaintTarget;
+import com.vaadin.server.*;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.LegacyComponent;
 import com.vaadin.ui.TextField;
@@ -44,19 +43,20 @@ public class CubaTextField extends TextField implements Action.Container, Legacy
 //        setShowErrorForDisabledState(false);
     }
 
-    /* vaadin8
     @Override
     public ErrorMessage getErrorMessage() {
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
         ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequired() && isEmpty()) {
-            ErrorMessage error = AbstractErrorMessage.getErrorMessageForException(
-                    new com.vaadin.v7.data.Validator.EmptyValueException(getRequiredError()));
-            if (error != null) {
-                return new CompositeErrorMessage(superError, error);
-            }
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
         }
         return superError;
-    }*/
+    }
 
     @Override
     public void paintContent(PaintTarget target) throws PaintException {

@@ -19,6 +19,9 @@ package com.haulmont.cuba.web.widgets;
 import com.haulmont.cuba.web.widgets.client.datefield.CubaDateFieldState;
 import com.vaadin.data.Result;
 import com.vaadin.event.Action;
+import com.vaadin.server.CompositeErrorMessage;
+import com.vaadin.server.ErrorMessage;
+import com.vaadin.server.UserError;
 import com.vaadin.shared.ui.datefield.DateResolution;
 import org.apache.commons.lang3.StringUtils;
 
@@ -195,5 +198,20 @@ public class CubaDateField extends com.vaadin.ui.DateField implements Action.Con
     @Override
     public void removeActionHandler(Action.Handler actionHandler) {
         getActionManager().removeActionHandler(actionHandler);
+    }
+
+    @Override
+    public ErrorMessage getErrorMessage() {
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
+        return superError;
     }
 }

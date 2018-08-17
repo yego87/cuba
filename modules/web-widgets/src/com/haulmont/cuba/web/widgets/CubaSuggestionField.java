@@ -125,17 +125,17 @@ public class CubaSuggestionField<T> extends AbstractField<T> {
 
     @Override
     public ErrorMessage getErrorMessage() {
-        // VAADIN8: gg, implement
-        /*ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequired() && isEmpty()) {
-            ErrorMessage error = AbstractErrorMessage.getErrorMessageForException(
-                    new com.vaadin.v7.data.Validator.EmptyValueException(getRequiredError()));
-            if (error != null) {
-                return new CompositeErrorMessage(superError, error);
-            }
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
         }
-        return superError;*/
-        return super.getErrorMessage();
+        return superError;
     }
 
     public void setTextViewConverter(Function<T, String> converter) {

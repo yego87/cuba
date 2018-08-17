@@ -19,8 +19,7 @@ package com.haulmont.cuba.web.widgets;
 import com.vaadin.data.HasValue;
 import com.vaadin.data.ValueProvider;
 import com.vaadin.event.Action;
-import com.vaadin.server.Page;
-import com.vaadin.server.WebBrowser;
+import com.vaadin.server.*;
 import com.vaadin.ui.*;
 
 import java.util.ArrayList;
@@ -299,20 +298,20 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
         container.removeActionHandler(actionHandler);
     }
 
-    // VAADIN8: gg, implement
-    /*@Override
+    @Override
     public ErrorMessage getErrorMessage() {
-        *//*ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequired() && isEmpty()) {
-            ErrorMessage error = AbstractErrorMessage.getErrorMessageForException(
-                    new com.vaadin.v7.data.Validator.EmptyValueException(getRequiredError()));
-            if (error != null) {
-                return new CompositeErrorMessage(superError, error);
-            }
-        }
+        return getComponentError();
+    }
 
-        return superError;*//*
-    }*/
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
+        return superError;
+    }
 
     @Override
     public boolean isEmpty() {

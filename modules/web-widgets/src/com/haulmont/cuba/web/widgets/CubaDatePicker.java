@@ -16,6 +16,9 @@
 
 package com.haulmont.cuba.web.widgets;
 
+import com.vaadin.server.CompositeErrorMessage;
+import com.vaadin.server.ErrorMessage;
+import com.vaadin.server.UserError;
 import com.vaadin.ui.InlineDateField;
 
 public class CubaDatePicker extends InlineDateField {
@@ -24,5 +27,20 @@ public class CubaDatePicker extends InlineDateField {
         // VAADIN8: gg,
 //        setValidationVisible(false);
 //        setShowBufferedSourceException(false);
+    }
+
+    @Override
+    public ErrorMessage getErrorMessage() {
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
+        return superError;
     }
 }

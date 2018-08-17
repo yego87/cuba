@@ -19,9 +19,7 @@ package com.haulmont.cuba.web.widgets;
 import com.vaadin.event.Action;
 import com.vaadin.event.ActionManager;
 import com.vaadin.event.ShortcutListener;
-import com.vaadin.server.ErrorMessage;
-import com.vaadin.server.PaintException;
-import com.vaadin.server.PaintTarget;
+import com.vaadin.server.*;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.LegacyComponent;
@@ -44,17 +42,16 @@ public class CComboBox<V> extends ComboBox<V> implements Action.Container, Legac
 
     @Override
     public ErrorMessage getErrorMessage() {
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
         ErrorMessage superError = super.getErrorMessage();
-        // vaadin8
-        /*if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-
-            ErrorMessage error = AbstractErrorMessage.getErrorMessageForException(
-                    new com.vaadin.v7.data.Validator.EmptyValueException(getRequiredError()));
-            if (error != null) {
-                return new CompositeErrorMessage(superError, error);
-            }
-        }*/
-
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
         return superError;
     }
 

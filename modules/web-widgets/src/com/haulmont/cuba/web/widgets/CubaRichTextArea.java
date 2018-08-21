@@ -17,6 +17,9 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.richtextarea.CubaRichTextAreaState;
+import com.vaadin.server.CompositeErrorMessage;
+import com.vaadin.server.ErrorMessage;
+import com.vaadin.server.UserError;
 import com.vaadin.ui.RichTextArea;
 
 import java.util.Map;
@@ -30,5 +33,20 @@ public class CubaRichTextArea extends RichTextArea {
 
     public void setLocaleMap(Map<String, String> localeMap) {
         getState().localeMap = localeMap;
+    }
+
+    @Override
+    public ErrorMessage getErrorMessage() {
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
+        return superError;
     }
 }

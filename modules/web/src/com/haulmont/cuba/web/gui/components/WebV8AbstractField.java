@@ -55,12 +55,12 @@ public abstract class WebV8AbstractField<T extends com.vaadin.ui.Component & com
 
     @Override
     public void setRequiredMessage(String msg) {
-        component.setRequiredError(msg);
+        ((AbstractComponent) component).setRequiredError(msg);
     }
 
     @Override
     public String getRequiredMessage() {
-        return component.getRequiredError();
+        return ((AbstractComponent) component).getRequiredError();
     }
 
     @Override

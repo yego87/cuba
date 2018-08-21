@@ -71,8 +71,6 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<Layou
 
     protected boolean editable = true;
 
-    protected String requiredErrorMessage;
-
     protected ThemeConstants theme;
 
     public WebDateField() {
@@ -489,12 +487,13 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<Layou
 
     @Override
     public String getRequiredMessage() {
-        return requiredErrorMessage;
+        return dateField.getRequiredError();
     }
 
     @Override
     public void setRequiredMessage(String msg) {
-        requiredErrorMessage = msg;
+        dateField.setRequiredError(msg);
+        timeField.setRequiredError(msg);
     }
 
     @Override

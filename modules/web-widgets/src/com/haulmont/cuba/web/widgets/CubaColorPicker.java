@@ -249,19 +249,4 @@ public class CubaColorPicker extends ColorPicker implements Component.Focusable 
     protected CubaColorPickerState getState(boolean markAsDirty) {
         return (CubaColorPickerState) super.getState(markAsDirty);
     }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
-    }
 }

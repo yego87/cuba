@@ -29,17 +29,26 @@ public class CubaColorPickerWrapper extends CustomField<Color> {
 
     protected CubaColorPicker field;
 
+    // The internalValue is used to store the 'null' value,
+    // because the ColorPicker doesn't accept null values
     protected Color internalValue;
 
     public CubaColorPickerWrapper() {
-        initColorPicker();
+        field = createColorPicker();
+        initColorPicker(field);
+        // We need to sync 'internalValue' with the default field value, otherwise,
+        // the first time we set 'null', it doesn't change the color to Black
+        setInternalValue(field.getValue());
         setFocusDelegate(field);
         setPrimaryStyleName("c-color-picker");
         setWidthUndefined();
     }
 
-    protected void initColorPicker() {
-        field = new CubaColorPicker();
+    private CubaColorPicker createColorPicker() {
+        return new CubaColorPicker();
+    }
+
+    protected void initColorPicker(CubaColorPicker field) {
         field.addValueChangeListener((ValueChangeListener<Color>) event -> {
             setInternalValue(event.getValue());
             fireEvent(createValueChange(event.getOldValue(), event.isUserOriginated()));

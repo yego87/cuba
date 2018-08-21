@@ -19,8 +19,8 @@ package com.haulmont.cuba.web.widgets;
 import com.vaadin.server.CompositeErrorMessage;
 import com.vaadin.server.ErrorMessage;
 import com.vaadin.server.UserError;
-import com.vaadin.ui.Component;
 import com.vaadin.shared.ui.colorpicker.Color;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomField;
 
 import java.util.Objects;
@@ -28,6 +28,8 @@ import java.util.Objects;
 public class CubaColorPickerWrapper extends CustomField<Color> {
 
     protected CubaColorPicker field;
+
+    protected Color internalValue;
 
     public CubaColorPickerWrapper() {
         initColorPicker();
@@ -38,9 +40,16 @@ public class CubaColorPickerWrapper extends CustomField<Color> {
 
     protected void initColorPicker() {
         field = new CubaColorPicker();
-        field.addValueChangeListener((ValueChangeListener<Color>) event ->
-                fireEvent(createValueChange(event.getOldValue(), event.isUserOriginated())));
+        field.addValueChangeListener((ValueChangeListener<Color>) event -> {
+            setInternalValue(event.getValue());
+            fireEvent(createValueChange(event.getOldValue(), event.isUserOriginated()));
+        });
         field.setCaption(null);
+    }
+
+    @Override
+    protected Component initContent() {
+        return field;
     }
 
     @Override
@@ -56,11 +65,38 @@ public class CubaColorPickerWrapper extends CustomField<Color> {
         if (!Objects.equals(field.getValue(), value)) {
             field.setValue(value);
         }
+        setInternalValue(value);
     }
 
     @Override
     public Color getValue() {
-        return field.getValue();
+        return getInternalValue();
+    }
+
+    public Color getInternalValue() {
+        return internalValue;
+    }
+
+    public void setInternalValue(Color internalValue) {
+        if (!Objects.equals(this.internalValue, internalValue)) {
+            this.internalValue = internalValue;
+            markAsDirty();
+        }
+    }
+
+    @Override
+    public ErrorMessage getErrorMessage() {
+        return getComponentError();
+    }
+
+    @Override
+    public ErrorMessage getComponentError() {
+        ErrorMessage superError = super.getErrorMessage();
+        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
+            ErrorMessage error = new UserError(getRequiredError());
+            return new CompositeErrorMessage(superError, error);
+        }
+        return superError;
     }
 
     @Override
@@ -87,11 +123,6 @@ public class CubaColorPickerWrapper extends CustomField<Color> {
                 field.setHeight("100%");
             }
         }
-    }
-
-    @Override
-    protected Component initContent() {
-        return field;
     }
 
     public void setDefaultCaptionEnabled(boolean value) {
@@ -258,20 +289,5 @@ public class CubaColorPickerWrapper extends CustomField<Color> {
 
     public String getValueSliderCaption() {
         return field.getValueSliderCaption();
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 }

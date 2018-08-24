@@ -34,11 +34,11 @@ import com.haulmont.cuba.gui.components.data.value.DatasourceValueSource;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.widgets.CubaCssActionsLayout;
 import com.haulmont.cuba.web.widgets.CubaDateField;
 import com.haulmont.cuba.web.widgets.CubaTimeField;
 import com.vaadin.data.HasValue;
 import com.vaadin.shared.ui.datefield.DateResolution;
-import com.vaadin.ui.Layout;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.apache.commons.lang3.StringUtils;
@@ -49,7 +49,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class WebDateField<V extends Date> extends WebAbstractViewComponent<Layout, LocalDateTime, V>
+public class WebDateField<V extends Date> extends WebAbstractViewComponent<CubaCssActionsLayout, LocalDateTime, V>
         implements DateField<V>, InitializingBean {
 
     protected static final int VALIDATORS_LIST_INITIAL_CAPACITY = 2;
@@ -74,20 +74,42 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<Layou
     protected ThemeConstants theme;
 
     public WebDateField() {
-        component = new com.vaadin.ui.CssLayout();
+        component = createComponent();
         component.setPrimaryStyleName("c-datefield-layout");
 
         if (App.isBound()) {
             theme = App.getInstance().getThemeConstants();
         }
 
-        dateField = new CubaDateField();
-        timeField = new CubaTimeField();
+        dateField = createDateField();
+        initDateField(dateField);
+        timeField = createTimeField();
+        initTimeField(timeField);
 
         setWidthAuto();
 
         dateField.addValueChangeListener(createDateValueChangeListener());
         timeField.addValueChangeListener(createTimeValueChangeListener());
+    }
+
+    protected CubaCssActionsLayout createComponent() {
+        return new CubaCssActionsLayout();
+    }
+
+    protected CubaDateField createDateField() {
+        return new CubaDateField();
+    }
+
+    protected void initDateField(CubaDateField dateField) {
+        dateField.setCaptionManagedByLayout(false);
+    }
+
+    protected CubaTimeField createTimeField() {
+        return new CubaTimeField();
+    }
+
+    protected void initTimeField(CubaTimeField timeField) {
+        timeField.setCaptionManagedByLayout(false);
     }
 
     @Override
@@ -338,6 +360,13 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<Layou
     }
 
     @Override
+    public void setDescription(String description) {
+        super.setDescription(description);
+        dateField.setDescription(description);
+        timeField.setDescription(description);
+    }
+
+    @Override
     public void commit() {
         // VAADIN8: gg, implement
         /*if (updatingInstance) {
@@ -481,6 +510,11 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<Layou
 
     @Override
     public void setRequired(boolean required) {
+        // Set requiredIndicatorVisible to a component
+        // in order to show required indicator
+        component.setRequiredIndicatorVisible(required);
+        // Set requiredIndicatorVisible to fields
+        // in order to show required message and apply error styles
         dateField.setRequiredIndicatorVisible(required);
         timeField.setRequiredIndicatorVisible(required);
     }

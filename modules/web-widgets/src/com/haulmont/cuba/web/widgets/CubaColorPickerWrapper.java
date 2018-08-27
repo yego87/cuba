@@ -16,9 +16,6 @@
 
 package com.haulmont.cuba.web.widgets;
 
-import com.vaadin.server.CompositeErrorMessage;
-import com.vaadin.server.ErrorMessage;
-import com.vaadin.server.UserError;
 import com.vaadin.shared.ui.colorpicker.Color;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomField;
@@ -91,21 +88,6 @@ public class CubaColorPickerWrapper extends CustomField<Color> {
             this.internalValue = internalValue;
             markAsDirty();
         }
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 
     @Override

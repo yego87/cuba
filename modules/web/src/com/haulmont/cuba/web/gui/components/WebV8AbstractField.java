@@ -17,6 +17,8 @@ package com.haulmont.cuba.web.gui.components;
 
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.data.ConversionException;
+import com.vaadin.server.ErrorMessage;
+import com.vaadin.server.UserError;
 import com.vaadin.ui.AbstractComponent;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Base class for Vaadin8 based input components.
@@ -43,6 +46,8 @@ public abstract class WebV8AbstractField<T extends com.vaadin.ui.Component & com
 
     protected EditableChangeNotifier.EditableChangeListener parentEditableChangeListener;
 
+    protected Supplier<ErrorMessage> componentErrorProvider;
+
     @Override
     public boolean isRequired() {
         return component.isRequiredIndicatorVisible();
@@ -51,6 +56,26 @@ public abstract class WebV8AbstractField<T extends com.vaadin.ui.Component & com
     @Override
     public void setRequired(boolean required) {
         component.setRequiredIndicatorVisible(required);
+
+        setupComponentErrorProvider(required, component);
+    }
+
+    protected void setupComponentErrorProvider(boolean required, T component) {
+        AbstractComponent abstractComponent = (AbstractComponent) component;
+        if (required) {
+            if (componentErrorProvider == null) {
+                componentErrorProvider = () ->
+                        (isEditable() && isRequired() && isEmpty())
+                                ? new UserError(getRequiredMessage())
+                                : null;
+            }
+            abstractComponent.setComponentErrorProvider(componentErrorProvider);
+        } else {
+            if (componentErrorProvider != null) {
+                componentErrorProvider = null;
+            }
+            abstractComponent.setComponentErrorProvider(null);
+        }
     }
 
     @Override

@@ -20,7 +20,8 @@ import com.haulmont.cuba.web.widgets.client.textfield.CubaTextFieldState;
 import com.vaadin.event.Action;
 import com.vaadin.event.ActionManager;
 import com.vaadin.event.ShortcutListener;
-import com.vaadin.server.*;
+import com.vaadin.server.PaintException;
+import com.vaadin.server.PaintTarget;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.LegacyComponent;
 import com.vaadin.ui.TextField;
@@ -41,21 +42,6 @@ public class CubaTextField extends TextField implements Action.Container, Legacy
 //        setValidationVisible(false);
 //        setShowBufferedSourceException(false);
 //        setShowErrorForDisabledState(false);
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 
     @Override

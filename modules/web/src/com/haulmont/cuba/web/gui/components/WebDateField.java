@@ -38,16 +38,20 @@ import com.haulmont.cuba.web.widgets.CubaCssActionsLayout;
 import com.haulmont.cuba.web.widgets.CubaDateField;
 import com.haulmont.cuba.web.widgets.CubaTimeField;
 import com.vaadin.data.HasValue;
+import com.vaadin.server.ErrorMessage;
+import com.vaadin.server.UserError;
 import com.vaadin.shared.ui.datefield.DateResolution;
+import com.vaadin.ui.AbstractComponent;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class WebDateField<V extends Date> extends WebAbstractViewComponent<CubaCssActionsLayout, LocalDateTime, V>
         implements DateField<V>, InitializingBean {
@@ -56,6 +60,8 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<CubaC
     protected List<Validator> validators; // lazily initialized list
 
     protected Resolution resolution;
+
+    protected Supplier<ErrorMessage> componentErrorProvider;
 
     protected boolean updatingInstance;
 
@@ -517,6 +523,26 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<CubaC
         // in order to show required message and apply error styles
         dateField.setRequiredIndicatorVisible(required);
         timeField.setRequiredIndicatorVisible(required);
+
+        setupComponentErrorProvider(required, dateField);
+        setupComponentErrorProvider(required, timeField);
+    }
+
+    protected void setupComponentErrorProvider(boolean required, AbstractComponent component) {
+        if (required) {
+            if (componentErrorProvider == null) {
+                componentErrorProvider = () ->
+                        (isEditable() && isRequired() && isEmpty())
+                                ? new UserError(getRequiredMessage())
+                                : null;
+            }
+            component.setComponentErrorProvider(componentErrorProvider);
+        } else {
+            if (componentErrorProvider != null) {
+                componentErrorProvider = null;
+            }
+            component.setComponentErrorProvider(null);
+        }
     }
 
     @Override

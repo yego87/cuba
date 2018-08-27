@@ -19,7 +19,8 @@ package com.haulmont.cuba.web.widgets;
 import com.vaadin.data.HasValue;
 import com.vaadin.data.ValueProvider;
 import com.vaadin.event.Action;
-import com.vaadin.server.*;
+import com.vaadin.server.Page;
+import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.*;
 
 import java.util.ArrayList;
@@ -296,21 +297,6 @@ public class CubaPickerField<T> extends com.vaadin.ui.CustomField<T> implements 
     @Override
     public void removeActionHandler(Action.Handler actionHandler) {
         container.removeActionHandler(actionHandler);
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 
     @Override

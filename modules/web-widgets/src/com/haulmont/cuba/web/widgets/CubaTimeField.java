@@ -19,9 +19,6 @@ package com.haulmont.cuba.web.widgets;
 import com.haulmont.cuba.web.widgets.client.timefield.CubaTimeFieldState;
 import com.haulmont.cuba.web.widgets.client.timefield.TimeResolution;
 import com.vaadin.event.FieldEvents;
-import com.vaadin.server.CompositeErrorMessage;
-import com.vaadin.server.ErrorMessage;
-import com.vaadin.server.UserError;
 import com.vaadin.shared.communication.FieldRpc;
 import com.vaadin.shared.ui.textfield.AbstractTextFieldServerRpc;
 import com.vaadin.ui.AbstractField;
@@ -223,21 +220,6 @@ public class CubaTimeField extends AbstractField<LocalTime> {
             dateTimeFormatter = dateTimeFormatter.withLocale(locale);
         }
         return dateTimeFormatter;
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 
     public boolean isCaptionManagedByLayout() {

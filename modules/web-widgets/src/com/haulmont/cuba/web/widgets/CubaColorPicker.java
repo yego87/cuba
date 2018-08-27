@@ -17,9 +17,6 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.colorpicker.CubaColorPickerState;
-import com.vaadin.server.CompositeErrorMessage;
-import com.vaadin.server.ErrorMessage;
-import com.vaadin.server.UserError;
 import com.vaadin.ui.Component;
 import com.vaadin.shared.ui.colorpicker.Color;
 import com.vaadin.ui.ColorPicker;

@@ -19,9 +19,6 @@ package com.haulmont.cuba.web.widgets;
 import com.haulmont.cuba.web.widgets.addons.aceeditor.AceEditor;
 import com.haulmont.cuba.web.widgets.client.sourcecodeeditor.CubaSourceCodeEditorClientRpc;
 import com.haulmont.cuba.web.widgets.client.sourcecodeeditor.CubaSourceCodeEditorState;
-import com.vaadin.server.CompositeErrorMessage;
-import com.vaadin.server.ErrorMessage;
-import com.vaadin.server.UserError;
 
 public class CubaSourceCodeEditor extends AceEditor {
 
@@ -46,21 +43,6 @@ public class CubaSourceCodeEditor extends AceEditor {
 
         setHandleTabKey(false);
         setFontSize("auto");
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 
     @Override

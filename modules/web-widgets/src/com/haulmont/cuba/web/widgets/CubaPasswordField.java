@@ -17,9 +17,6 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.passwordfield.CubaPasswordFieldState;
-import com.vaadin.server.CompositeErrorMessage;
-import com.vaadin.server.ErrorMessage;
-import com.vaadin.server.UserError;
 import com.vaadin.shared.Connector;
 import com.vaadin.ui.PasswordField;
 
@@ -51,21 +48,6 @@ public class CubaPasswordField extends PasswordField {
         if (isAutocomplete() != autocomplete) {
             getState().autocomplete = autocomplete;
         }
-    }
-
-    @Override
-    public ErrorMessage getErrorMessage() {
-        return getComponentError();
-    }
-
-    @Override
-    public ErrorMessage getComponentError() {
-        ErrorMessage superError = super.getErrorMessage();
-        if (!isReadOnly() && isRequiredIndicatorVisible() && isEmpty()) {
-            ErrorMessage error = new UserError(getRequiredError());
-            return new CompositeErrorMessage(superError, error);
-        }
-        return superError;
     }
 
     public void setCapsLockIndicator(Connector capsLockIndicator) {

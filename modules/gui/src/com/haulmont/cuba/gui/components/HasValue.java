@@ -18,11 +18,13 @@ package com.haulmont.cuba.gui.components;
 
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.cuba.gui.components.compatibility.ComponentValueListenerWrapper;
+import com.haulmont.cuba.gui.components.sys.EventHubOwner;
 import com.haulmont.cuba.gui.data.ValueListener;
 
 import javax.annotation.Nullable;
 import java.util.EventObject;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Object having a value.
@@ -59,8 +61,18 @@ public interface HasValue<V> {
         removeValueChangeListener(new ComponentValueListenerWrapper(listener));
     }
 
-    Subscription addValueChangeListener(ValueChangeListener listener);
-    void removeValueChangeListener(ValueChangeListener listener);
+    default Subscription addValueChangeListener(Consumer<ValueChangeEvent> listener) {
+        return ((EventHubOwner) this).getEventHub().subscribe(ValueChangeEvent.class, listener);
+    }
+
+    /**
+     * @param listener a listener to remove
+     * @deprecated Use {@link Subscription} instead
+     */
+    @Deprecated
+    default void removeValueChangeListener(Consumer<ValueChangeEvent> listener) {
+        ((EventHubOwner) this).getEventHub().unsubscribe(ValueChangeEvent.class, listener);
+    }
 
     /**
      * Describes value change event.
@@ -72,7 +84,7 @@ public interface HasValue<V> {
         private final Object prevValue;
         private final Object value;
 
-        // vaadin8 add isUserOriginated !!!
+        // vaadin8 add isUserOriginated !!!!!
 
         public ValueChangeEvent(HasValue component, Object prevValue, Object value) {
             super(component);
@@ -108,18 +120,5 @@ public interface HasValue<V> {
         public Object getValue() {
             return value;
         }
-    }
-
-    /**
-     * Listener to value change events.
-     */
-    @FunctionalInterface
-    interface ValueChangeListener {
-        /**
-         * Called when value of Component changed.
-         *
-         * @param e event object
-         */
-        void valueChanged(ValueChangeEvent e);
     }
 }

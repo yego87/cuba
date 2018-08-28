@@ -16,7 +16,6 @@
  */
 package com.haulmont.cuba.web.gui.components;
 
-import com.haulmont.bali.events.Subscription;
 import com.haulmont.chile.core.model.utils.InstanceUtils;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.gui.components.*;
@@ -175,18 +174,6 @@ public abstract class WebAbstractField<T extends com.vaadin.v7.ui.AbstractField,
         component.setReadOnly(!editable);
     }
 
-    @Override
-    public Subscription addValueChangeListener(ValueChangeListener listener) {
-        getEventRouter().addListener(ValueChangeListener.class, listener);
-
-        return () -> getEventRouter().removeListener(ValueChangeListener.class, listener);
-    }
-
-    @Override
-    public void removeValueChangeListener(ValueChangeListener listener) {
-        getEventRouter().removeListener(ValueChangeListener.class, listener);
-    }
-
     @SuppressWarnings("unchecked")
     protected void attachListener(T component) {
         component.addValueChangeListener(event -> {
@@ -206,7 +193,7 @@ public abstract class WebAbstractField<T extends com.vaadin.v7.ui.AbstractField,
             }
 
             ValueChangeEvent event = new ValueChangeEvent(this, oldValue, value);
-            getEventRouter().fireEvent(ValueChangeListener.class, ValueChangeListener::valueChanged, event);
+            getEventHub().publish(ValueChangeEvent.class, event);
         }
     }
 

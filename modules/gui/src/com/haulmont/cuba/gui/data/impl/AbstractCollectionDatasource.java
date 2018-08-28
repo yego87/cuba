@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -692,9 +693,9 @@ public abstract class AbstractCollectionDatasource<T extends Entity<K>, K>
         this.refreshMode = refreshMode;
     }
 
-    protected class ComponentValueListener implements HasValue.ValueChangeListener {
+    protected class ComponentValueListener implements Consumer<HasValue.ValueChangeEvent> {
         @Override
-        public void valueChanged(HasValue.ValueChangeEvent e) {
+        public void accept(HasValue.ValueChangeEvent e) {
             refresh();
         }
     }

@@ -530,19 +530,16 @@ public class WebDateField<V extends Date> extends WebAbstractViewComponent<CubaC
 
     protected void setupComponentErrorProvider(boolean required, AbstractComponent component) {
         if (required) {
-            if (componentErrorProvider == null) {
-                componentErrorProvider = () ->
-                        (isEditable() && isRequired() && isEmpty())
-                                ? new UserError(getRequiredMessage())
-                                : null;
-            }
-            component.setComponentErrorProvider(componentErrorProvider);
+            component.setComponentErrorProvider(this::getErrorMessage);
         } else {
-            if (componentErrorProvider != null) {
-                componentErrorProvider = null;
-            }
             component.setComponentErrorProvider(null);
         }
+    }
+
+    protected ErrorMessage getErrorMessage() {
+        return (isEditable() && isRequired() && isEmpty())
+                ? new UserError(getRequiredMessage())
+                : null;
     }
 
     @Override

@@ -24,63 +24,6 @@ public interface FileMultiUploadField extends UploadField {
     String NAME = "multiUpload";
 
     /**
-     * @deprecated Use {@link UploadField.FileUploadStartListener},
-     *                 {@link UploadField.FileUploadFinishListener},
-     *                 {@link UploadField.FileUploadErrorListener},
-     *                 {@link QueueUploadCompleteListener}
-     */
-    @Deprecated
-    abstract class UploadListener {
-        /**
-         * File upload finished. Executed in uploading thread. <br>
-         * <b>Do not perform progress indication here!</b>
-         *
-         * @param fileName file name
-         */
-        public void fileUploaded(String fileName) {
-        }
-
-        /**
-         * File uploading started. Executed in uploading thread. <br>
-         * <b>Do not perform progress indication here!</b>
-         *
-         * @param fileName file name
-         */
-        public void fileUploadStart(String fileName) {
-        }
-
-        /**
-         * Queue upload completed
-         */
-        public void queueUploadComplete() {
-        }
-
-        /**
-         * Handle uploading error.
-         *
-         * @param fileName file name
-         * @return true if error handled by listener.
-         *         If returned false then component shows default upload error notification.
-         */
-        @Deprecated
-        public boolean uploadError(String fileName) {
-            return false;
-        }
-    }
-
-    /**
-     * @deprecated Use {@link #addQueueUploadCompleteListener(QueueUploadCompleteListener)},
-     *                 {@link #addFileUploadErrorListener(FileUploadErrorListener)},
-     *                 {@link #addFileUploadFinishListener(FileUploadFinishListener)},
-     *                 {@link #addFileUploadStartListener(FileUploadStartListener)}
-     */
-    @Deprecated
-    void addListener(UploadListener listener);
-
-    @Deprecated
-    void removeListener(UploadListener listener);
-
-    /**
      * Get uploads map
      *
      * @return Map ( UUID - Id of file in FileUploadingAPI, String - FileName )

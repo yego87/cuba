@@ -141,6 +141,9 @@ public interface Accordion extends ComponentContainer, Component.BelongToFrame, 
 
     /**
      * Remove previously added SelectedTabChangeListener.
+     *
+     * @param listener a listener to remove
+     * @deprecated Use {@link Subscription} instead
      */
     @Deprecated
     default void removeSelectedTabChangeListener(Consumer<SelectedTabChangeEvent> listener) {

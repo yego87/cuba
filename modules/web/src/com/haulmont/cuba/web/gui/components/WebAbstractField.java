@@ -40,7 +40,8 @@ public abstract class WebAbstractField<T extends com.vaadin.v7.ui.AbstractField,
     protected V internalValue;
     protected ValueBinding<V> valueBinding;
 
-    protected EditableChangeNotifier.EditableChangeListener parentEditableChangeListener;
+    // VAADIN8: gg, replace with Subscription
+    protected Consumer<EditableChangeNotifier.EditableChangeEvent> parentEditableChangeListener;
 
     protected Consumer<ContextHelpIconClickEvent> contextHelpIconClickHandler;
     protected ContextHelpIconClickListener contextHelpIconClickListener;

@@ -1268,20 +1268,6 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     }
 
     /**
-     * Renderer listens to clicks.
-     */
-    @FunctionalInterface
-    interface RendererClickListener<T extends Entity> {
-
-        /**
-         * Called when a renderer is clicked.
-         *
-         * @param event the event representing the click
-         */
-        void onClick(RendererClickEvent<T> event);
-    }
-
-    /**
      * Click event fired by a {@link HasRendererClickListener}
      */
     class RendererClickEvent<T extends Entity> extends DataGridClickEvent {
@@ -1338,7 +1324,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          *
          * @param listener the listener to set
          */
-        void setRendererClickListener(RendererClickListener<T> listener);
+        void setRendererClickListener(Consumer<RendererClickEvent<T>> listener);
     }
 
     /**

@@ -42,24 +42,6 @@ public interface Timer extends Component.HasXmlDescriptor, Component.BelongToFra
     void stop();
 
     /**
-     * @deprecated Use {@link com.haulmont.cuba.gui.components.Timer.ActionListener} and {@link com.haulmont.cuba.gui.components.Timer.StopListener}
-     */
-    @Deprecated
-    void addTimerListener(TimerListener listener);
-    @Deprecated
-    void removeTimerListener(TimerListener listener);
-
-    /**
-     * @deprecated Use {@link com.haulmont.cuba.gui.components.Timer.ActionListener} and {@link com.haulmont.cuba.gui.components.Timer.StopListener}
-     */
-    @Deprecated
-    interface TimerListener {
-        void onTimer(Timer timer);
-
-        void onStopTimer(Timer timer);
-    }
-
-    /**
      * Listener for timer events.
      */
     interface ActionListener {

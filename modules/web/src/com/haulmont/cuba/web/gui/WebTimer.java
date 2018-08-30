@@ -18,7 +18,6 @@ package com.haulmont.cuba.web.gui;
 
 import com.haulmont.cuba.core.global.RemoteException;
 import com.haulmont.cuba.gui.components.Timer;
-import com.haulmont.cuba.gui.components.compatibility.TimerListenerWrapper;
 import com.haulmont.cuba.security.global.NoUserSessionException;
 import com.haulmont.cuba.web.gui.components.WebAbstractComponent;
 import com.haulmont.cuba.web.widgets.CubaTimer;
@@ -86,22 +85,6 @@ public class WebTimer extends WebAbstractComponent<Label> implements com.haulmon
     @Override
     public void setDelay(int delay) {
         timerImpl.setDelay(delay);
-    }
-
-    @Override
-    public void addTimerListener(TimerListener listener) {
-        TimerListenerWrapper wrapper = new TimerListenerWrapper(listener);
-
-        addActionListener(wrapper);
-        addStopListener(wrapper);
-    }
-
-    @Override
-    public void removeTimerListener(TimerListener listener) {
-        TimerListenerWrapper wrapper = new TimerListenerWrapper(listener);
-
-        removeActionListener(wrapper);
-        removeStopListener(wrapper);
     }
 
     @Override

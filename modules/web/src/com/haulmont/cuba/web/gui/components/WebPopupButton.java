@@ -66,7 +66,7 @@ public class WebPopupButton extends WebAbstractComponent<CubaPopupButton>
         };
 
         component.addPopupVisibilityListener(event ->
-                getEventHub().publish(PopupVisibilityEvent.class, new PopupVisibilityEvent(this))
+                publish(PopupVisibilityEvent.class, new PopupVisibilityEvent(this))
         );
 
         this.vActionsContainer = createActionsContainer();

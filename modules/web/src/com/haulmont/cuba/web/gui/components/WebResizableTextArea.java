@@ -39,7 +39,7 @@ public class WebResizableTextArea<V> extends WebAbstractTextArea<CubaTextArea, V
         wrapper = new CubaResizableTextAreaWrapper(component);
         wrapper.addResizeListener((oldWidth, oldHeight, width, height) -> {
             ResizeEvent e = new ResizeEvent(this, oldWidth, width, oldHeight, height);
-            getEventHub().publish(ResizeEvent.class, e);
+            publish(ResizeEvent.class, e);
         });
     }
 

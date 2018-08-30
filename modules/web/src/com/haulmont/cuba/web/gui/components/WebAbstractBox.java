@@ -210,12 +210,12 @@ public abstract class WebAbstractBox<T extends AbstractOrderedLayout>
 
                 LayoutClickEvent layoutClickEvent = new LayoutClickEvent(this, childComponent, mouseEventDetails);
 
-                getEventHub().publish(LayoutClickEvent.class, layoutClickEvent);
+                publish(LayoutClickEvent.class, layoutClickEvent);
             };
             component.addLayoutClickListener(layoutClickListener);
         }
 
-        return getEventHub().subscribe(LayoutClickEvent.class, listener);
+        return BoxLayout.super.addLayoutClickListener(listener);
     }
 
     protected Component findChildComponent(com.vaadin.ui.Component childComponent) {
@@ -229,9 +229,9 @@ public abstract class WebAbstractBox<T extends AbstractOrderedLayout>
 
     @Override
     public void removeLayoutClickListener(Consumer<LayoutClickEvent> listener) {
-        getEventHub().unsubscribe(LayoutClickEvent.class, listener);
+        BoxLayout.super.removeLayoutClickListener(listener);
 
-        if (!getEventHub().hasSubscriptions(LayoutClickEvent.class)) {
+        if (!hasSubscriptions(LayoutClickEvent.class)) {
             component.removeLayoutClickListener(layoutClickListener);
             layoutClickListener = null;
         }

@@ -161,7 +161,7 @@ public class WebListEditor<V> extends WebAbstractField<WebListEditor.CubaListEdi
             internalValue = newValue;
 
             ValueChangeEvent event = new ValueChangeEvent(this, oldValue, newValue);
-            getEventHub().publish(ValueChangeEvent.class, event);
+            publish(ValueChangeEvent.class, event);
         }
     }
 

@@ -46,7 +46,7 @@ public class WebButtonsPanel extends WebHBoxLayout implements ButtonsPanel, Visi
     public void setVisible(boolean visible) {
         super.setVisible(visible);
 
-        getEventHub().publish(VisibilityChangeEvent.class,
+        publish(VisibilityChangeEvent.class,
                 new VisibilityChangeEvent(this, visible));
     }
 }

@@ -247,7 +247,7 @@ public class WebGroupBox extends WebAbstractComponent<CubaGroupBox> implements G
 
     protected void fireExpandStateChange(boolean expanded) {
         ExpandedStateChangeEvent event = new ExpandedStateChangeEvent(this, expanded);
-        getEventHub().publish(ExpandedStateChangeEvent.class, event);
+        publish(ExpandedStateChangeEvent.class, event);
     }
 
     @Override

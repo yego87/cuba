@@ -171,12 +171,12 @@ public class WebAbstractOrderedLayout<T extends com.vaadin.ui.CssLayout> extends
 
                 LayoutClickEvent layoutClickEvent = new LayoutClickEvent(this, childComponent, mouseEventDetails);
 
-                getEventHub().publish(LayoutClickEvent.class, layoutClickEvent);
+                publish(LayoutClickEvent.class, layoutClickEvent);
             };
             component.addLayoutClickListener(layoutClickListener);
         }
 
-        return getEventHub().subscribe(LayoutClickEvent.class, listener);
+        return LayoutClickNotifier.super.addLayoutClickListener(listener);
     }
 
     protected Component findChildComponent(ComponentContainer layout, com.vaadin.ui.Component clickedComponent) {
@@ -190,9 +190,9 @@ public class WebAbstractOrderedLayout<T extends com.vaadin.ui.CssLayout> extends
 
     @Override
     public void removeLayoutClickListener(Consumer<LayoutClickEvent> listener) {
-        getEventHub().unsubscribe(LayoutClickEvent.class, listener);
+        LayoutClickNotifier.super.removeLayoutClickListener(listener);
 
-        if (!getEventHub().hasSubscriptions(LayoutClickEvent.class)) {
+        if (!hasSubscriptions(LayoutClickEvent.class)) {
             component.removeLayoutClickListener(layoutClickListener);
             layoutClickListener = null;
         }

@@ -633,7 +633,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
             this.editable = editable;
 
             EditableChangeEvent event = new EditableChangeEvent(this);
-            getEventHub().publish(EditableChangeEvent.class, event);
+            publish(EditableChangeEvent.class, event);
         }
     }
 

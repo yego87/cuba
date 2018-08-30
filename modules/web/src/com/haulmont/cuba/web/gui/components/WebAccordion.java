@@ -487,14 +487,14 @@ public class WebAccordion extends WebAbstractComponent<CubaAccordion> implements
 
     protected void fireTabChanged() {
         SelectedTabChangeEvent event = new SelectedTabChangeEvent(this, getTab());
-        getEventHub().publish(SelectedTabChangeEvent.class, event);
+        publish(SelectedTabChangeEvent.class, event);
     }
 
     @Override
     public Subscription addSelectedTabChangeListener(Consumer<SelectedTabChangeEvent> listener) {
         initComponentTabChangeListener();
 
-        return getEventHub().subscribe(SelectedTabChangeEvent.class, listener);
+        return Accordion.super.addSelectedTabChangeListener(listener);
     }
 
     protected class LazyTabChangeListener implements com.vaadin.ui.Accordion.SelectedTabChangeListener {

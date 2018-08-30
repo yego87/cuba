@@ -267,7 +267,7 @@ public class WebFilter extends WebAbstractComponent<CubaCssActionsLayout> implem
 
     protected void fireExpandStateChange(boolean expanded) {
         ExpandedStateChangeEvent event = new ExpandedStateChangeEvent(this, expanded);
-        getEventHub().publish(ExpandedStateChangeEvent.class, event);
+        publish(ExpandedStateChangeEvent.class, event);
     }
 
     @Nullable

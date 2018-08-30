@@ -194,7 +194,7 @@ public abstract class WebAbstractField<T extends com.vaadin.v7.ui.AbstractField,
             }
 
             ValueChangeEvent event = new ValueChangeEvent(this, oldValue, value);
-            getEventHub().publish(ValueChangeEvent.class, event);
+            publish(ValueChangeEvent.class, event);
         }
     }
 

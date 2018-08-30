@@ -120,7 +120,7 @@ public class WebFileUploadField extends WebAbstractUploadField<CubaFileUploadWra
 
     protected void clearButtonClicked(@SuppressWarnings("unused") Button.ClickEvent clickEvent) {
         BeforeValueClearEvent beforeValueClearEvent = new BeforeValueClearEvent(this);
-        getEventHub().publish(BeforeValueClearEvent.class, beforeValueClearEvent);
+        publish(BeforeValueClearEvent.class, beforeValueClearEvent);
 
         if (!beforeValueClearEvent.isClearPrevented()) {
             setValue(null);
@@ -129,7 +129,7 @@ public class WebFileUploadField extends WebAbstractUploadField<CubaFileUploadWra
 
         AfterValueClearEvent afterValueClearEvent = new AfterValueClearEvent(this,
                 !beforeValueClearEvent.isClearPrevented());
-        getEventHub().publish(AfterValueClearEvent.class, afterValueClearEvent);
+        publish(AfterValueClearEvent.class, afterValueClearEvent);
     }
 
     protected void saveFile(FileDescriptor fileDescriptor) {
@@ -343,22 +343,22 @@ public class WebFileUploadField extends WebAbstractUploadField<CubaFileUploadWra
 
     protected void fireFileUploadStart(String fileName, long contentLength) {
         FileUploadStartEvent e = new FileUploadStartEvent(fileName, contentLength);
-        getEventHub().publish(FileUploadStartEvent.class, e);
+        publish(FileUploadStartEvent.class, e);
     }
 
     protected void fireFileUploadFinish(String fileName, long contentLength) {
         FileUploadFinishEvent e = new FileUploadFinishEvent(fileName, contentLength);
-        getEventHub().publish(FileUploadFinishEvent.class, e);
+        publish(FileUploadFinishEvent.class, e);
     }
 
     protected void fireFileUploadError(String fileName, long contentLength, Exception cause) {
         FileUploadErrorEvent e = new FileUploadErrorEvent(fileName, contentLength, cause);
-        getEventHub().publish(FileUploadErrorEvent.class, e);
+        publish(FileUploadErrorEvent.class, e);
     }
 
     protected void fireFileUploadSucceed(String fileName, long contentLength) {
         FileUploadSucceedEvent e = new FileUploadSucceedEvent(fileName, contentLength);
-        getEventHub().publish(FileUploadSucceedEvent.class, e);
+        publish(FileUploadSucceedEvent.class, e);
     }
 
     @Override

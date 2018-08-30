@@ -536,11 +536,11 @@ public class WebTabSheet extends WebAbstractComponent<CubaTabSheet> implements T
     public Subscription addSelectedTabChangeListener(Consumer<SelectedTabChangeEvent> listener) {
         initComponentTabChangeListener();
 
-        return getEventHub().subscribe(SelectedTabChangeEvent.class, listener);
+        return TabSheet.super.addSelectedTabChangeListener(listener);
     }
 
     protected void fireTabChanged(SelectedTabChangeEvent event) {
-        getEventHub().publish(SelectedTabChangeEvent.class, event);
+        publish(SelectedTabChangeEvent.class, event);
     }
 
     protected class LazyTabChangeListener implements com.vaadin.ui.TabSheet.SelectedTabChangeListener {

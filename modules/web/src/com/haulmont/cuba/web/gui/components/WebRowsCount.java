@@ -341,7 +341,7 @@ public class WebRowsCount extends WebAbstractComponent<CubaRowsCount> implements
     public void setVisible(boolean visible) {
         super.setVisible(visible);
 
-        getEventHub().publish(VisibilityChangeEvent.class,
+        publish(VisibilityChangeEvent.class,
                 new VisibilityChangeEvent(this, visible));
     }
 }

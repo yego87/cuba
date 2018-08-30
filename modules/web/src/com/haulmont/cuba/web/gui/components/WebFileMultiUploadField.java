@@ -210,17 +210,17 @@ public class WebFileMultiUploadField extends WebAbstractUploadComponent<CubaFile
 
     protected void fireFileUploadStart(String fileName, long contentLength) {
         FileUploadStartEvent event = new FileUploadStartEvent(fileName, contentLength);
-        getEventHub().publish(FileUploadStartEvent.class, event);
+        publish(FileUploadStartEvent.class, event);
     }
 
     protected void fireFileUploadFinish(String fileName, long contentLength) {
         FileUploadFinishEvent event = new FileUploadFinishEvent(fileName, contentLength);
-        getEventHub().publish(FileUploadFinishEvent.class, event);
+        publish(FileUploadFinishEvent.class, event);
     }
 
     protected void fireFileUploadError(String fileName, long contentLength, Exception cause) {
         FileUploadErrorEvent event = new FileUploadErrorEvent(fileName, contentLength, cause);
-        getEventHub().publish(FileUploadErrorEvent.class, event);
+        publish(FileUploadErrorEvent.class, event);
     }
 
     protected void fireQueueUploadComplete() {

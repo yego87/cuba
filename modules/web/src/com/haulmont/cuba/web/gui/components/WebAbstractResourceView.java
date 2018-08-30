@@ -85,7 +85,7 @@ public abstract class WebAbstractResourceView<T extends AbstractEmbedded> extend
             ((WebAbstractResource) value).setResourceUpdatedHandler(resourceUpdateHandler);
         }
 
-        getEventHub().publish(SourceChangeEvent.class,
+        publish(SourceChangeEvent.class,
                 new SourceChangeEvent(this, oldValue, this.resource));
     }
 

@@ -980,9 +980,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         }
 
         LookupSelectionChangeEvent selectionChangeEvent = new LookupSelectionChangeEvent(this);
-        getEventRouter().fireEvent(LookupSelectionChangeListener.class,
-                LookupSelectionChangeListener::lookupValueChanged, selectionChangeEvent);
-
+        publish(LookupSelectionChangeEvent.class, selectionChangeEvent);
         // todo implement selection change events
     }
 
@@ -2622,16 +2620,6 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         }
 
         component.setCurrentPageFirstItemId(item.getId());
-    }
-
-    @Override
-    public void addLookupValueChangeListener(LookupSelectionChangeListener listener) {
-        getEventRouter().addListener(LookupSelectionChangeListener.class, listener);
-    }
-
-    @Override
-    public void removeLookupValueChangeListener(LookupSelectionChangeListener listener) {
-        getEventRouter().removeListener(LookupSelectionChangeListener.class, listener);
     }
 
     protected void handleColumnCollapsed(com.vaadin.v7.ui.Table.ColumnCollapseEvent event) {

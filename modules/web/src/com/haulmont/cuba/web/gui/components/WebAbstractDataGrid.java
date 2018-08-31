@@ -341,8 +341,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
             }
 
             LookupSelectionChangeEvent selectionChangeEvent = new LookupSelectionChangeEvent(this);
-            getEventRouter().fireEvent(LookupSelectionChangeListener.class,
-                    LookupSelectionChangeListener::lookupValueChanged, selectionChangeEvent);
+            publish(LookupSelectionChangeEvent.class, selectionChangeEvent);
 
             if (hasSubscriptions(SelectionEvent.class)) {
                 fireSelectionEvent(e);
@@ -2566,16 +2565,6 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     @Override
     public void setTabIndex(int tabIndex) {
         component.setTabIndex(tabIndex);
-    }
-
-    @Override
-    public void addLookupValueChangeListener(LookupSelectionChangeListener listener) {
-        getEventRouter().addListener(LookupSelectionChangeListener.class, listener);
-    }
-
-    @Override
-    public void removeLookupValueChangeListener(LookupSelectionChangeListener listener) {
-        getEventRouter().removeListener(LookupSelectionChangeListener.class, listener);
     }
 
     protected class RowStyleGeneratorAdapter<T extends E> implements StyleGenerator<T> {

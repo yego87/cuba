@@ -2309,7 +2309,8 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     public void removeColumnCollapsingChangeListener(Consumer<ColumnCollapsingChangeEvent> listener) {
         DataGrid.super.removeColumnCollapsingChangeListener(listener);
 
-        if (!hasSubscriptions(ColumnCollapsingChangeEvent.class)) {
+        if (!hasSubscriptions(ColumnCollapsingChangeEvent.class)
+                && columnCollapsingChangeListenerRegistration != null) {
             columnCollapsingChangeListenerRegistration.remove();
             columnCollapsingChangeListenerRegistration = null;
         }
@@ -2336,7 +2337,8 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     public void removeColumnResizeListener(Consumer<ColumnResizeEvent> listener) {
         DataGrid.super.removeColumnResizeListener(listener);
 
-        if (!hasSubscriptions(ColumnResizeEvent.class)) {
+        if (!hasSubscriptions(ColumnResizeEvent.class)
+                && columnResizeListenerRegistration != null) {
             columnResizeListenerRegistration.remove();
             columnResizeListenerRegistration = null;
         }
@@ -2365,7 +2367,8 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     public void removeSortListener(Consumer<SortEvent> listener) {
         DataGrid.super.removeSortListener(listener);
 
-        if (!hasSubscriptions(SortEvent.class)) {
+        if (!hasSubscriptions(SortEvent.class)
+                && sortListenerRegistration != null) {
             sortListenerRegistration.remove();
             sortListenerRegistration = null;
         }
@@ -2392,7 +2395,8 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     public void removeContextClickListener(Consumer<ContextClickEvent> listener) {
         DataGrid.super.removeContextClickListener(listener);
 
-        if (!hasSubscriptions(ContextClickEvent.class)) {
+        if (!hasSubscriptions(ContextClickEvent.class)
+                && contextClickListenerRegistration != null) {
             contextClickListenerRegistration.remove();
             contextClickListenerRegistration = null;
         }

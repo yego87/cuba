@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
  * Generic filter implementation for the web-client.
@@ -322,22 +323,22 @@ public class WebFilter extends WebAbstractComponent<CubaCssActionsLayout> implem
     }
 
     @Override
-    public BeforeFilterAppliedHandler getBeforeFilterAppliedHandler() {
+    public BooleanSupplier getBeforeFilterAppliedHandler() {
         return delegate.getBeforeFilterAppliedHandler();
     }
 
     @Override
-    public void setBeforeFilterAppliedHandler(BeforeFilterAppliedHandler beforeFilterAppliedHandler) {
+    public void setBeforeFilterAppliedHandler(BooleanSupplier beforeFilterAppliedHandler) {
         delegate.setBeforeFilterAppliedHandler(beforeFilterAppliedHandler);
     }
 
     @Override
-    public AfterFilterAppliedHandler getAfterFilterAppliedHandler() {
+    public Runnable getAfterFilterAppliedHandler() {
         return delegate.getAfterFilterAppliedHandler();
     }
 
     @Override
-    public void setAfterFilterAppliedHandler(AfterFilterAppliedHandler afterFilterAppliedHandler) {
+    public void setAfterFilterAppliedHandler(Runnable afterFilterAppliedHandler) {
         delegate.setAfterFilterAppliedHandler(afterFilterAppliedHandler);
     }
 

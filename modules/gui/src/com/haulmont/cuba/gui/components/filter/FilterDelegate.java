@@ -28,6 +28,7 @@ import org.dom4j.Element;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
@@ -38,13 +39,13 @@ import java.util.function.Consumer;
 public interface FilterDelegate {
     String NAME = "cuba_FilterDelegate";
 
-    Filter.BeforeFilterAppliedHandler getBeforeFilterAppliedHandler();
+    BooleanSupplier getBeforeFilterAppliedHandler();
 
-    void setBeforeFilterAppliedHandler(Filter.BeforeFilterAppliedHandler beforeFilterAppliedHandler);
+    void setBeforeFilterAppliedHandler(BooleanSupplier beforeFilterAppliedHandler);
 
-    Filter.AfterFilterAppliedHandler getAfterFilterAppliedHandler();
+    Runnable getAfterFilterAppliedHandler();
 
-    void setAfterFilterAppliedHandler(Filter.AfterFilterAppliedHandler afterFilterAppliedHandler);
+    void setAfterFilterAppliedHandler(Runnable afterFilterAppliedHandler);
 
     enum FilterMode {
         GENERIC_MODE,

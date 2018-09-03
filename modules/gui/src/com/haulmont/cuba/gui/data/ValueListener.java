@@ -16,12 +16,14 @@
  */
 package com.haulmont.cuba.gui.data;
 
+import com.haulmont.cuba.gui.components.HasValue;
+
 import javax.annotation.Nullable;
 
 /**
  * Listener to value change events
  *
- * @deprecated Use {@link com.haulmont.cuba.gui.components.Component.ValueChangeListener}
+ * @deprecated Use {@link HasValue#addValueChangeListener(java.util.function.Consumer)}
  * @param <T> type of event source
  */
 @Deprecated

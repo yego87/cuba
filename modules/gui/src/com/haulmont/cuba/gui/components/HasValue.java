@@ -48,7 +48,7 @@ public interface HasValue<V> {
     /**
      * vaadin8 for removal
      *
-     * @deprecated Use {@link #addValueChangeListener(ValueChangeListener)}
+     * @deprecated Use {@link #addValueChangeListener(Consumer)}
      */
     @Deprecated
     default void addListener(ValueListener listener) {

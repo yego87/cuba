@@ -17,6 +17,7 @@
 package com.haulmont.cuba.web.gui.components;
 
 import com.google.common.base.Strings;
+import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaProperty;
@@ -375,8 +376,14 @@ public class WebPickerField<V extends Entity> extends WebV8AbstractField<CubaPic
     }
 
     @Override
-    public void addFieldListener(FieldListener listener) {
-        component.addFieldListener(listener::actionPerformed);
+    public Subscription addFieldValueChangeListener(Consumer<FieldValueChangeEvent<V>> listener) {
+        component.addFieldListener(vEvent -> {
+            FieldValueChangeEvent<V> event = new FieldValueChangeEvent<>(WebPickerField.this,
+                    vEvent.getText(), vEvent.getPrevValue());
+            publish(FieldValueChangeEvent.class, event);
+        });
+
+        return PickerField.super.addFieldValueChangeListener(listener);
     }
 
     @Override

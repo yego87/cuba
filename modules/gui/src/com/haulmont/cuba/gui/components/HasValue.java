@@ -17,9 +17,7 @@
 package com.haulmont.cuba.gui.components;
 
 import com.haulmont.bali.events.Subscription;
-import com.haulmont.cuba.gui.components.compatibility.ComponentValueListenerWrapper;
 import com.haulmont.cuba.gui.components.sys.EventHubOwner;
-import com.haulmont.cuba.gui.data.ValueListener;
 
 import javax.annotation.Nullable;
 import java.util.EventObject;
@@ -31,6 +29,7 @@ import java.util.function.Consumer;
  */
 public interface HasValue<V> {
     V getValue();
+
     void setValue(V value);
 
     default void clear() {
@@ -43,22 +42,6 @@ public interface HasValue<V> {
 
     default boolean isEmpty() {
         return Objects.equals(getValue(), getEmptyValue());
-    }
-
-    /**
-     * vaadin8 for removal
-     *
-     * @deprecated Use {@link #addValueChangeListener(Consumer)}
-     */
-    @Deprecated
-    default void addListener(ValueListener listener) {
-        addValueChangeListener(new ComponentValueListenerWrapper(listener));
-    }
-
-    // vaadin8 for removal
-    @Deprecated
-    default void removeListener(ValueListener listener) {
-        removeValueChangeListener(new ComponentValueListenerWrapper(listener));
     }
 
     default Subscription addValueChangeListener(Consumer<ValueChangeEvent> listener) {
@@ -76,7 +59,7 @@ public interface HasValue<V> {
 
     /**
      * Describes value change event.
-     *
+     * <p>
      * todo V parameter
      */
     class ValueChangeEvent extends EventObject {

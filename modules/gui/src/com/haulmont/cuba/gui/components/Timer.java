@@ -63,21 +63,33 @@ public interface Timer extends Component.HasXmlDescriptor, Component.BelongToFra
         void timerStopped(Timer timer);
     }
 
+    /**
+     * @deprecated Use {@link #addTimerActionListener(Consumer)} instead
+     */
     @Deprecated
     default void addActionListener(ActionListener listener) {
         addTimerActionListener(new TimerActionListenerWrapper(listener));
     }
 
+    /**
+     * @deprecated Use {@link #removeTimerActionListener(Consumer)} instead
+     */
     @Deprecated
     default void removeActionListener(ActionListener listener) {
         removeTimerActionListener(new TimerActionListenerWrapper(listener));
     }
 
+    /**
+     * @deprecated Use {@link #addTimerStopListener(Consumer)} instead
+     */
     @Deprecated
     default void addStopListener(StopListener listener) {
         addTimerStopListener(new TimerStopListenerWrapper(listener));
     }
 
+    /**
+     * @deprecated Use {@link #removeTimerStopListener(Consumer)} instead
+     */
     @Deprecated
     default void removeStopListener(StopListener listener) {
         removeTimerStopListener(new TimerStopListenerWrapper(listener));

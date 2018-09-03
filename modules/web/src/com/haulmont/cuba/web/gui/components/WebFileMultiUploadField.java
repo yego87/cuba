@@ -48,8 +48,6 @@ public class WebFileMultiUploadField extends WebAbstractUploadComponent<CubaFile
     protected UUID tempFileId;
     protected String accept;
 
-    protected List<QueueUploadCompleteListener> queueUploadCompleteListeners; // lazily initialized list
-
     public WebFileMultiUploadField() {
         fileUploading = AppBeans.get(FileUploadingAPI.NAME);
 
@@ -224,28 +222,8 @@ public class WebFileMultiUploadField extends WebAbstractUploadComponent<CubaFile
     }
 
     protected void fireQueueUploadComplete() {
-        if (queueUploadCompleteListeners != null) {
-            for (QueueUploadCompleteListener listener : new ArrayList<>(queueUploadCompleteListeners)) {
-                listener.queueUploadComplete();
-            }
-        }
-    }
-
-    @Override
-    public void addQueueUploadCompleteListener(QueueUploadCompleteListener listener) {
-        if (queueUploadCompleteListeners == null) {
-            queueUploadCompleteListeners = new ArrayList<>();
-        }
-        if (!queueUploadCompleteListeners.contains(listener)) {
-            queueUploadCompleteListeners.add(listener);
-        }
-    }
-
-    @Override
-    public void removeQueueUploadCompleteListener(QueueUploadCompleteListener listener) {
-        if (queueUploadCompleteListeners != null) {
-            queueUploadCompleteListeners.remove(listener);
-        }
+        QueueUploadCompleteEvent event = new QueueUploadCompleteEvent(this);
+        publish(QueueUploadCompleteEvent.class, event);
     }
 
     @Override

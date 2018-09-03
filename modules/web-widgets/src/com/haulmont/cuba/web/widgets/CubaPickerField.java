@@ -27,8 +27,6 @@ import com.vaadin.util.ReflectTools;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static com.haulmont.cuba.web.widgets.CubaPickerField.FieldValueChangeListener.FIELD_VALUE_CHANGE_METHOD;
 

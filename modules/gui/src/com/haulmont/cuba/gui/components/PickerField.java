@@ -122,6 +122,9 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
         return (OpenAction) getActionNN(OpenAction.NAME);
     }
 
+    /**
+     * @deprecated Use {@link #addFieldValueChangeListener(Consumer)} instead
+     */
     @Deprecated
     default void addFieldListener(FieldListener listener) {
         addFieldValueChangeListener(new PickerFieldFieldListenerWrapper<>(listener));
@@ -129,11 +132,21 @@ public interface PickerField<V extends Entity> extends Field<V>, ActionsHolder, 
 
     void setFieldEditable(boolean editable);
 
+    /**
+     * @deprecated Use {@link #addFieldValueChangeListener(Consumer)} instead
+     */
     @Deprecated
     interface FieldListener {
         void actionPerformed(String text, Object prevValue);
     }
 
+    /**
+     * Adds a listener that will be fired in case field is editable.
+     *
+     * @param listener a listener to add
+     * @return a {@link Subscription} object
+     * @see #setFieldEditable(boolean)
+     */
     default Subscription addFieldValueChangeListener(Consumer<FieldValueChangeEvent<V>> listener) {
         //noinspection unchecked
         return ((EventHubOwner) this).getEventHub().subscribe(FieldValueChangeEvent.class, (Consumer) listener);

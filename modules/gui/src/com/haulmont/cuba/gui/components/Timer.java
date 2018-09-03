@@ -16,6 +16,14 @@
  */
 package com.haulmont.cuba.gui.components;
 
+import com.haulmont.bali.events.Subscription;
+import com.haulmont.cuba.gui.components.compatibility.TimerActionListenerWrapper;
+import com.haulmont.cuba.gui.components.compatibility.TimerStopListenerWrapper;
+import com.haulmont.cuba.gui.components.sys.EventHubOwner;
+
+import java.util.EventObject;
+import java.util.function.Consumer;
+
 public interface Timer extends Component.HasXmlDescriptor, Component.BelongToFrame {
 
     boolean isRepeating();
@@ -55,9 +63,61 @@ public interface Timer extends Component.HasXmlDescriptor, Component.BelongToFra
         void timerStopped(Timer timer);
     }
 
-    void addActionListener(ActionListener listener);
-    void removeActionListener(ActionListener listener);
+    @Deprecated
+    default void addActionListener(ActionListener listener) {
+        addTimerActionListener(new TimerActionListenerWrapper(listener));
+    }
 
-    void addStopListener(StopListener listener);
-    void removeStopListener(StopListener listener);
+    @Deprecated
+    default void removeActionListener(ActionListener listener) {
+        removeTimerActionListener(new TimerActionListenerWrapper(listener));
+    }
+
+    @Deprecated
+    default void addStopListener(StopListener listener) {
+        addTimerStopListener(new TimerStopListenerWrapper(listener));
+    }
+
+    @Deprecated
+    default void removeStopListener(StopListener listener) {
+        removeTimerStopListener(new TimerStopListenerWrapper(listener));
+    }
+
+    default Subscription addTimerActionListener(Consumer<TimerActionEvent> listener) {
+        return ((EventHubOwner) this).getEventHub().subscribe(TimerActionEvent.class, listener);
+    }
+
+    default void removeTimerActionListener(Consumer<TimerActionEvent> listener) {
+        ((EventHubOwner) this).getEventHub().unsubscribe(TimerActionEvent.class, listener);
+    }
+
+    default Subscription addTimerStopListener(Consumer<TimerStopEvent> listener) {
+        return ((EventHubOwner) this).getEventHub().subscribe(TimerStopEvent.class, listener);
+    }
+
+    default void removeTimerStopListener(Consumer<TimerStopEvent> listener) {
+        ((EventHubOwner) this).getEventHub().unsubscribe(TimerStopEvent.class, listener);
+    }
+
+    class TimerActionEvent extends EventObject {
+        public TimerActionEvent(Timer source) {
+            super(source);
+        }
+
+        @Override
+        public Timer getSource() {
+            return (Timer) super.getSource();
+        }
+    }
+
+    class TimerStopEvent extends EventObject {
+        public TimerStopEvent(Timer source) {
+            super(source);
+        }
+
+        @Override
+        public Timer getSource() {
+            return (Timer) super.getSource();
+        }
+    }
 }

@@ -24,7 +24,6 @@ import com.haulmont.cuba.gui.model.DataLoader;
 import com.haulmont.cuba.security.entity.FilterEntity;
 
 import java.util.List;
-import java.util.function.BooleanSupplier;
 
 public interface Filter extends HasMargin, Component.BelongToFrame, HasNamedComponents,
         Component.HasXmlDescriptor, HasSettings, Component.HasCaption,
@@ -46,19 +45,27 @@ public interface Filter extends HasMargin, Component.BelongToFrame, HasNamedComp
         void filterEntityChanged(FilterEntity filterEntity);
     }
 
-    BooleanSupplier getBeforeFilterAppliedHandler();
+    interface BeforeFilterAppliedHandler {
+        boolean beforeFilterApplied();
+    }
+
+    interface AfterFilterAppliedHandler {
+        void afterFilterApplied();
+    }
+
+    BeforeFilterAppliedHandler getBeforeFilterAppliedHandler();
 
     /**
-     * Sets the handler that will be invoked before the filter is applied. If the
-     * beforeFilterAppliedHandler returns false, then the filter won't be applied
+     * Sets the handler that will be invoked before the filter is applied. If the {@link
+     * BeforeFilterAppliedHandler#beforeFilterApplied()} returns false, then the filter won't be applied
      *
      * @param beforeFilterAppliedHandler
      */
-    void setBeforeFilterAppliedHandler(BooleanSupplier beforeFilterAppliedHandler);
+    void setBeforeFilterAppliedHandler(BeforeFilterAppliedHandler beforeFilterAppliedHandler);
 
-    Runnable getAfterFilterAppliedHandler();
+    AfterFilterAppliedHandler getAfterFilterAppliedHandler();
 
-    void setAfterFilterAppliedHandler(Runnable afterFilterAppliedHandler);
+    void setAfterFilterAppliedHandler(AfterFilterAppliedHandler afterFilterAppliedHandler);
 
     /**
      * Returns {@link DataLoader} which the filter is applied to.

@@ -77,7 +77,6 @@ import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.*;
-import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -201,9 +200,9 @@ public class FilterDelegateImpl implements FilterDelegate {
 
     protected List<FDExpandedStateChangeListener> expandedStateChangeListeners;
 
-    protected BooleanSupplier beforeFilterAppliedHandler;
+    protected Filter.BeforeFilterAppliedHandler beforeFilterAppliedHandler;
 
-    protected Runnable afterFilterAppliedHandler;
+    protected Filter.AfterFilterAppliedHandler afterFilterAppliedHandler;
     protected boolean borderVisible = true;
 
     protected Set<String> ftsLastDatasourceRefreshParamsNames = new HashSet<>();
@@ -1499,7 +1498,7 @@ public class FilterDelegateImpl implements FilterDelegate {
     @Override
     public boolean apply(boolean notifyInvalidConditions) {
         if (beforeFilterAppliedHandler != null) {
-            if (!beforeFilterAppliedHandler.getAsBoolean()) return false;
+            if (!beforeFilterAppliedHandler.beforeFilterApplied()) return false;
         }
         if (clientConfig.getGenericFilterChecking()) {
             if (filterEntity != null && conditions.getRoots().size() > 0) {
@@ -1543,7 +1542,7 @@ public class FilterDelegateImpl implements FilterDelegate {
         }
 
         if (afterFilterAppliedHandler != null) {
-            afterFilterAppliedHandler.run();
+            afterFilterAppliedHandler.afterFilterApplied();
         }
         return true;
     }
@@ -1579,7 +1578,7 @@ public class FilterDelegateImpl implements FilterDelegate {
             return;
 
         if (beforeFilterAppliedHandler != null) {
-            if (!beforeFilterAppliedHandler.getAsBoolean()) return;
+            if (!beforeFilterAppliedHandler.beforeFilterApplied()) return;
         }
 
         String searchTerm = ftsSearchCriteriaField.getValue();
@@ -1612,7 +1611,7 @@ public class FilterDelegateImpl implements FilterDelegate {
         adapter.refresh(params);
 
         if (afterFilterAppliedHandler != null) {
-            afterFilterAppliedHandler.run();
+            afterFilterAppliedHandler.afterFilterApplied();
         }
     }
 
@@ -2183,22 +2182,22 @@ public class FilterDelegateImpl implements FilterDelegate {
     }
 
     @Override
-    public BooleanSupplier getBeforeFilterAppliedHandler() {
+    public Filter.BeforeFilterAppliedHandler getBeforeFilterAppliedHandler() {
         return beforeFilterAppliedHandler;
     }
 
     @Override
-    public void setBeforeFilterAppliedHandler(BooleanSupplier beforeFilterAppliedHandler) {
+    public void setBeforeFilterAppliedHandler(Filter.BeforeFilterAppliedHandler beforeFilterAppliedHandler) {
         this.beforeFilterAppliedHandler = beforeFilterAppliedHandler;
     }
 
     @Override
-    public Runnable getAfterFilterAppliedHandler() {
+    public Filter.AfterFilterAppliedHandler getAfterFilterAppliedHandler() {
         return afterFilterAppliedHandler;
     }
 
     @Override
-    public void setAfterFilterAppliedHandler(Runnable afterFilterAppliedHandler) {
+    public void setAfterFilterAppliedHandler(Filter.AfterFilterAppliedHandler afterFilterAppliedHandler) {
         this.afterFilterAppliedHandler = afterFilterAppliedHandler;
     }
 

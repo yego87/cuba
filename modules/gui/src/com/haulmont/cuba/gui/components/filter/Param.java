@@ -648,7 +648,7 @@ public class Param {
             return listEditor;
         }
 
-        DateField dateField = componentsFactory.createComponent(DateField.class);
+        DateField<Date> dateField = componentsFactory.createComponent(DateField.class);
 
         DateField.Resolution resolution;
         String formatStr;
@@ -666,10 +666,10 @@ public class Param {
             dateField.setTimeZone(userSession.getTimeZone());
         }
 
-        dateField.addValueChangeListener((Consumer<HasValue.ValueChangeEvent>) e ->
+        dateField.addValueChangeListener(e ->
                 _setValue(e.getValue(), valueProperty));
 
-        dateField.setValue(_getValue(valueProperty));
+        dateField.setValue((Date) _getValue(valueProperty));
         return dateField;
     }
 
@@ -792,7 +792,7 @@ public class Param {
                 initListEditor(listEditor, valueProperty);
                 return listEditor;
             } else {
-                PickerField picker = componentsFactory.createComponent(PickerField.class);
+                PickerField<Entity> picker = componentsFactory.createComponent(PickerField.class);
                 picker.setMetaClass(metaClass);
 
                 picker.setWidth(theme.get("cuba.gui.filter.Param.textComponent.width"));
@@ -801,9 +801,9 @@ public class Param {
                 picker.addLookupAction();
                 picker.addClearAction();
 
-                picker.addValueChangeListener((Consumer<HasValue.ValueChangeEvent>) e ->
+                picker.addValueChangeListener(e ->
                         _setValue(e.getValue(), valueProperty));
-                picker.setValue(_getValue(valueProperty));
+                picker.setValue((Entity) _getValue(valueProperty));
 
                 return picker;
             }
@@ -819,7 +819,7 @@ public class Param {
                 initListEditor(listEditor, valueProperty);
                 return listEditor;
             } else {
-                final LookupPickerField lookup = componentsFactory.createComponent(LookupPickerField.class);
+                final LookupPickerField<Entity> lookup = componentsFactory.createComponent(LookupPickerField.class);
                 lookup.addClearAction();
                 lookup.setWidth(theme.get("cuba.gui.filter.Param.textComponent.width"));
                 lookup.setOptionsDatasource(optionsDataSource);
@@ -827,9 +827,9 @@ public class Param {
                 //noinspection unchecked
                 optionsDataSource.addCollectionChangeListener(e -> lookup.setValue(null));
 
-                lookup.addValueChangeListener((Consumer<HasValue.ValueChangeEvent>) e ->
+                lookup.addValueChangeListener(e ->
                         _setValue(e.getValue(), valueProperty));
-                lookup.setValue(_getValue(valueProperty));
+                lookup.setValue((Entity) _getValue(valueProperty));
 
                 return lookup;
             }
@@ -928,8 +928,8 @@ public class Param {
         }
     }
 
-    protected void initListEditor(ListEditor listEditor, ValueProperty valueProperty) {
-        listEditor.addValueChangeListener((Consumer<HasValue.ValueChangeEvent>) e -> {
+    protected void initListEditor(ListEditor<List<?>> listEditor, ValueProperty valueProperty) {
+        listEditor.addValueChangeListener(e -> {
             Object value = e.getValue();
             if (value instanceof List && ((List) value).isEmpty()) {
                 value = null;
@@ -938,7 +938,8 @@ public class Param {
         });
         Object value = _getValue(valueProperty);
         if (value != null) {
-            listEditor.setValue(value);
+            //noinspection unchecked
+            listEditor.setValue((List<List<?>>) value);
         }
         listEditor.setClearButtonVisible(true);
     }

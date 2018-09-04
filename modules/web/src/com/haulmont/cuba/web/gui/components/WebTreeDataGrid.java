@@ -8,6 +8,7 @@ import com.haulmont.cuba.gui.components.data.TreeDataGridSource;
 import com.haulmont.cuba.web.gui.components.datagrid.DataGridDataProvider;
 import com.haulmont.cuba.web.gui.components.datagrid.HierarchicalDataGridDataProvider;
 import com.haulmont.cuba.web.widgets.CubaTreeGrid;
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.Grid;
 
 import javax.annotation.Nullable;
@@ -22,6 +23,9 @@ public class WebTreeDataGrid<E extends Entity> extends WebAbstractDataGrid<CubaT
         implements TreeDataGrid<E> {
 
     protected Predicate<E> itemCollapseAllowedProvider = t -> true;
+
+    protected Registration expandListener;
+    protected Registration collapseListener;
 
     @Override
     protected CubaTreeGrid<E> createComponent() {
@@ -117,7 +121,9 @@ public class WebTreeDataGrid<E extends Entity> extends WebAbstractDataGrid<CubaT
     @SuppressWarnings("unchecked")
     @Override
     public Subscription addExpandListener(Consumer<ExpandEvent<E>> listener) {
-        component.addExpandListener(this::onItemExpand);
+        if (expandListener == null) {
+            expandListener = component.addExpandListener(this::onItemExpand);
+        }
 
         return TreeDataGrid.super.addExpandListener(listener);
     }
@@ -131,7 +137,9 @@ public class WebTreeDataGrid<E extends Entity> extends WebAbstractDataGrid<CubaT
     @SuppressWarnings("unchecked")
     @Override
     public Subscription addCollapseListener(Consumer<CollapseEvent<E>> listener) {
-        component.addCollapseListener(this::onItemCollapse);
+        if (collapseListener == null) {
+            collapseListener = component.addCollapseListener(this::onItemCollapse);
+        }
 
         return TreeDataGrid.super.addCollapseListener(listener);
     }

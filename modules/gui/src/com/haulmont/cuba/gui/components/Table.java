@@ -678,7 +678,7 @@ public interface Table<E extends Entity>
         protected String description;
         protected String valueDescription;
         protected boolean editable;
-        protected Formatter formatter;
+        protected Function<Object, String> formatter;
         protected Integer width;
         protected boolean collapsed;
         protected boolean groupAllowed = true;
@@ -827,12 +827,12 @@ public interface Table<E extends Entity>
         }
 
         @Override
-        public Formatter getFormatter() {
+        public Function<Object, String> getFormatter() {
             return formatter;
         }
 
         @Override
-        public void setFormatter(Formatter formatter) {
+        public void setFormatter(Function formatter) {
             this.formatter = formatter;
         }
 

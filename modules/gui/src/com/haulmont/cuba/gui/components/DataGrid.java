@@ -2664,7 +2664,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          */
         @Deprecated
         @Override
-        Formatter getFormatter();
+        Function getFormatter();
 
         /**
          * If either {@link Function presentation provider} or {@link Converter} are set they take precedence over {@link Formatter}.
@@ -2673,7 +2673,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          */
         @Deprecated
         @Override
-        void setFormatter(Formatter formatter);
+        void setFormatter(Function formatter);
 
         /**
          * Returns the converter instance used by this column.

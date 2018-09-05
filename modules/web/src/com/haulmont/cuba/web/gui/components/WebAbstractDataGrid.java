@@ -28,7 +28,6 @@ import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.*;
-import com.haulmont.cuba.gui.components.Formatter;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.DataGridSource;
@@ -2748,7 +2747,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
         protected boolean resizable;
         protected boolean editable;
         protected boolean generated;
-        protected Formatter formatter;
+        protected Function<?, String> formatter;
 
         protected AbstractRenderer<E, ?> renderer;
         protected Function presentationProvider;
@@ -3038,12 +3037,12 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
         }
 
         @Override
-        public Formatter getFormatter() {
+        public Function getFormatter() {
             return formatter;
         }
 
         @Override
-        public void setFormatter(Formatter formatter) {
+        public void setFormatter(Function formatter) {
             this.formatter = formatter;
             updateRendererInternal();
         }

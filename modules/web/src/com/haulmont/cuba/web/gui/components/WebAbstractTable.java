@@ -36,7 +36,6 @@ import com.haulmont.cuba.core.entity.LocaleHelper;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.*;
-import com.haulmont.cuba.gui.components.Formatter;
 import com.haulmont.cuba.gui.components.LookupComponent.LookupSelectionChangeNotifier;
 import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.components.data.BindingState;
@@ -91,6 +90,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
@@ -1005,10 +1005,10 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         if (colId instanceof MetaPropertyPath) {
             MetaPropertyPath propertyPath = (MetaPropertyPath) colId;
 
-            Table.Column column = this.columns.get(propertyPath);
+            Table.Column<E> column = this.columns.get(propertyPath);
             if (column != null) {
                 if (column.getFormatter() != null) {
-                    return column.getFormatter().format(cellValue);
+                    return column.getFormatter().apply(cellValue);
                 } else if (column.getXmlDescriptor() != null) {
                     // vaadin8 move to Column
                     String captionProperty = column.getXmlDescriptor().attributeValue("captionProperty");
@@ -2231,7 +2231,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
     protected Map<Object, Object> __handleAggregationResults(AggregationContainer.Context context,
                                                              Map<Object, Object> results) {
         for (Map.Entry<Object, Object> entry : results.entrySet()) {
-            Table.Column column = columns.get(entry.getKey());
+            Table.Column<E> column = columns.get(entry.getKey());
             if (aggregationCells.get(column) != null) {
                 Object value = entry.getValue();
                 String cellText = getFormattedValue(column, value);
@@ -2241,7 +2241,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         return results;
     }
 
-    protected String getFormattedValue(Column column, Object value) {
+    protected String getFormattedValue(Column<E> column, Object value) {
         String cellText;
         if (value == null) {
             cellText = "";
@@ -2249,10 +2249,10 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
             if (value instanceof String) {
                 cellText = (String) value;
             } else {
-                Formatter formatter = column.getFormatter();
+                Function<Object, String> formatter = column.getFormatter();
                 if (formatter != null) {
                     //noinspection unchecked
-                    cellText = formatter.format(value);
+                    cellText = formatter.apply(value);
                 } else {
                     Datatype datatype = datatypeRegistry.get(value.getClass());
                     if (datatype != null) {

@@ -137,7 +137,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
     protected Action enterPressAction;
 
     protected List<Table.StyleProvider> styleProviders; // lazily initialized List
-    protected Table.IconProvider<? super E> iconProvider;
+    protected Function<? super E, String> iconProvider;
 
     protected Map<Table.Column, String> requiredColumns; // lazily initialized Map
 
@@ -1607,7 +1607,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
     }
 
     @Override
-    public void setIconProvider(IconProvider<? super E> iconProvider) {
+    public void setIconProvider(Function<? super E, String> iconProvider) {
         this.iconProvider = iconProvider;
         if (iconProvider != null) {
             setRowHeaderMode(RowHeaderMode.ICON);
@@ -1629,7 +1629,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         if (item == null) {
             return null;
         }
-        String resourceUrl = iconProvider.getItemIcon(item);
+        String resourceUrl = iconProvider.apply(item);
         return iconResolver.getIconResource(resourceUrl);
     }
 

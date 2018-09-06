@@ -20,6 +20,7 @@ import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.data.HierarchicalDatasource;
 
 import javax.annotation.Nullable;
+import java.util.function.Function;
 
 public interface Tree<E extends Entity> extends ListComponent<E>, Component.Editable, HasButtonsPanel,
                                                 Component.HasCaption, Component.HasIcon, LookupComponent,
@@ -84,7 +85,7 @@ public interface Tree<E extends Entity> extends ListComponent<E>, Component.Edit
     /**
      * Set the icon provider for the tree.
      */
-    void setIconProvider(IconProvider<? super E> iconProvider);
+    void setIconProvider(Function<? super E, String> iconProvider);
 
     /**
      * Repaint UI representation of the tree including style providers and icon providers without refreshing the tree data.

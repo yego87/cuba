@@ -243,7 +243,7 @@ public interface Table<E extends Entity>
     void setContextMenuEnabled(boolean contextMenuEnabled);
 
     /**
-     * Set width of row header column. Row header shows icons if {@link IconProvider} is specified.
+     * Set width of row header column. Row header shows icons if Icon Provider is specified.
      *
      * @param width width of row header column in px
      */
@@ -398,7 +398,7 @@ public interface Table<E extends Entity>
      *
      * @see #setRowHeaderWidth(int)
      */
-    void setIconProvider(IconProvider<? super E> iconProvider);
+    void setIconProvider(Function<? super E, String> iconProvider);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

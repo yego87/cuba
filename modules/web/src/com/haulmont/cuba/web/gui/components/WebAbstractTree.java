@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
         extends WebAbstractList<T, E> implements Tree<E> {
@@ -57,7 +58,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
     protected HorizontalLayout topPanel;
     protected com.vaadin.ui.CssLayout componentComposition;
     protected Action enterPressAction;
-    protected IconProvider<? super E> iconProvider;
+    protected Function<? super E, String> iconProvider;
 
     protected IconResolver iconResolver = AppBeans.get(IconResolver.class);
 
@@ -430,7 +431,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
     }
 
     @Override
-    public void setIconProvider(IconProvider<? super E> iconProvider) {
+    public void setIconProvider(Function<? super E, String> iconProvider) {
         if (this.iconProvider != iconProvider) {
             this.iconProvider = iconProvider;
 
@@ -444,7 +445,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
                         return null;
                     }
 
-                    String resourceUrl = WebAbstractTree.this.iconProvider.getItemIcon(item);
+                    String resourceUrl = WebAbstractTree.this.iconProvider.apply(item);
                     return iconResolver.getIconResource(resourceUrl);
                 });
             }

@@ -16,14 +16,7 @@
  */
 package com.haulmont.cuba.gui.components;
 
-import java.util.Collection;
-
 public interface ButtonsPanel extends BoxLayout {
 
     String NAME = "buttonsPanel";
-
-    // todo replace with Java8 Supplier
-    interface Provider {
-        Collection<Component> getButtons();
-    }
 }

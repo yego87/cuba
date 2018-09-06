@@ -143,7 +143,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     protected List<Function<? super E, String>> rowStyleProviders;
     protected List<CellStyleProvider<? super E>> cellStyleProviders;
 
-    protected DescriptionProvider<? super E> rowDescriptionProvider;
+    protected Function<? super E, String> rowDescriptionProvider;
     protected CellDescriptionProvider<? super E> cellDescriptionProvider;
 
     protected DetailsGenerator<E> detailsGenerator = null;
@@ -2174,17 +2174,17 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
     @SuppressWarnings("unchecked")
     @Override
-    public DescriptionProvider<E> getRowDescriptionProvider() {
-        return (DescriptionProvider<E>) rowDescriptionProvider;
+    public Function<E, String>getRowDescriptionProvider() {
+        return (Function<E, String>) rowDescriptionProvider;
     }
 
     @Override
-    public void setRowDescriptionProvider(DescriptionProvider<? super E> provider) {
+    public void setRowDescriptionProvider(Function<? super E, String> provider) {
         setRowDescriptionProvider(provider, ContentMode.PREFORMATTED);
     }
 
     @Override
-    public void setRowDescriptionProvider(DescriptionProvider<? super E> provider, ContentMode contentMode) {
+    public void setRowDescriptionProvider(Function<? super E, String> provider, ContentMode contentMode) {
         this.rowDescriptionProvider = provider;
 
         if (provider != null) {
@@ -2197,7 +2197,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
     protected DescriptionGenerator<E> createRowDescriptionGenerator() {
         return item ->
-                rowDescriptionProvider.getDescription(item);
+                rowDescriptionProvider.apply(item);
     }
 
     @Override
@@ -2656,7 +2656,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
     protected String getGeneratedCellDescription(E item, Column<E> column) {
         if (column.getDescriptionProvider() != null) {
-            return column.getDescriptionProvider().getDescription(item);
+            return column.getDescriptionProvider().apply(item);
         }
 
         if (cellDescriptionProvider != null) {
@@ -2754,7 +2754,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
         protected Converter converter;
 
         protected Function<? super E, String> styleProvider;
-        protected DescriptionProvider<? super E> descriptionProvider;
+        protected Function<? super E, String> descriptionProvider;
         protected ContentMode descriptionContentMode = ContentMode.PREFORMATTED;
 
         protected final Class type;
@@ -3226,17 +3226,17 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
         @SuppressWarnings("unchecked")
         @Override
-        public DescriptionProvider<E> getDescriptionProvider() {
-            return (DescriptionProvider<E>) descriptionProvider;
+        public Function<E, String> getDescriptionProvider() {
+            return (Function<E, String>) descriptionProvider;
         }
 
         @Override
-        public void setDescriptionProvider(DescriptionProvider<? super E> descriptionProvider) {
+        public void setDescriptionProvider(Function<? super E, String> descriptionProvider) {
             setDescriptionProvider(descriptionProvider, ContentMode.PREFORMATTED);
         }
 
         @Override
-        public void setDescriptionProvider(DescriptionProvider<? super E> descriptionProvider,
+        public void setDescriptionProvider(Function<? super E, String> descriptionProvider,
                                            ContentMode contentMode) {
             this.descriptionProvider = descriptionProvider;
             this.descriptionContentMode = contentMode;

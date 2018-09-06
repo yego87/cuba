@@ -64,8 +64,8 @@ public class ButtonsPanelLoader extends ContainerLoader<ButtonsPanel> {
         loadResponsive(resultComponent, element);
 
         if (!element.elements().isEmpty()) {
-//            loadSubComponents();
-//        } else {
+            loadSubComponents();
+        } else {
             String className = element.attributeValue("providerClass");
             if (StringUtils.isNotEmpty(className)) {
                 Class<Supplier<Collection<Component>>> clazz = ReflectionHelper.getClass(className);

@@ -140,7 +140,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     protected ButtonsPanel buttonsPanel;
     protected RowsCount rowsCount;
 
-    protected List<StyleProvider<? super E>> rowStyleProviders;
+    protected List<Function<? super E, String>> rowStyleProviders;
     protected List<CellStyleProvider<? super E>> cellStyleProviders;
 
     protected DescriptionProvider<? super E> rowDescriptionProvider;
@@ -2117,7 +2117,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     }
 
     @Override
-    public void addRowStyleProvider(StyleProvider<? super E> styleProvider) {
+    public void addRowStyleProvider(Function<? super E, String> styleProvider) {
         if (this.rowStyleProviders == null) {
             this.rowStyleProviders = new LinkedList<>();
         }
@@ -2130,7 +2130,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     }
 
     @Override
-    public void removeRowStyleProvider(StyleProvider<? super E> styleProvider) {
+    public void removeRowStyleProvider(Function<? super E, String> styleProvider) {
         if (this.rowStyleProviders != null) {
             if (this.rowStyleProviders.remove(styleProvider)) {
                 repaint();
@@ -2584,8 +2584,8 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
         }
 
         StringBuilder joinedStyle = null;
-        for (StyleProvider<? super E> styleProvider : rowStyleProviders) {
-            String styleName = styleProvider.getStyleName(item);
+        for (Function<? super E, String> styleProvider : rowStyleProviders) {
+            String styleName = styleProvider.apply(item);
             if (styleName != null) {
                 if (joinedStyle == null) {
                     joinedStyle = new StringBuilder(styleName);
@@ -2618,7 +2618,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
         StringBuilder joinedStyle = null;
 
         if (column.getStyleProvider() != null) {
-            String styleName = column.getStyleProvider().getStyleName(item);
+            String styleName = column.getStyleProvider().apply(item);
             if (styleName != null) {
                 joinedStyle = new StringBuilder(styleName);
             }
@@ -2753,7 +2753,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
         protected Function presentationProvider;
         protected Converter converter;
 
-        protected StyleProvider<? super E> styleProvider;
+        protected Function<? super E, String> styleProvider;
         protected DescriptionProvider<? super E> descriptionProvider;
         protected ContentMode descriptionContentMode = ContentMode.PREFORMATTED;
 
@@ -3214,12 +3214,12 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
         @SuppressWarnings("unchecked")
         @Override
-        public StyleProvider<E> getStyleProvider() {
-            return (StyleProvider<E>) styleProvider;
+        public Function<E, String> getStyleProvider() {
+            return (Function<E, String>) styleProvider;
         }
 
         @Override
-        public void setStyleProvider(StyleProvider<? super E> styleProvider) {
+        public void setStyleProvider(Function<? super E, String> styleProvider) {
             this.styleProvider = styleProvider;
             owner.repaint();
         }

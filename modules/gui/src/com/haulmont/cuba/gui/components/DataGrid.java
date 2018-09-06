@@ -899,10 +899,10 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * Allows to define different styles for DataGrid rows.
      *
-     * @deprecated use {@link StyleProvider} instead
+     * @deprecated use {@link Function} instead
      */
     @Deprecated
-    interface RowStyleProvider<E extends Entity> extends StyleProvider<E> {
+    interface RowStyleProvider<E extends Entity> extends Function<E, String> {
     }
 
     /**
@@ -912,19 +912,19 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      *
      * @param styleProvider a style provider to add, not null
      */
-    void addRowStyleProvider(StyleProvider<? super E> styleProvider);
+    void addRowStyleProvider(Function<? super E, String> styleProvider);
 
     /**
      * Removes style provider for the DataGrid rows.
      *
      * @param styleProvider a style provider to remove, not null
      */
-    void removeRowStyleProvider(StyleProvider<? super E> styleProvider);
+    void removeRowStyleProvider(Function<? super E, String> styleProvider);
 
     /**
      * Allows to define different styles for DataGrid cells.
      *
-     * @deprecated use {@link StyleProvider} instead
+     * @deprecated use {@link Column#setStyleProvider(Function)} instead
      */
     @Deprecated
     interface CellStyleProvider<E extends Entity> {
@@ -943,7 +943,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * <p>
      * DataGrid can use several providers to obtain many style names for cells.
      *
-     * @deprecated use {@link Column#setStyleProvider(StyleProvider)} instead
+     * @deprecated use {@link Column#setStyleProvider(Function)} instead
      */
     @Deprecated
     void addCellStyleProvider(CellStyleProvider<? super E> styleProvider);
@@ -951,7 +951,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     /**
      * Removes style provider for the DataGrid cells.
      *
-     * @deprecated use {@link Column#setStyleProvider(StyleProvider)} instead
+     * @deprecated use {@link Column#setStyleProvider(Function)} instead
      */
     @Deprecated
     void removeCellStyleProvider(CellStyleProvider<? super E> styleProvider);
@@ -2745,14 +2745,14 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
         /**
          * @return the style provider that is used for generating styles for cells
          */
-        StyleProvider<E> getStyleProvider();
+        Function<E, String> getStyleProvider();
 
         /**
          * Sets the style provider for the DataGrid column.
          *
          * @param styleProvider a style provider to set
          */
-        void setStyleProvider(StyleProvider<? super E> styleProvider);
+        void setStyleProvider(Function<? super E, String> styleProvider);
 
         /**
          * @return the description provider that is used for generating

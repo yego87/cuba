@@ -62,25 +62,26 @@ public interface Tree<E extends Entity> extends ListComponent<E>, Component.Edit
     void setItemClickAction(Action action);
     Action getItemClickAction();
 
-    void setStyleProvider(@Nullable StyleProvider<? super E> styleProvider);
-
-    void addStyleProvider(StyleProvider<? super E> styleProvider);
-    void removeStyleProvider(StyleProvider<? super E> styleProvider);
+    /**
+     * Sets a single style provider for tree items.
+     *
+     * @param styleProvider a style provider to set
+     */
+    void setStyleProvider(@Nullable Function<? super E, String> styleProvider);
 
     /**
-     * Allows to define different styles for tree items.
+     * Add a style provider for tree items.
+     *
+     * @param styleProvider a style provider to add
      */
-    interface StyleProvider<E extends Entity> {
-        /**
-         * Called by {@link Tree} to get a style for item. <br>
-         * All unhandled exceptions from StyleProvider in Web components by default are logged with ERROR level
-         * and not shown to users.
-         *
-         * @param entity an entity instance represented by the current item
-         * @return style name or null to apply the default
-         */
-        String getStyleName(E entity);
-    }
+    void addStyleProvider(Function<? super E, String> styleProvider);
+
+    /**
+     * Removes a previously added style provider.
+     *
+     * @param styleProvider a style provider to remove
+     */
+    void removeStyleProvider(Function<? super E, String> styleProvider);
 
     /**
      * Set the icon provider for the tree.

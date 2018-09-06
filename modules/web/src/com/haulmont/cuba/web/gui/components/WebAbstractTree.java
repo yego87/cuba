@@ -49,7 +49,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
     // Style names used by tree itself
     protected List<String> internalStyles = new ArrayList<>(2);
 
-    protected List<Tree.StyleProvider> styleProviders; // lazily initialized List
+    protected List<Function<? super E, String>> styleProviders; // lazily initialized List
     protected StyleGeneratorAdapter styleGenerator;    // lazily initialized field
 
     protected CollectionDsListenersWrapper collectionDsListenersWrapper;
@@ -306,10 +306,10 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
             return null;
         }
 
-        Entity item = datasource.getItem(itemId);
+        E item = (E) datasource.getItem(itemId);
         StringBuilder joinedStyle = null;
-        for (Tree.StyleProvider styleProvider : styleProviders) {
-            String styleName = styleProvider.getStyleName(item);
+        for (Function<? super E, String> styleProvider : styleProviders) {
+            String styleName = styleProvider.apply(item);
             if (styleName != null) {
                 if (joinedStyle == null) {
                     joinedStyle = new StringBuilder(styleName);
@@ -346,7 +346,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
     }
 
     @Override
-    public void setStyleProvider(@Nullable Tree.StyleProvider<? super E> styleProvider) {
+    public void setStyleProvider(@Nullable Function<? super E, String> styleProvider) {
         if (styleProvider != null) {
             if (this.styleProviders == null) {
                 this.styleProviders = new LinkedList<>();
@@ -369,7 +369,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
     }
 
     @Override
-    public void addStyleProvider(Tree.StyleProvider<? super E> styleProvider) {
+    public void addStyleProvider(Function<? super E, String> styleProvider) {
         if (this.styleProviders == null) {
             this.styleProviders = new LinkedList<>();
         }
@@ -387,7 +387,7 @@ public abstract class WebAbstractTree<T extends CubaTree, E extends Entity>
     }
 
     @Override
-    public void removeStyleProvider(Tree.StyleProvider<? super E> styleProvider) {
+    public void removeStyleProvider(Function<? super E, String> styleProvider) {
         if (this.styleProviders != null) {
             if (this.styleProviders.remove(styleProvider)) {
                 component.markAsDirty();

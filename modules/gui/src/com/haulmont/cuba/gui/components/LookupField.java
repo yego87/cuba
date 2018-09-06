@@ -17,6 +17,8 @@
 
 package com.haulmont.cuba.gui.components;
 
+import java.util.function.Function;
+
 public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buffered, LookupComponent,
         Component.Focusable, HasOptionsStyleProvider {
 
@@ -89,7 +91,7 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
      *
      * @param optionIconProvider provider which provides icons for options
      */
-    void setOptionIconProvider(OptionIconProvider<? super V> optionIconProvider);
+    void setOptionIconProvider(Function<? super V, String> optionIconProvider);
 
     /**
      * Set the icon provider for LookupField.
@@ -98,12 +100,12 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
      * @param optionClass        class of the option
      * @param optionIconProvider provider which provides icons for options
      */
-    void setOptionIconProvider(Class<V> optionClass, OptionIconProvider<V> optionIconProvider);
+    void setOptionIconProvider(Class<V> optionClass, Function<? super V, String> optionIconProvider);
 
     /**
      * @return icon provider of the LookupField.
      */
-    OptionIconProvider<? super V> getOptionIconProvider();
+    Function<? super V, String> getOptionIconProvider();
 
     /**
      * Enables to setup how items should be filtered.
@@ -148,21 +150,5 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
          * @param caption value entered by user
          */
         void addNewOption(String caption);
-    }
-
-    /**
-     * Allows to set icons for particular elements in the options list.
-     *
-     * vaadin8 replace with Supplier
-     */
-    interface OptionIconProvider<T> {
-
-        /**
-         * Called when component paints its content.
-         *
-         * @param item item from options list, options map or enum options
-         * @return icon name or null to show no icon
-         */
-        String getItemIcon(T item);
     }
 }

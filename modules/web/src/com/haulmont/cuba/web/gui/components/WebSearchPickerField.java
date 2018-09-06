@@ -60,7 +60,7 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
     protected NewOptionHandler newOptionHandler;
 
     protected OptionsStyleProvider optionsStyleProvider;
-    protected OptionIconProvider<? super V> optionIconProvider;
+    protected Function<? super V, String> optionIconProvider;
     protected Function<? super V, String> optionCaptionProvider;
 
     protected OptionsBinding<V> optionsBinding;
@@ -351,7 +351,7 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public void setOptionIconProvider(OptionIconProvider<? super V> optionIconProvider) {
+    public void setOptionIconProvider(Function<? super V, String> optionIconProvider) {
         if (this.optionIconProvider != optionIconProvider) {
             // noinspection unchecked
             this.optionIconProvider = optionIconProvider;
@@ -365,12 +365,12 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public void setOptionIconProvider(Class<V> optionClass, OptionIconProvider<V> optionIconProvider) {
+    public void setOptionIconProvider(Class<V> optionClass, Function<? super V, String> optionIconProvider) {
         setOptionIconProvider(optionIconProvider);
     }
 
     @Override
-    public OptionIconProvider<? super V> getOptionIconProvider() {
+    public Function<? super V, String> getOptionIconProvider() {
         return optionIconProvider;
     }
 
@@ -378,7 +378,7 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
         String resourceId;
         try {
             // noinspection unchecked
-            resourceId = optionIconProvider.getItemIcon(item);
+            resourceId = optionIconProvider.apply(item);
         } catch (Exception e) {
             LoggerFactory.getLogger(WebLookupField.class)
                     .warn("Error invoking OptionIconProvider getItemIcon method", e);

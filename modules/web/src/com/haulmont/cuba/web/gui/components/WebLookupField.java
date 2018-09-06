@@ -65,7 +65,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     protected ComponentErrorHandler componentErrorHandler;
 
     protected OptionsStyleProvider optionsStyleProvider;
-    protected OptionIconProvider<? super V> optionIconProvider;
+    protected Function<? super V, String> optionIconProvider;
     protected Function<? super V, String> optionCaptionProvider;
     protected FilterPredicate filterPredicate;
 
@@ -357,7 +357,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     }
 
     @SuppressWarnings("unchecked")
-    public void setOptionIconProvider(OptionIconProvider<? super V> optionIconProvider) {
+    public void setOptionIconProvider(Function<? super V, String> optionIconProvider) {
         if (this.optionIconProvider != optionIconProvider) {
             // noinspection unchecked
             this.optionIconProvider = optionIconProvider;
@@ -371,12 +371,12 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     }
 
     @Override
-    public void setOptionIconProvider(Class<V> optionClass, OptionIconProvider<V> optionIconProvider) {
+    public void setOptionIconProvider(Class<V> optionClass, Function<? super V, String> optionIconProvider) {
         setOptionIconProvider(optionIconProvider);
     }
 
     @Override
-    public OptionIconProvider<? super V> getOptionIconProvider() {
+    public Function<? super V, String> getOptionIconProvider() {
         return optionIconProvider;
     }
 
@@ -384,7 +384,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
         String resourceId;
         try {
             // noinspection unchecked
-            resourceId = optionIconProvider.getItemIcon(item);
+            resourceId = optionIconProvider.apply(item);
         } catch (Exception e) {
             LoggerFactory.getLogger(WebLookupField.class)
                     .warn("Error invoking OptionIconProvider getItemIcon method", e);

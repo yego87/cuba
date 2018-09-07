@@ -46,7 +46,7 @@ import java.util.stream.Stream;
 public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
         implements LookupPickerField<V>, SecuredActionsHolder {
 
-    protected V nullOption;
+    protected String nullOption;
     protected boolean nullOptionVisible = true;
 
     protected FilterMode filterMode = FilterMode.CONTAINS;
@@ -105,7 +105,7 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     @Override
     protected void initComponent(CubaPickerField<V> component) {
         ((CubaComboBoxPickerField<V>) component)
-                .setItemCaptionGenerator(this::generateDefaultItemCaption);
+                .setItemCaptionGenerator(this::generateItemCaption);
 
         component.addShortcutListener(new ShortcutListenerDelegate("clearShortcut",
                 ShortcutAction.KeyCode.DELETE, new int[]{ShortcutAction.ModifierKey.SHIFT})
@@ -140,15 +140,15 @@ public class WebLookupPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public V getNullOption() {
+    public String getNullOption() {
         return nullOption;
     }
 
     @Override
-    public void setNullOption(V nullOption) {
+    public void setNullOption(String nullOption) {
         this.nullOption = nullOption;
 
-        getComponent().setEmptySelectionCaption(generateItemCaption(nullOption));
+        getComponent().setEmptySelectionCaption(nullOption);
 
         setInputPrompt(null);
     }

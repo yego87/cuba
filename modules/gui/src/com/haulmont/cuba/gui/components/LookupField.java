@@ -22,8 +22,8 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
 
     String NAME = "lookupField";
 
-    V getNullOption();
-    void setNullOption(V nullOption);
+    String getNullOption();
+    void setNullOption(String nullOption);
 
     FilterMode getFilterMode();
     void setFilterMode(FilterMode mode);

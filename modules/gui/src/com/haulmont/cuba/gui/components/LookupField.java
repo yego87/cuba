@@ -139,4 +139,18 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
         STARTS_WITH,
         CONTAINS
     }
+
+    /**
+     * Interface to be implemented if {@link #setNewOptionAllowed(boolean)} is set to true.
+     */
+    @Deprecated
+    interface NewOptionHandler extends Consumer<String> {
+    }
+
+    /**
+     * Allows to set icons for particular elements in the options list.
+     */
+    @Deprecated
+    interface OptionIconProvider<T> extends Function<T, String> {
+    }
 }

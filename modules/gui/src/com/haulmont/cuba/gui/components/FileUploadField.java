@@ -257,4 +257,8 @@ public interface FileUploadField extends UploadField, Field<FileDescriptor>, Com
      * @return FileContentProvider which can be used to read data from field
      */
     Supplier<InputStream> getContentProvider();
+
+    @Deprecated
+    interface FileContentProvider extends Supplier<InputStream> {
+    }
 }

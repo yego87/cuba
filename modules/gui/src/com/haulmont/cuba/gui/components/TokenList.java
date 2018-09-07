@@ -137,6 +137,10 @@ public interface TokenList<V> extends Field<V>, Component.BelongToFrame, Compone
      */
     void setLookupInputPrompt(String inputPrompt);
 
+    @Deprecated
+    interface TokenStyleGenerator extends Function<Object, String> {
+    }
+
     interface ItemChangeHandler {
         void addItem(Object item);
         void removeItem(Object item);

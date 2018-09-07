@@ -84,6 +84,13 @@ public interface Tree<E extends Entity> extends ListComponent<E>, Component.Edit
     void removeStyleProvider(Function<? super E, String> styleProvider);
 
     /**
+     * Allows to define different styles for tree items.
+     */
+    @Deprecated
+    interface StyleProvider<E extends Entity> extends Function<E, String> {
+    }
+
+    /**
      * Set the icon provider for the tree.
      */
     void setIconProvider(Function<? super E, String> iconProvider);

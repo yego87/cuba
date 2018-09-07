@@ -22,6 +22,7 @@ import com.haulmont.cuba.core.entity.Entity;
 import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.Collection;
+import java.util.function.Function;
 
 public interface ListComponent<E extends Entity> extends Component, Component.BelongToFrame, ActionsHolder,
         RowsCount.RowsCountTarget {
@@ -37,4 +38,13 @@ public interface ListComponent<E extends Entity> extends Component, Component.Be
     void setSelected(Collection<E> items);
 
     CollectionDatasource getDatasource();
+
+    /**
+     * Allows to set icons for particular rows in the table.
+     *
+     * @param <E> entity class
+     */
+    @Deprecated
+    interface IconProvider<E extends Entity> extends Function<E, String> {
+    }
 }

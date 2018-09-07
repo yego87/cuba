@@ -17,6 +17,7 @@
 
 package com.haulmont.cuba.gui.components;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buffered, LookupComponent,
@@ -34,14 +35,14 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
      * vaadin8 deprecate
      *
      * @return true if the component handles new options entered by user.
-     * @see LookupField.NewOptionHandler
+     * @see #setNewOptionHandler(Consumer)
      */
     boolean isNewOptionAllowed();
     /**
      * vaadin8 deprecate
      *
      * Makes the component handle new options entered by user.
-     * @see LookupField.NewOptionHandler
+     * @see #setNewOptionHandler(Consumer)
      */
     void setNewOptionAllowed(boolean newOptionAllowed);
 
@@ -58,12 +59,12 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
     /**
      * @return current handler
      */
-    NewOptionHandler getNewOptionHandler();
+    Consumer<String> getNewOptionHandler();
     /**
      * Set handler.
      * @param newOptionHandler handler instance
      */
-    void setNewOptionHandler(NewOptionHandler newOptionHandler);
+    void setNewOptionHandler(Consumer<String> newOptionHandler);
 
     /**
      * @return the page length of the suggestion popup.
@@ -137,18 +138,5 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
         NO,
         STARTS_WITH,
         CONTAINS
-    }
-
-    /**
-     * Interface to be implemented if {@link #setNewOptionAllowed(boolean)} is set to true.
-     *
-     * vaadin8 replace with Consumer
-     */
-    interface NewOptionHandler {
-        /**
-         * Called when user enters a value which is not in the options list, and presses Enter.
-         * @param caption value entered by user
-         */
-        void addNewOption(String caption);
     }
 }

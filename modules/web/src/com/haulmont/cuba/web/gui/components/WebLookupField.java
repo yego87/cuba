@@ -45,6 +45,7 @@ import javax.inject.Inject;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,7 +61,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     protected V nullOption;
     protected boolean nullOptionVisible = true;
 
-    protected NewOptionHandler newOptionHandler;
+    protected Consumer<String> newOptionHandler;
 
     protected ComponentErrorHandler componentErrorHandler;
 
@@ -325,12 +326,12 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     }
 
     @Override
-    public NewOptionHandler getNewOptionHandler() {
+    public Consumer<String> getNewOptionHandler() {
         return newOptionHandler;
     }
 
     @Override
-    public void setNewOptionHandler(NewOptionHandler newItemHandler) {
+    public void setNewOptionHandler(Consumer<String> newItemHandler) {
         this.newOptionHandler = newItemHandler;
     }
 

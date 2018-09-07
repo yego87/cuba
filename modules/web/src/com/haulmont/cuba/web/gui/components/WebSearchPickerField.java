@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,7 +58,7 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
     // just stub
     protected FilterPredicate filterPredicate;
 
-    protected NewOptionHandler newOptionHandler;
+    protected Consumer<String> newOptionHandler;
 
     protected OptionsStyleProvider optionsStyleProvider;
     protected Function<? super V, String> optionIconProvider;
@@ -319,12 +320,12 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public NewOptionHandler getNewOptionHandler() {
+    public Consumer<String> getNewOptionHandler() {
         return newOptionHandler;
     }
 
     @Override
-    public void setNewOptionHandler(NewOptionHandler newOptionHandler) {
+    public void setNewOptionHandler(Consumer<String> newOptionHandler) {
         this.newOptionHandler = newOptionHandler;
     }
 

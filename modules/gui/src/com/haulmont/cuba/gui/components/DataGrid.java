@@ -2646,7 +2646,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * The presentation provider is a {@link Function} that takes the value of this
          * column on a single row, and converts that to a value that the renderer accepts.
          * <p>
-         * The presentation provider takes precedence over {@link Converter} and {@link Formatter}.
+         * The presentation provider takes precedence over {@link Converter} and {@link Function formatter}.
          *
          * @param renderer             the renderer to use
          * @param presentationProvider the presentation provider to use
@@ -2667,7 +2667,8 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
         Function getFormatter();
 
         /**
-         * If either {@link Function presentation provider} or {@link Converter} are set they take precedence over {@link Formatter}.
+         * If either {@link Function presentation provider} or {@link Converter}
+         * are set they take precedence over {@link Function formatter}.
          *
          * @deprecated use {@link #getPresentationProvider()} instead
          */
@@ -2689,7 +2690,7 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
          * the renderer presentation type. If given converter is null, then the
          * default converter will be used.
          * <p>
-         * Takes precedence over {@link Formatter}, but is inferior to the {@link Function presentation provider}.
+         * Takes precedence over {@link Function formatter}, but is inferior to the {@link Function presentation provider}.
          *
          * @param converter the converter to use, or {@code null} to not use any
          *                  converters

@@ -63,7 +63,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
 
     protected Consumer<String> newOptionHandler;
 
-    protected ComponentErrorHandler componentErrorHandler;
+    protected Consumer<ErrorMessage> componentErrorHandler;
 
     protected OptionsStyleProvider optionsStyleProvider;
     protected Function<? super V, String> optionIconProvider;
@@ -491,10 +491,5 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     @Override
     public void setTabIndex(int tabIndex) {
         component.setTabIndex(tabIndex);
-    }
-
-    // vaadin8 replace with Consumer<ErrorMessage>
-    protected interface ComponentErrorHandler {
-        boolean handleError(ErrorMessage message);
     }
 }

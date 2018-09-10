@@ -57,6 +57,7 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
 
     protected FilterMode filterMode = FilterMode.CONTAINS;
 
+    protected V nullOption;
     protected boolean nullOptionVisible = true;
 
     protected NewOptionHandler newOptionHandler;
@@ -229,12 +230,23 @@ public class WebLookupField<V> extends WebV8AbstractField<CComboBox<V>, V, V>
     }
 
     @Override
-    public String getNullOption() {
+    public V getNullOption() {
+        return nullOption;
+    }
+
+    @Override
+    public void setNullOption(V nullOption) {
+        this.nullOption = nullOption;
+        setNullSelectionCaption(generateItemCaption(nullOption));
+    }
+
+    @Override
+    public String getNullSelectionCaption() {
         return component.getEmptySelectionCaption();
     }
 
     @Override
-    public void setNullOption(String nullOption) {
+    public void setNullSelectionCaption(String nullOption) {
         component.setEmptySelectionCaption(nullOption);
 
         setInputPrompt(null);

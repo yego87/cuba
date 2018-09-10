@@ -22,8 +22,33 @@ public interface LookupField<V> extends OptionsField<V, V>, HasInputPrompt, Buff
 
     String NAME = "lookupField";
 
-    String getNullOption();
-    void setNullOption(String nullOption);
+    /**
+     * @deprecated Use {@link #getNullSelectionCaption()} instead
+     */
+    @Deprecated
+    V getNullOption();
+
+    /**
+     * @deprecated Use {@link #setNullSelectionCaption(String)} instead
+     */
+    @Deprecated
+    void setNullOption(V nullOption);
+
+    /**
+     * @return the null selection caption, not {@code null}
+     */
+    String getNullSelectionCaption();
+
+    /**
+     * Sets the null selection caption.
+     * <p>
+     * The empty string {@code ""} is the default null selection caption.
+     * <p>
+     * If null selection is allowed then the null item will be shown with the given caption.
+     *
+     * @param nullOption the caption to set, not {@code null}
+     */
+    void setNullSelectionCaption(String nullOption);
 
     FilterMode getFilterMode();
     void setFilterMode(FilterMode mode);

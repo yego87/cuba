@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
         implements SearchPickerField<V>, SecuredActionsHolder {
 
+    protected V nullOption;
     protected boolean nullOptionVisible = true;
 
     // just stub
@@ -249,12 +250,23 @@ public class WebSearchPickerField<V extends Entity> extends WebPickerField<V>
     }
 
     @Override
-    public String getNullOption() {
+    public V getNullOption() {
+        return nullOption;
+    }
+
+    @Override
+    public void setNullOption(V nullOption) {
+        this.nullOption = nullOption;
+        setNullSelectionCaption(generateItemCaption(nullOption));
+    }
+
+    @Override
+    public String getNullSelectionCaption() {
         return getComponent().getEmptySelectionCaption();
     }
 
     @Override
-    public void setNullOption(String nullOption) {
+    public void setNullSelectionCaption(String nullOption) {
         getComponent().setEmptySelectionCaption(nullOption);
 
         setInputPrompt(null);

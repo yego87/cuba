@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.EventObject;
 import java.util.List;
 import java.util.Map;
@@ -669,6 +670,45 @@ public interface Table<E extends Entity>
          * Descending (e.g. Z-A, 9..1) sort order
          */
         DESCENDING
+    }
+
+    /**
+     * Registers a new selection listener
+     *
+     * @param listener the listener to register
+     */
+    @SuppressWarnings("unchecked")
+    default Subscription addSelectionListener(Consumer<SelectionEvent<E>> listener) {
+        return ((EventHubOwner) this).getEventHub().subscribe(SelectionEvent.class, (Consumer) listener);
+    }
+
+    /**
+     * An event that specifies what in a selection has changed, and where the
+     * selection took place.
+     */
+    class SelectionEvent<E extends Entity> extends EventObject {
+        protected final List<E> selected;
+
+        /**
+         * Constructor for a selection event.
+         *
+         * @param component the Table from which this event originates
+         * @param selected  items that are currently selected
+         */
+        public SelectionEvent(Table<E> component,  List<E> selected) {
+            super(component);
+
+            this.selected = Collections.unmodifiableList(selected);
+        }
+
+        /**
+         * A {@link List} of all the items that are currently selected.
+         *
+         * @return a List of the items that are currently selected
+         */
+        public List<E> getSelected() {
+            return selected;
+        }
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

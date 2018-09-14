@@ -990,7 +990,6 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
 
         LookupSelectionChangeEvent selectionChangeEvent = new LookupSelectionChangeEvent(this);
         publish(LookupSelectionChangeEvent.class, selectionChangeEvent);
-        // todo implement selection change events
 
         fireSelectionEvent(event);
     }

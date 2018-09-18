@@ -698,7 +698,13 @@ public interface Table<E extends Entity>
         public SelectionEvent(Table<E> component,  List<E> selected) {
             super(component);
 
-            this.selected = Collections.unmodifiableList(selected);
+            this.selected = selected;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Table<E> getSource() {
+            return (Table<E>) super.getSource();
         }
 
         /**

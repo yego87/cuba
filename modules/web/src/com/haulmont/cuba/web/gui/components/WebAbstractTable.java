@@ -17,6 +17,7 @@
 package com.haulmont.cuba.web.gui.components;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.util.Dom4j;
 import com.haulmont.bali.util.Preconditions;
@@ -995,7 +996,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
     }
 
     protected void fireSelectionEvent(@SuppressWarnings("unused") Property.ValueChangeEvent e) {
-        List<E> selectedItems = new ArrayList<>(getSelected());
+        List<E> selectedItems = ImmutableList.copyOf(getSelected());
 
         SelectionEvent<E> event =
                 new SelectionEvent<>(WebAbstractTable.this, selectedItems);

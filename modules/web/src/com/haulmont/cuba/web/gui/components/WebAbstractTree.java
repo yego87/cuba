@@ -979,11 +979,11 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     public void setSelected(Collection<E> items) {
         TreeSource<E> treeSource = getTreeSource();
 
-        // TODO: gg, replace with stream
-        for (E item : items) {
-            if (!treeSource.containsItem(item)) {
-                throw new IllegalStateException("Datasource doesn't contain items");
-            }
+        boolean allMatch = items.stream()
+                .allMatch(treeSource::containsItem);
+
+        if (!allMatch) {
+            throw new IllegalStateException("Datasource doesn't contain items");
         }
 
         setSelectedInternal(items);

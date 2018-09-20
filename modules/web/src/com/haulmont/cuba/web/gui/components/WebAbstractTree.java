@@ -157,8 +157,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         initContextMenu();
     }
 
-    // TODO: gg, make protected?
-    public void initComponent(CubaTree<E> component) {
+    protected void initComponent(CubaTree<E> component) {
         componentComposition = createComponentComposition();
 
         component.setSizeFull();

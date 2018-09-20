@@ -19,7 +19,7 @@ package com.haulmont.cuba.web.gui.components;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.components.Action;
 import com.haulmont.cuba.gui.components.data.BindingState;
-import com.haulmont.cuba.gui.components.data.TreeDataGridSource;
+import com.haulmont.cuba.gui.components.data.TreeSource;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.impl.CollectionDsListenersWrapper;
@@ -60,7 +60,7 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
     }
 
     protected void onSelectionChange(SelectionEvent<E> event) {
-        TreeDataGridSource<E> treeSource = getTreeSource();
+        TreeSource<E> treeSource = getTreeSource();
 
         if (treeSource == null
                 || treeSource.getState() == BindingState.INACTIVE) {

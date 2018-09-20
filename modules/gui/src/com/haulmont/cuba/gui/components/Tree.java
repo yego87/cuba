@@ -18,9 +18,8 @@ package com.haulmont.cuba.gui.components;
 
 import com.google.common.reflect.TypeToken;
 import com.haulmont.cuba.core.entity.Entity;
-import com.haulmont.cuba.gui.components.data.DataGridSource;
-import com.haulmont.cuba.gui.components.data.TreeDataGridSource;
-import com.haulmont.cuba.gui.components.data.datagrid.HierarchicalDatasourceDataGridAdapter;
+import com.haulmont.cuba.gui.components.data.TreeSource;
+import com.haulmont.cuba.gui.components.data.tree.HierarchicalDatasourceTreeAdapter;
 import com.haulmont.cuba.gui.data.HierarchicalDatasource;
 
 import javax.annotation.Nullable;
@@ -72,22 +71,22 @@ public interface Tree<E extends Entity> extends ListComponent<E>, HasButtonsPane
     default void setDatasource(HierarchicalDatasource datasource) {
         //noinspection unchecked
         setTreeSource(datasource != null
-                ? new HierarchicalDatasourceDataGridAdapter(datasource)
+                ? new HierarchicalDatasourceTreeAdapter(datasource)
                 : null);
     }
 
     @Deprecated
     @Override
     default HierarchicalDatasource getDatasource() {
-        DataGridSource<E> dataGridSource = getTreeSource();
-        return dataGridSource != null
-                ? (HierarchicalDatasource) ((HierarchicalDatasourceDataGridAdapter) dataGridSource).getDatasource()
+        TreeSource<E> treeSource = getTreeSource();
+        return treeSource != null
+                ? ((HierarchicalDatasourceTreeAdapter) treeSource).getDatasource()
                 : null;
     }
 
-    TreeDataGridSource<E> getTreeSource();
+    TreeSource<E> getTreeSource();
 
-    void setTreeSource(TreeDataGridSource<E> treeSource);
+    void setTreeSource(TreeSource<E> treeSource);
 
     /**
      * Assign action to be executed on double click inside a tree node.

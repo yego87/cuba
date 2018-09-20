@@ -30,16 +30,15 @@ import com.haulmont.cuba.gui.components.LookupComponent.LookupSelectionChangeNot
 import com.haulmont.cuba.gui.components.Tree;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.data.BindingState;
-import com.haulmont.cuba.gui.components.data.DataGridSource;
-import com.haulmont.cuba.gui.components.data.TreeDataGridSource;
-import com.haulmont.cuba.gui.components.data.datagrid.HierarchicalDatasourceDataGridAdapter;
+import com.haulmont.cuba.gui.components.data.TreeSource;
+import com.haulmont.cuba.gui.components.data.tree.HierarchicalDatasourceTreeAdapter;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.components.sys.ShortcutsDelegate;
 import com.haulmont.cuba.gui.components.sys.ShowInfoAction;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.theme.ThemeConstantsManager;
-import com.haulmont.cuba.web.gui.components.datagrid.DataGridSourceEventsDelegate;
-import com.haulmont.cuba.web.gui.components.datagrid.HierarchicalDataGridDataProvider;
+import com.haulmont.cuba.web.gui.components.tree.TreeDataProvider;
+import com.haulmont.cuba.web.gui.components.tree.TreeSourceEventsDelegate;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaTree;
@@ -69,7 +68,7 @@ import static com.haulmont.cuba.gui.ComponentsHelper.findActionById;
 public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         extends WebAbstractComponent<C>
         implements Tree<E>, LookupSelectionChangeNotifier, SecuredActionsHolder,
-        HasInnerComponents, InitializingBean, DataGridSourceEventsDelegate<E> {
+        HasInnerComponents, InitializingBean, TreeSourceEventsDelegate<E> {
 
     private static final String HAS_TOP_PANEL_STYLENAME = "has-top-panel";
 
@@ -109,7 +108,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     protected boolean showIconsForPopupMenuActions;
 
     protected String hierarchyProperty;
-    protected HierarchicalDataGridDataProvider<E> dataBinding;
+    protected TreeDataProvider<E> dataBinding;
 
     public WebAbstractTree() {
         component = createComponent();
@@ -263,12 +262,12 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     }
 
     @Override
-    public TreeDataGridSource<E> getTreeSource() {
-        return this.dataBinding != null ? (TreeDataGridSource<E>) this.dataBinding.getDataGridSource() : null;
+    public TreeSource<E> getTreeSource() {
+        return this.dataBinding != null ? this.dataBinding.getTreeSource() : null;
     }
 
     @Override
-    public void setTreeSource(TreeDataGridSource<E> treeSource) {
+    public void setTreeSource(TreeSource<E> treeSource) {
         if (this.dataBinding != null) {
             this.dataBinding.unbind();
             this.dataBinding = null;
@@ -277,8 +276,6 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         }
 
         if (treeSource != null) {
-
-
             this.dataBinding = createDataGridDataProvider(treeSource);
             this.hierarchyProperty = treeSource.getHierarchyPropertyName();
 
@@ -387,8 +384,8 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         }
     }
 
-    protected HierarchicalDataGridDataProvider<E> createDataGridDataProvider(TreeDataGridSource<E> dataGridSource) {
-        return new HierarchicalDataGridDataProvider<>(dataGridSource, this);
+    protected TreeDataProvider<E> createDataGridDataProvider(TreeSource<E> treeSource) {
+        return new TreeDataProvider<>(treeSource, this);
     }
 
     @Override
@@ -502,7 +499,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     }
 
     @Override
-    public void dataGridSourceItemSetChanged(DataGridSource.ItemSetChangeEvent<E> event) {
+    public void treeSourceItemSetChanged(TreeSource.ItemSetChangeEvent<E> event) {
         // #PL-2035, reload selection from ds
         Set<E> selectedItems = getSelected();
         Set<E> newSelection = new HashSet<>();
@@ -523,7 +520,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         } else {
             // Workaround for the MultiSelect model.
             // Set the selected items only if the previous selection is different
-            // Otherwise, the DataGrid rows will display the values before editing
+            // Otherwise, the tree rows will display the values before editing
             if (isMultiSelect() && !selectedItems.equals(newSelection)) {
                 setSelectedInternal(newSelection);
             }
@@ -533,17 +530,17 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     }
 
     @Override
-    public void dataGridSourcePropertyValueChanged(DataGridSource.ValueChangeEvent<E> event) {
+    public void treeSourcePropertyValueChanged(TreeSource.ValueChangeEvent<E> event) {
         refreshActionsState();
     }
 
     @Override
-    public void dataGridSourceStateChanged(DataGridSource.StateChangeEvent<E> event) {
+    public void treeSourceStateChanged(TreeSource.StateChangeEvent<E> event) {
         refreshActionsState();
     }
 
     @Override
-    public void dataGridSourceSelectedItemChanged(DataGridSource.SelectedItemChangeEvent<E> event) {
+    public void treeSourceSelectedItemChanged(TreeSource.SelectedItemChangeEvent<E> event) {
         refreshActionsState();
     }
 
@@ -745,9 +742,9 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     @Override
     public void refresh() {
-        TreeDataGridSource<E> treeSource = getTreeSource();
-        if (treeSource instanceof HierarchicalDatasourceDataGridAdapter) {
-            ((HierarchicalDatasourceDataGridAdapter) treeSource).getDatasource().refresh();
+        TreeSource<E> treeSource = getTreeSource();
+        if (treeSource instanceof HierarchicalDatasourceTreeAdapter) {
+            ((HierarchicalDatasourceTreeAdapter) treeSource).getDatasource().refresh();
         }
     }
 
@@ -981,8 +978,9 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     @Override
     public void setSelected(Collection<E> items) {
-        TreeDataGridSource<E> treeSource = getTreeSource();
+        TreeSource<E> treeSource = getTreeSource();
 
+        // TODO: gg, replace with stream
         for (E item : items) {
             if (!treeSource.containsItem(item)) {
                 throw new IllegalStateException("Datasource doesn't contain items");

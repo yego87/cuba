@@ -41,4 +41,9 @@ public class HierarchicalDatasourceDataGridAdapter<E extends Entity<K>, K>
     public boolean hasChildren(E item) {
         return getHierarchicalDatasource().hasChildren(item.getId());
     }
+
+    @Override
+    public String getHierarchyPropertyName() {
+        return getHierarchicalDatasource().getHierarchyPropertyName();
+    }
 }

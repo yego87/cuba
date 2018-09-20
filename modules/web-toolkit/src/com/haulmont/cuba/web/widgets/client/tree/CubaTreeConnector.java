@@ -23,45 +23,44 @@ import com.haulmont.cuba.web.widgets.client.Tools;
 import com.vaadin.client.*;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.ShortcutActionHandler;
+import com.vaadin.client.ui.composite.CompositeConnector;
 import com.vaadin.shared.ui.Connect;
-import com.vaadin.v7.client.ui.VTree;
-import com.vaadin.v7.client.ui.tree.TreeConnector;
 
 import java.util.Collections;
 import java.util.List;
 
 @Connect(CubaTree.class)
-public class CubaTreeConnector extends TreeConnector implements HasComponentsConnector {
+public class CubaTreeConnector extends CompositeConnector {
 
     protected boolean contextMenuSelection = false;
 
     public CubaTreeConnector() {
         //noinspection Convert2Lambda
-        registerRpc(CubaTreeClientRpc.class, new CubaTreeClientRpc() {
-            @Override
-            public void hideContextMenuPopup() {
-                if (getWidget().customContextMenuPopup != null) {
-                    getWidget().customContextMenuPopup.hide();
-                }
-            }
-        });
+//        registerRpc(CubaTreeClientRpc.class, new CubaTreeClientRpc() {
+//            @Override
+//            public void hideContextMenuPopup() {
+//                if (getWidget().customContextMenuPopup != null) {
+//                    getWidget().customContextMenuPopup.hide();
+//                }
+//            }
+//        });
     }
 
-    @Override
-    public CubaTreeWidget getWidget() {
-        return (CubaTreeWidget) super.getWidget();
-    }
+//    @Override
+//    public CubaTreeWidget getWidget() {
+//        return (CubaTreeWidget) super.getWidget();
+//    }
 
-    @Override
-    public CubaTreeState getState() {
-        return (CubaTreeState) super.getState();
-    }
+//    @Override
+//    public CubaTreeState getState() {
+//        return (CubaTreeState) super.getState();
+//    }
 
     public void setContextMenuSelection(boolean contextMenuSelection) {
         this.contextMenuSelection = contextMenuSelection;
     }
 
-    @Override
+    /*@Override
     public void updateFromUIDL(UIDL uidl, ApplicationConnection client) {
         super.updateFromUIDL(uidl, client);
 
@@ -82,51 +81,52 @@ public class CubaTreeConnector extends TreeConnector implements HasComponentsCon
                 }
             }
         }
-    }
+    }*/
 
     @Override
     public void onStateChanged(StateChangeEvent stateChangeEvent) {
         super.onStateChanged(stateChangeEvent);
 
+        // TODO: gg, fix
         if (stateChangeEvent.hasPropertyChanged("doubleClickMode")) {
-            getWidget().doubleClickMode = getState().doubleClickMode;
+//            getWidget().doubleClickMode = getState().doubleClickMode;
         }
         if (stateChangeEvent.hasPropertyChanged("nodeCaptionsAsHtml")) {
-            getWidget().nodeCaptionsAsHtml = getState().nodeCaptionsAsHtml;
+//            getWidget().nodeCaptionsAsHtml = getState().nodeCaptionsAsHtml;
         }
         if (stateChangeEvent.hasPropertyChanged("contextMenu")) {
-            if (getState().contextMenu != null) {
-                ComponentConnector contextMenu = (ComponentConnector) getState().contextMenu;
-                getWidget().customContextMenu = contextMenu.getWidget();
-            } else {
-                getWidget().customContextMenu = null;
-            }
+//            if (getState().contextMenu != null) {
+//                ComponentConnector contextMenu = (ComponentConnector) getState().contextMenu;
+//                getWidget().customContextMenu = contextMenu.getWidget();
+//            } else {
+//                getWidget().customContextMenu = null;
+//            }
         }
     }
 
-    @Override
+    /*@Override
     protected boolean isNodeUidl(UIDL childUidl) {
         return !"shortcuts".equals(childUidl.getTag());
-    }
+    }*/
 
-    @Override
+    /*@Override
     protected boolean isPopupSelection(UIDL uidl) {
         boolean selection = contextMenuSelection;
         contextMenuSelection = false;
         return selection;
-    }
+    }*/
 
-    @Override
+    /*@Override
     protected VTree.TreeNode createNode(UIDL childUidl) {
         return getWidget().new CubaTreeNode();
-    }
+    }*/
 
     @Override
     public void updateCaption(ComponentConnector connector) {
         // NOP, not rendered
     }
 
-    @Override
+    /*@Override
     public List<ComponentConnector> getChildComponents() {
         return Collections.emptyList();
     }
@@ -139,10 +139,10 @@ public class CubaTreeConnector extends TreeConnector implements HasComponentsCon
     public HandlerRegistration addConnectorHierarchyChangeHandler(ConnectorHierarchyChangeEvent.ConnectorHierarchyChangeHandler handler) {
         return ensureHandlerManager().addHandler(
                 ConnectorHierarchyChangeEvent.TYPE, handler);
-    }
+    }*/
 
-    @Override
+    /*@Override
     public boolean isUseSimpleModeForTouchDevice() {
         return Tools.isUseSimpleMultiselectForTouchDevice();
-    }
+    }*/
 }

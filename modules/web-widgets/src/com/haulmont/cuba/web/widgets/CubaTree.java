@@ -18,37 +18,52 @@ package com.haulmont.cuba.web.widgets;
 
 import com.google.common.base.Preconditions;
 import com.haulmont.cuba.web.widgets.client.tree.CubaTreeClientRpc;
-import com.haulmont.cuba.web.widgets.client.tree.CubaTreeState;
+import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.event.Action;
-import com.vaadin.event.ActionManager;
-import com.vaadin.event.ShortcutListener;
-import com.vaadin.server.PaintException;
-import com.vaadin.server.PaintTarget;
-import com.vaadin.server.Resource;
-import com.vaadin.shared.Registration;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Layout;
-import com.vaadin.v7.ui.Tree;
+import com.vaadin.ui.Tree;
+import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.components.grid.GridSelectionModel;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-public class CubaTree extends Tree implements HasComponents {
+public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
 
     protected Runnable beforePaintListener;
-
-    public CubaTree() {
-        setValidationVisible(false);
-        setShowBufferedSourceException(false);
-    }
 
     /**
      * Keeps track of the ShortcutListeners added to this component, and manages the painting and handling as well.
      */
-    protected ActionManager shortcutActionManager;
-    protected ItemIconProvider itemIconProvider;
-
+//    protected ActionManager shortcutActionManager;
     @Override
+    protected TreeGrid<T> createTreeGrid() {
+        return new CubaTreeGrid<>();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public CubaTreeGrid<T> getCompositionRoot() {
+        return (CubaTreeGrid<T>) super.getCompositionRoot();
+    }
+
+    public void setGridSelectionModel(GridSelectionModel<T> model) {
+        getCompositionRoot().setGridSelectionModel(model);
+    }
+
+    public Collection<T> getChildren(T item) {
+        // TODO: gg, it seems that this needs to be changed
+//        return getTreeData().getChildren(item);
+        return getDataProvider()
+                .fetchChildren(new HierarchicalQuery<>(null, item))
+                .collect(Collectors.toList());
+    }
+
+    public boolean hasChildren(T item) {
+        return getDataProvider().hasChildren(item);
+    }
+
+    /*@Override
     protected CubaTreeState getState() {
         return (CubaTreeState) super.getState();
     }
@@ -56,10 +71,10 @@ public class CubaTree extends Tree implements HasComponents {
     @Override
     protected CubaTreeState getState(boolean markAsDirty) {
         return (CubaTreeState) super.getState(markAsDirty);
-    }
+    }*/
 
     public void setContextMenuPopup(Layout contextMenu) {
-        getState().contextMenu = contextMenu;
+//        getState().contextMenu = contextMenu;
     }
 
     public void hideContextMenuPopup() {
@@ -67,62 +82,65 @@ public class CubaTree extends Tree implements HasComponents {
     }
 
     public void setDoubleClickMode(boolean doubleClickMode) {
-        if (getState(false).doubleClickMode != doubleClickMode) {
-            getState().doubleClickMode = doubleClickMode;
-        }
+//        if (getState(false).doubleClickMode != doubleClickMode) {
+//            getState().doubleClickMode = doubleClickMode;
+//        }
     }
 
-    public boolean isDoubleClickMode() {
-        return getState(false).doubleClickMode;
-    }
+//    public boolean isDoubleClickMode() {
+//        return getState(false).doubleClickMode;
+//    }
 
     public void setNodeCaptionsAsHtml(boolean nodeCaptionsAsHtml) {
-        if (getState(false).nodeCaptionsAsHtml != nodeCaptionsAsHtml) {
-            getState().nodeCaptionsAsHtml = nodeCaptionsAsHtml;
-        }
+//        if (getState(false).nodeCaptionsAsHtml != nodeCaptionsAsHtml) {
+//            getState().nodeCaptionsAsHtml = nodeCaptionsAsHtml;
+//        }
     }
 
-    public boolean isNodeCaptionsAsHtml() {
-        return getState(false).nodeCaptionsAsHtml;
-    }
+//    public boolean isNodeCaptionsAsHtml() {
+//        return getState(false).nodeCaptionsAsHtml;
+//    }
 
-    @Override
+    // VAADIN8: gg, replace
+    /*@Override
     public void changeVariables(Object source, Map<String, Object> variables) {
         super.changeVariables(source, variables);
 
         if (shortcutActionManager != null) {
             shortcutActionManager.handleActions(variables, this);
         }
-    }
+    }*/
 
-    @Override
-    public Registration addShortcutListener(ShortcutListener shortcut) {
-        if (shortcutActionManager == null) {
-            shortcutActionManager = new ShortcutActionManager(this);
-        }
+//    @Override
+//    public Registration addShortcutListener(ShortcutListener shortcut) {
+//        if (shortcutActionManager == null) {
+//            shortcutActionManager = new ShortcutActionManager(this);
+//        }
+//
+//        shortcutActionManager.addAction(shortcut);
+//
+//        return () -> shortcutActionManager.removeAction(shortcut);
+//    }
+//
+//    @Override
+//    public void removeShortcutListener(ShortcutListener shortcut) {
+//        if (shortcutActionManager != null) {
+//            shortcutActionManager.removeAction(shortcut);
+//        }
+//    }
 
-        shortcutActionManager.addAction(shortcut);
-
-        return () -> shortcutActionManager.removeAction(shortcut);
-    }
-
-    @Override
-    public void removeShortcutListener(ShortcutListener shortcut) {
-        if (shortcutActionManager != null) {
-            shortcutActionManager.removeAction(shortcut);
-        }
-    }
-
-    @Override
+    // VAADIN8: gg, replace
+    /*@Override
     protected void paintActions(PaintTarget target, Set<Action> actionSet) throws PaintException {
         super.paintActions(target, actionSet);
 
         if (shortcutActionManager != null) {
             shortcutActionManager.paintActions(null, target);
         }
-    }
+    }*/
 
-    @Override
+    // VAADIN8: gg, replace
+    /*@Override
     public void paintContent(PaintTarget target) throws PaintException {
         if (beforePaintListener != null) {
             beforePaintListener.run();
@@ -132,72 +150,80 @@ public class CubaTree extends Tree implements HasComponents {
             target.addAttribute("nodeCaptionsAsHtml", true);
         }
         super.paintContent(target);
-    }
+    }*/
 
-    @Override
-    public Iterator<Component> iterator() {
-        if (getState(false).contextMenu != null) {
-            return Collections.singleton((Component)getState(false).contextMenu).iterator();
-        }
-        return Collections.emptyIterator();
-    }
-
+    //    @Override
+//    public Iterator<Component> iterator() {
+//        if (getState(false).contextMenu != null) {
+//            return Collections.singleton((Component) getState(false).contextMenu).iterator();
+//        }
+//        return Collections.emptyIterator();
+//    }
+//
     public void expandAll() {
-        for (Object id : getItemIds()) {
+        // VAADIN8: gg, implement
+        /*for (Object id : getItems()) {
             expandItemRecursively(id);
-        }
+        }*/
     }
 
-    public void expandItemRecursively(Object id) {
-        expandItem(id);
+    // VAADIN8: gg, implement
+    public void expandItemRecursively(T item) {
+        /*expandItem(id);
         if (hasChildren(id)) {
             for (Object childId: getChildren(id)) {
                 expandItemRecursively(childId);
             }
-        }
+        }*/
     }
 
-    public void expandItemWithParents(Object id) {
-        Object currentId = id;
+    public void expandItemWithParents(T item) {
+        // VAADIN8: gg, implement
+        /*Object currentId = id;
         while (currentId != null) {
             expandItem(currentId);
 
             currentId = getParent(currentId);
-        }
+        }*/
     }
 
-    public void collapseItemRecursively(Object id) {
-        if (hasChildren(id)) {
+    public void collapseItemRecursively(T item) {
+        // VAADIN8: gg, implement
+        /*if (hasChildren(id)) {
             for (Object childId: getChildren(id)) {
                 collapseItemRecursively(childId);
             }
         }
-        collapseItem(id);
+        collapseItem(id);*/
     }
 
     public void collapseAll() {
-        for (Object id : getItemIds()) {
+        // VAADIN8: gg, implement
+        /*for (Object id : getItemIds()) {
             collapseItemRecursively(id);
-        }
+        }*/
     }
 
     public void expandUpTo(int level) {
         Preconditions.checkArgument(level > 0, "level should be greater than 0");
 
-        List<Object> currentLevelItemIds = new ArrayList<>(getItemIds());
+        // VAADIN8: gg, implement
+        /*List<Object> currentLevelItemIds = new ArrayList<>(getItemIds());
 
         int i = 0;
         while (i < level && !currentLevelItemIds.isEmpty()) {
             for (Object itemId : new ArrayList<>(currentLevelItemIds)) {
+                // VAADIN8: gg, implement
                 expandItem(itemId);
                 currentLevelItemIds.remove(itemId);
                 currentLevelItemIds.addAll(getChildren(itemId));
             }
             i++;
-        }
+        }*/
     }
 
-    @Override
+    // VAADIN8: gg, replace
+    /*@Override
     public Resource getItemIcon(Object itemId) {
         if (itemIconProvider != null) {
             Resource itemIcon = itemIconProvider.getItemIcon(itemId);
@@ -207,21 +233,15 @@ public class CubaTree extends Tree implements HasComponents {
         }
 
         return super.getItemIcon(itemId);
+    }*/
+
+    public void deselectAll() {
+        getSelectionModel().deselectAll();
     }
 
-    public ItemIconProvider getItemIconProvider() {
-        return itemIconProvider;
-    }
-
-    public void setItemIconProvider(ItemIconProvider itemIconProvider) {
-        if (this.itemIconProvider != itemIconProvider) {
-            this.itemIconProvider = itemIconProvider;
-            markAsDirty();
-        }
-    }
-
-    public interface ItemIconProvider {
-        Resource getItemIcon(Object itemId);
+    public void repaint() {
+        markAsDirtyRecursive();
+        getCompositionRoot().repaint();
     }
 
     public void setBeforePaintListener(Runnable beforePaintListener) {

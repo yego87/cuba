@@ -52,7 +52,7 @@ public class CubaWidgetsTreeConnector extends CubaTreeConnector implements HasCo
         this.nodeWidgets = childComponents;
     }
 
-    @Override
+    /*@Override
     protected VTree.TreeNode createNode(UIDL childUidl) {
         if (childUidl.hasAttribute("widgetIndex")) {
             int widgetIndex = childUidl.getIntAttribute("widgetIndex");
@@ -66,5 +66,5 @@ public class CubaWidgetsTreeConnector extends CubaTreeConnector implements HasCo
         }
         // all branches should return instance of same TreeNode class
         return getWidget().new WidgetTreeNode();
-    }
+    }*/
 }

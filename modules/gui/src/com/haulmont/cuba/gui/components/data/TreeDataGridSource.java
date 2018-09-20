@@ -26,4 +26,9 @@ public interface TreeDataGridSource<T> extends DataGridSource.Sortable<T> {
      * @return {@code true} if the iten has children, {@code false} otherwise
      */
     boolean hasChildren(T item);
+
+    /**
+     * @return the name of the property which forms the hierarchy
+     */
+    String getHierarchyPropertyName();
 }

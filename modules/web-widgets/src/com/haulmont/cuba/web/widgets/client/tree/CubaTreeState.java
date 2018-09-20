@@ -19,9 +19,9 @@ package com.haulmont.cuba.web.widgets.client.tree;
 
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.annotations.NoLayout;
-import com.vaadin.v7.shared.ui.tree.TreeState;
+import com.vaadin.shared.ui.composite.CompositeState;
 
-public class CubaTreeState extends TreeState {
+public class CubaTreeState extends CompositeState {
 
     @NoLayout
     public boolean doubleClickMode = false;

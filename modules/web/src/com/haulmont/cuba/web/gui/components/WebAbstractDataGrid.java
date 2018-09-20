@@ -94,7 +94,7 @@ import java.util.stream.Collectors;
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 import static com.haulmont.cuba.gui.ComponentsHelper.findActionById;
 
-public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, E extends Entity>
+public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid<E>, E extends Entity>
         extends WebAbstractComponent<T>
         implements DataGrid<E>, SecuredActionsHolder, LookupComponent.LookupSelectionChangeNotifier,
         DataGridSourceEventsDelegate<E>, HasInnerComponents, InitializingBean {
@@ -370,9 +370,9 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
     protected ShortcutListenerDelegate createEnterShortcutListener() {
         return new ShortcutListenerDelegate("dataGridEnter", KeyCode.ENTER, null)
                 .withHandler((sender, target) -> {
-                    T dataGridComponent = this.component;
+                    T dataGridComponent = WebAbstractDataGrid.this.component;
 
-                    if (target == this.component) {
+                    if (target == dataGridComponent) {
                         if (WebAbstractDataGrid.this.isEditorEnabled()) {
                             // Prevent custom actions on Enter if DataGrid editor is enabled
                             // since it's the default shortcut to open editor
@@ -659,6 +659,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
     protected void addColumnInternal(ColumnImpl<E> column, int index) {
         Grid.Column<E, ?> gridColumn = component.addColumn(
+                new EntityValueProvider<>(column.getPropertyPath()));
                 new EntityValueProvider<>(column.getPropertyPath()));
 
         columns.put(column.getId(), column);
@@ -1541,7 +1542,7 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid, 
 
     @Override
     public void setSelected(@Nullable E item) {
-        if (getSelectionMode().equals(SelectionMode.NONE)) {
+        if (SelectionMode.NONE.equals(getSelectionMode())) {
             return;
         }
 

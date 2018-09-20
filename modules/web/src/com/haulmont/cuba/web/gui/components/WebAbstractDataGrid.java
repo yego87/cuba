@@ -660,7 +660,6 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid<E
     protected void addColumnInternal(ColumnImpl<E> column, int index) {
         Grid.Column<E, ?> gridColumn = component.addColumn(
                 new EntityValueProvider<>(column.getPropertyPath()));
-                new EntityValueProvider<>(column.getPropertyPath()));
 
         columns.put(column.getId(), column);
         columnsOrder.add(index, column);

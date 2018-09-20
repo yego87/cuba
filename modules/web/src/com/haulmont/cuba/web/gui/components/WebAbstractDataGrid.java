@@ -29,6 +29,7 @@ import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.Window;
+import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.DataGridSource;
 import com.haulmont.cuba.gui.components.data.EntityDataGridSource;
@@ -557,19 +558,13 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid<E
 
     @Override
     public void setLookupSelectHandler(Runnable selectHandler) {
-        setEnterPressAction(new AbstractAction(Window.Lookup.LOOKUP_ENTER_PRESSED_ACTION_ID) {
-            @Override
-            public void actionPerform(com.haulmont.cuba.gui.components.Component component) {
-                selectHandler.run();
-            }
-        });
+        Consumer<Action.ActionPerformedEvent> actionHandler = event -> selectHandler.run();
 
-        setItemClickAction(new AbstractAction(Window.Lookup.LOOKUP_ITEM_CLICK_ACTION_ID) {
-            @Override
-            public void actionPerform(com.haulmont.cuba.gui.components.Component component) {
-                selectHandler.run();
-            }
-        });
+        setEnterPressAction(new BaseAction(Window.Lookup.LOOKUP_ENTER_PRESSED_ACTION_ID)
+                .withHandler(actionHandler));
+
+        setItemClickAction(new BaseAction(Window.Lookup.LOOKUP_ITEM_CLICK_ACTION_ID)
+                .withHandler(actionHandler));
     }
 
     @Override

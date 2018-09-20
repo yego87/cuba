@@ -17,10 +17,11 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.google.common.base.Preconditions;
-import com.haulmont.cuba.web.widgets.client.tree.CubaTreeClientRpc;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.event.Action;
-import com.vaadin.ui.Layout;
+import com.vaadin.event.ActionManager;
+import com.vaadin.event.ShortcutListener;
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
@@ -35,7 +36,8 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     /**
      * Keeps track of the ShortcutListeners added to this component, and manages the painting and handling as well.
      */
-//    protected ActionManager shortcutActionManager;
+    protected ActionManager shortcutActionManager;
+
     @Override
     protected TreeGrid<T> createTreeGrid() {
         return new CubaTreeGrid<>();
@@ -52,8 +54,6 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     }
 
     public Collection<T> getChildren(T item) {
-        // TODO: gg, it seems that this needs to be changed
-//        return getTreeData().getChildren(item);
         return getDataProvider()
                 .fetchChildren(new HierarchicalQuery<>(null, item))
                 .collect(Collectors.toList());
@@ -63,45 +63,7 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         return getDataProvider().hasChildren(item);
     }
 
-    /*@Override
-    protected CubaTreeState getState() {
-        return (CubaTreeState) super.getState();
-    }
-
-    @Override
-    protected CubaTreeState getState(boolean markAsDirty) {
-        return (CubaTreeState) super.getState(markAsDirty);
-    }*/
-
-    public void setContextMenuPopup(Layout contextMenu) {
-//        getState().contextMenu = contextMenu;
-    }
-
-    public void hideContextMenuPopup() {
-        getRpcProxy(CubaTreeClientRpc.class).hideContextMenuPopup();
-    }
-
-    public void setDoubleClickMode(boolean doubleClickMode) {
-//        if (getState(false).doubleClickMode != doubleClickMode) {
-//            getState().doubleClickMode = doubleClickMode;
-//        }
-    }
-
-//    public boolean isDoubleClickMode() {
-//        return getState(false).doubleClickMode;
-//    }
-
-    public void setNodeCaptionsAsHtml(boolean nodeCaptionsAsHtml) {
-//        if (getState(false).nodeCaptionsAsHtml != nodeCaptionsAsHtml) {
-//            getState().nodeCaptionsAsHtml = nodeCaptionsAsHtml;
-//        }
-    }
-
-//    public boolean isNodeCaptionsAsHtml() {
-//        return getState(false).nodeCaptionsAsHtml;
-//    }
-
-    // VAADIN8: gg, replace
+    // TODO: gg, replace
     /*@Override
     public void changeVariables(Object source, Map<String, Object> variables) {
         super.changeVariables(source, variables);
@@ -111,25 +73,25 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         }
     }*/
 
-//    @Override
-//    public Registration addShortcutListener(ShortcutListener shortcut) {
-//        if (shortcutActionManager == null) {
-//            shortcutActionManager = new ShortcutActionManager(this);
-//        }
-//
-//        shortcutActionManager.addAction(shortcut);
-//
-//        return () -> shortcutActionManager.removeAction(shortcut);
-//    }
-//
-//    @Override
-//    public void removeShortcutListener(ShortcutListener shortcut) {
-//        if (shortcutActionManager != null) {
-//            shortcutActionManager.removeAction(shortcut);
-//        }
-//    }
+    @Override
+    public Registration addShortcutListener(ShortcutListener shortcut) {
+        if (shortcutActionManager == null) {
+            shortcutActionManager = new ShortcutActionManager(this);
+        }
 
-    // VAADIN8: gg, replace
+        shortcutActionManager.addAction(shortcut);
+
+        return () -> shortcutActionManager.removeAction(shortcut);
+    }
+
+    @Override
+    public void removeShortcutListener(ShortcutListener shortcut) {
+        if (shortcutActionManager != null) {
+            shortcutActionManager.removeAction(shortcut);
+        }
+    }
+
+    // TODO: gg, replace
     /*@Override
     protected void paintActions(PaintTarget target, Set<Action> actionSet) throws PaintException {
         super.paintActions(target, actionSet);
@@ -139,7 +101,7 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         }
     }*/
 
-    // VAADIN8: gg, replace
+    // TODO: gg, replace
     /*@Override
     public void paintContent(PaintTarget target) throws PaintException {
         if (beforePaintListener != null) {
@@ -152,22 +114,14 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         super.paintContent(target);
     }*/
 
-    //    @Override
-//    public Iterator<Component> iterator() {
-//        if (getState(false).contextMenu != null) {
-//            return Collections.singleton((Component) getState(false).contextMenu).iterator();
-//        }
-//        return Collections.emptyIterator();
-//    }
-//
     public void expandAll() {
-        // VAADIN8: gg, implement
+        // TODO: gg, implement
         /*for (Object id : getItems()) {
             expandItemRecursively(id);
         }*/
     }
 
-    // VAADIN8: gg, implement
+    // TODO: gg, implement
     public void expandItemRecursively(T item) {
         /*expandItem(id);
         if (hasChildren(id)) {
@@ -178,7 +132,7 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     }
 
     public void expandItemWithParents(T item) {
-        // VAADIN8: gg, implement
+        // TODO: gg, implement
         /*Object currentId = id;
         while (currentId != null) {
             expandItem(currentId);
@@ -188,7 +142,7 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     }
 
     public void collapseItemRecursively(T item) {
-        // VAADIN8: gg, implement
+        // TODO: gg, implement
         /*if (hasChildren(id)) {
             for (Object childId: getChildren(id)) {
                 collapseItemRecursively(childId);
@@ -198,7 +152,7 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     }
 
     public void collapseAll() {
-        // VAADIN8: gg, implement
+        // TODO: gg, implement
         /*for (Object id : getItemIds()) {
             collapseItemRecursively(id);
         }*/
@@ -207,13 +161,13 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     public void expandUpTo(int level) {
         Preconditions.checkArgument(level > 0, "level should be greater than 0");
 
-        // VAADIN8: gg, implement
+        // TODO: gg, implement
         /*List<Object> currentLevelItemIds = new ArrayList<>(getItemIds());
 
         int i = 0;
         while (i < level && !currentLevelItemIds.isEmpty()) {
             for (Object itemId : new ArrayList<>(currentLevelItemIds)) {
-                // VAADIN8: gg, implement
+                // TODO: gg, implement
                 expandItem(itemId);
                 currentLevelItemIds.remove(itemId);
                 currentLevelItemIds.addAll(getChildren(itemId));
@@ -221,19 +175,6 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
             i++;
         }*/
     }
-
-    // VAADIN8: gg, replace
-    /*@Override
-    public Resource getItemIcon(Object itemId) {
-        if (itemIconProvider != null) {
-            Resource itemIcon = itemIconProvider.getItemIcon(itemId);
-            if (itemIcon != null) {
-                return itemIcon;
-            }
-        }
-
-        return super.getItemIcon(itemId);
-    }*/
 
     public void deselectAll() {
         getSelectionModel().deselectAll();

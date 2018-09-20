@@ -36,8 +36,7 @@ public class WebWidgetsTree<E extends Entity> extends WebAbstractTree<CubaWidget
     @Override
     public void initComponent(CubaTree<E> component) {
         // TODO: gg, implement
-        /*component.setSelectable(false);
-        component.setBeforePaintListener(() -> {
+        /*component.setBeforePaintListener(() -> {
             Tree.ItemStyleGenerator generator = component.getItemStyleGenerator();
             if (generator instanceof WebAbstractTree.StyleGeneratorAdapter) {
                 //noinspection unchecked

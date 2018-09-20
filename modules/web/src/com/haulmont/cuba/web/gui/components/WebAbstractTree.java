@@ -29,6 +29,7 @@ import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.LookupComponent.LookupSelectionChangeNotifier;
 import com.haulmont.cuba.gui.components.Tree;
 import com.haulmont.cuba.gui.components.Window;
+import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.TreeSource;
 import com.haulmont.cuba.gui.components.data.tree.HierarchicalDatasourceTreeAdapter;
@@ -50,6 +51,7 @@ import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.Sizeable;
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.*;
 import com.vaadin.ui.CssLayout;
 import org.apache.commons.collections4.CollectionUtils;
@@ -60,6 +62,7 @@ import org.springframework.beans.factory.InitializingBean;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
@@ -99,6 +102,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     protected String captionProperty;
 
     protected Action doubleClickAction;
+    protected Registration itemClickListener;
 
     /* SecuredActionsHolder */
     protected final List<Action> actionList = new ArrayList<>();
@@ -298,41 +302,41 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     @Override
     public void setItemClickAction(Action action) {
-        // TODO: gg, implement
-        /*if (this.doubleClickAction != action) {
+        if (doubleClickAction != null) {
+            removeAction(doubleClickAction);
+        }
+
+        if (!getActions().contains(action)) {
+            addAction(action);
+        }
+
+        if (this.doubleClickAction != action) {
             if (action != null) {
                 if (itemClickListener == null) {
-                    component.setDoubleClickMode(true);
-                    itemClickListener = event -> {
-                        if (event.isDoubleClick() && !component.isReadOnly()) {
-                            CubaUI ui = (CubaUI) component.getUI();
-                            if (!ui.isAccessibleForUser(component)) {
-                                LoggerFactory.getLogger(WebTree.class)
-                                        .debug("Ignore click attempt because Tree is inaccessible for user");
-                                return;
-                            }
-
-                            if (!component.isMultiSelect()) {
-                                component.setValue(event.getItemId());
-                            } else {
-                                component.setValue(Collections.singletonList(event.getItemId()));
-                            }
-
-                            if (doubleClickAction != null) {
-                                doubleClickAction.actionPerform(WebTree.this);
-                            }
-                        }
-                    };
-                    component.addItemClickListener(itemClickListener);
+                    itemClickListener = component.addItemClickListener(this::onItemClick);
                 }
-            } else {
-                component.setDoubleClickMode(false);
-                component.removeItemClickListener(itemClickListener);
+            } else if (itemClickListener != null) {
+                itemClickListener.remove();
                 itemClickListener = null;
             }
 
             this.doubleClickAction = action;
-        }*/
+        }
+    }
+
+    protected void onItemClick(com.vaadin.ui.Tree.ItemClick<E> event) {
+        if (event.getMouseEventDetails().isDoubleClick()) {
+            CubaUI ui = (CubaUI) component.getUI();
+            if (!ui.isAccessibleForUser(component)) {
+                LoggerFactory.getLogger(WebTree.class)
+                        .debug("Ignore click attempt because Tree is inaccessible for user");
+                return;
+            }
+
+            if (doubleClickAction != null) {
+                doubleClickAction.actionPerform(WebAbstractTree.this);
+            }
+        }
     }
 
     @Override
@@ -723,16 +727,11 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     @Override
     public void setLookupSelectHandler(Runnable selectHandler) {
-//        component.setDoubleClickMode(true);
-        // TODO: gg, implement
-        /*component.addItemClickListener(event -> {
-            if (event.isDoubleClick()) {
-                if (event.getItem() != null) {
-                    component.setValue(event.getItemId());
-                    selectHandler.run();
-                }
-            }
-        });*/
+        Consumer<Action.ActionPerformedEvent> actionHandler = event -> selectHandler.run();
+
+        setItemClickAction(new BaseAction(Window.Lookup.LOOKUP_ITEM_CLICK_ACTION_ID)
+                .withHandler(actionHandler)
+        );
     }
 
     @Override

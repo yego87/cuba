@@ -79,7 +79,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     protected List<String> internalStyles = new ArrayList<>(2);
 
     protected List<Function<? super E, String>> styleProviders; // lazily initialized List
-    protected StyleGeneratorAdapter<E> styleGenerator;    // lazily initialized field
+    protected StyleGenerator<E> styleGenerator;    // lazily initialized field
 
     protected CubaGridContextMenu<E> contextMenu;
     protected final List<WebAbstractDataGrid.ActionMenuItemWrapper> contextMenuItems = new ArrayList<>();
@@ -838,33 +838,9 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     }
 
     protected class StyleGeneratorAdapter<T extends E> implements StyleGenerator<T> {
-        protected boolean exceptionHandled = false;
-
-        public static final String CUSTOM_STYLE_NAME_PREFIX = "cs ";
-
         @Override
         public String apply(T item) {
-            try {
-                String style = null;
-
-                if (styleProviders != null) {
-                    String generatedStyle = getGeneratedStyle(item);
-                    if (generatedStyle != null) {
-                        style = CUSTOM_STYLE_NAME_PREFIX + generatedStyle;
-                    }
-                }
-
-                return style == null ? null : (CUSTOM_STYLE_NAME_PREFIX + style);
-            } catch (Exception e) {
-                LoggerFactory.getLogger(WebAbstractTree.class).error("Uncaught exception in Tree StyleProvider", e);
-                this.exceptionHandled = true;
-                return null;
-            }
-        }
-
-        // TODO: gg, remove?
-        public void resetExceptionHandledFlag() {
-            this.exceptionHandled = false;
+            return getGeneratedStyle(item);
         }
     }
 

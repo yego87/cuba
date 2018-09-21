@@ -589,14 +589,6 @@ public abstract class WebAbstractDataGrid<T extends Grid<E> & CubaEnhancedGrid<E
         return new RowStyleGeneratorAdapter<>();
     }
 
-//    protected CellStyleGeneratorAdapter createCellStyleGenerator() {
-//        return new CellStyleGeneratorAdapter();
-//    }
-
-    /*protected CubaGridEditorFieldFactory createEditorFieldFactory() {
-        return new WebDataGridEditorFieldFactory(this);
-    }*/
-
     @Override
     public List<Column<E>> getColumns() {
         return Collections.unmodifiableList(columnsOrder);

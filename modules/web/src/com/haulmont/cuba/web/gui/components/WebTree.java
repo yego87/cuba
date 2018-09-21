@@ -46,17 +46,6 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
 
         setSelectionMode(SelectionMode.SINGLE);
         component.addSelectionListener(this::onSelectionChange);
-
-        // TODO: gg, implement
-        /*component.setBeforePaintListener(() -> {
-            Tree.ItemStyleGenerator generator = component.getItemStyleGenerator();
-            if (generator instanceof WebAbstractTree.StyleGeneratorAdapter) {
-                //noinspection unchecked
-                ((StyleGeneratorAdapter) generator).resetExceptionHandledFlag();
-            }
-        });*/
-
-
     }
 
     protected void onSelectionChange(SelectionEvent<E> event) {

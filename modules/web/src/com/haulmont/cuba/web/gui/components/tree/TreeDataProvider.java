@@ -19,13 +19,14 @@ package com.haulmont.cuba.web.gui.components.tree;
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.TreeSource;
+import com.haulmont.cuba.web.widgets.tree.EnhancedTreeDataProvider;
 import com.vaadin.data.provider.*;
 import com.vaadin.server.SerializablePredicate;
 
 import java.util.stream.Stream;
 
 public class TreeDataProvider<T> extends AbstractDataProvider<T, SerializablePredicate<T>>
-        implements HierarchicalDataProvider<T, SerializablePredicate<T>> {
+        implements HierarchicalDataProvider<T, SerializablePredicate<T>>, EnhancedTreeDataProvider<T> {
 
     protected TreeSource<T> treeSource;
     protected TreeSourceEventsDelegate<T> eventsDelegate;
@@ -109,11 +110,11 @@ public class TreeDataProvider<T> extends AbstractDataProvider<T, SerializablePre
 
     @Override
     public int getChildCount(HierarchicalQuery<T, SerializablePredicate<T>> query) {
-        if (getTreeSource().getState() == BindingState.INACTIVE) {
+        if (treeSource.getState() == BindingState.INACTIVE) {
             return 0;
         }
 
-        return getTreeSource().getChildCount(query.getParent());
+        return treeSource.getChildCount(query.getParent());
     }
 
     @Override
@@ -122,14 +123,23 @@ public class TreeDataProvider<T> extends AbstractDataProvider<T, SerializablePre
             return Stream.empty();
         }
 
-        return getTreeSource().getChildren(query.getParent())
+        return treeSource.getChildren(query.getParent())
                 .skip(query.getOffset())
                 .limit(query.getLimit());
     }
 
     @Override
     public boolean hasChildren(T item) {
-        return getTreeSource().hasChildren(item);
+        return treeSource.hasChildren(item);
+    }
+
+    @Override
+    public T getParent(T item) {
+        if (treeSource.getState() == BindingState.INACTIVE) {
+            return null;
+        }
+
+        return treeSource.getParent(item);
     }
 
     protected void datasourceItemSetChanged(TreeSource.ItemSetChangeEvent<T> event) {

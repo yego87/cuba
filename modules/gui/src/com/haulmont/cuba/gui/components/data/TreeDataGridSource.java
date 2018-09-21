@@ -16,7 +16,7 @@ public interface TreeDataGridSource<T> extends DataGridSource.Sortable<T> {
     int getChildCount(T parent);
 
     /**
-     * @param item the item to obtain children
+     * @param item the item to obtain children or {@code null} to get root items
      * @return children of the given item
      */
     Stream<T> getChildren(T item);

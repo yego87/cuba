@@ -17,7 +17,10 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.google.common.base.Preconditions;
+import com.haulmont.cuba.web.widgets.tree.EnhancedTreeDataProvider;
+import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.HierarchicalQuery;
+import com.vaadin.data.provider.Query;
 import com.vaadin.event.Action;
 import com.vaadin.event.ActionManager;
 import com.vaadin.event.ShortcutListener;
@@ -26,8 +29,11 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
 
@@ -51,14 +57,32 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         getCompositionRoot().setGridSelectionModel(model);
     }
 
+    @Override
+    public void setDataProvider(DataProvider<T, ?> dataProvider) {
+        if (!(dataProvider instanceof EnhancedTreeDataProvider)) {
+            throw new IllegalArgumentException("DataProvider must implement " +
+                    "com.haulmont.cuba.web.widgets.tree.EnhancedTreeDataProvider");
+        }
+
+        super.setDataProvider(dataProvider);
+    }
+
     public Collection<T> getChildren(T item) {
-        return getDataProvider()
-                .fetchChildren(new HierarchicalQuery<>(null, item))
+        return getDataProvider().fetchChildren(new HierarchicalQuery<>(null, item))
                 .collect(Collectors.toList());
     }
 
     public boolean hasChildren(T item) {
         return getDataProvider().hasChildren(item);
+    }
+
+    public Stream<T> getItems() {
+        return getDataProvider().fetch(new Query<>());
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T getParentItem(T item) {
+        return ((EnhancedTreeDataProvider<T>) getDataProvider()).getParent(item);
     }
 
     // TODO: gg, replace
@@ -100,65 +124,42 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     }*/
 
     public void expandAll() {
-        // TODO: gg, implement
-        /*for (Object id : getItems()) {
-            expandItemRecursively(id);
-        }*/
-    }
-
-    // TODO: gg, implement
-    public void expandItemRecursively(T item) {
-        /*expandItem(id);
-        if (hasChildren(id)) {
-            for (Object childId: getChildren(id)) {
-                expandItemRecursively(childId);
-            }
-        }*/
+        expand(getItems().collect(Collectors.toList()));
     }
 
     public void expandItemWithParents(T item) {
-        // TODO: gg, implement
-        /*Object currentId = id;
-        while (currentId != null) {
-            expandItem(currentId);
+        List<T> itemsToExpand = new ArrayList<>();
 
-            currentId = getParent(currentId);
-        }*/
-    }
-
-    public void collapseItemRecursively(T item) {
-        // TODO: gg, implement
-        /*if (hasChildren(id)) {
-            for (Object childId: getChildren(id)) {
-                collapseItemRecursively(childId);
-            }
+        T current = item;
+        while (current != null) {
+            itemsToExpand.add(current);
+            current = getParentItem(current);
         }
-        collapseItem(id);*/
+
+        expand(itemsToExpand);
     }
 
     public void collapseAll() {
-        // TODO: gg, implement
-        /*for (Object id : getItemIds()) {
-            collapseItemRecursively(id);
-        }*/
+        collapse(getItems().collect(Collectors.toList()));
+    }
+
+    public void collapseItemWithChildren(T item) {
+        Collection<T> itemsToCollapse = getItemWithChildren(item)
+                .collect(Collectors.toList());
+        collapse(itemsToCollapse);
+    }
+
+    protected Stream<T> getItemWithChildren(T item) {
+        return Stream.concat(Stream.of(item), hasChildren(item)
+                ? getChildren(item).stream().flatMap(this::getItemWithChildren)
+                : Stream.empty());
     }
 
     public void expandUpTo(int level) {
         Preconditions.checkArgument(level > 0, "level should be greater than 0");
 
-        // TODO: gg, implement
-        /*List<Object> currentLevelItemIds = new ArrayList<>(getItemIds());
-
-        int i = 0;
-        while (i < level && !currentLevelItemIds.isEmpty()) {
-            for (Object itemId : new ArrayList<>(currentLevelItemIds)) {
-                // TODO: gg, implement
-                expandItem(itemId);
-                currentLevelItemIds.remove(itemId);
-                currentLevelItemIds.addAll(getChildren(itemId));
-            }
-            i++;
-        }*/
+        Collection<T> rootItems = getChildren(null);
+        expandRecursively(rootItems, level - 1);
     }
 
     public void deselectAll() {

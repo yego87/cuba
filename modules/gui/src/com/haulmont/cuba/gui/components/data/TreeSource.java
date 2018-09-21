@@ -99,7 +99,7 @@ public interface TreeSource<T> {
     int getChildCount(T parent);
 
     /**
-     * @param item the item to obtain children
+     * @param item the item to obtain children or {@code null} to get root items
      * @return children of the given item
      */
     Stream<T> getChildren(T item);
@@ -109,6 +109,13 @@ public interface TreeSource<T> {
      * @return {@code true} if the item has children, {@code false} otherwise
      */
     boolean hasChildren(T item);
+
+    /**
+     * @param item the item to get parent
+     * @return the parent of given item or {@code null} if no parent
+     */
+    @Nullable
+    T getParent(T item);
 
     /**
      * @return the name of the property which forms the hierarchy

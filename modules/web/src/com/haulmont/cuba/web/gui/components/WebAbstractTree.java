@@ -566,7 +566,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     @Override
     public void collapse(E item) {
-        component.collapseItemRecursively(item);
+        component.collapseItemWithChildren(item);
     }
 
     @Override

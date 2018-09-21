@@ -176,8 +176,8 @@ public class HierarchicalDatasourceTreeAdapter<E extends Entity<K>, K> implement
     @Override
     public Stream<E> getChildren(E item) {
         Collection<K> itemIds = item == null
-                ? getDatasource().getRootItemIds()
-                : getDatasource().getChildren(item.getId());
+                ? datasource.getRootItemIds()
+                : datasource.getChildren(item.getId());
 
         return itemIds.stream()
                 .map(id -> datasource.getItem(id));
@@ -185,7 +185,15 @@ public class HierarchicalDatasourceTreeAdapter<E extends Entity<K>, K> implement
 
     @Override
     public boolean hasChildren(E item) {
-        return getDatasource().hasChildren(item.getId());
+        return datasource.hasChildren(item.getId());
+    }
+
+    @Nullable
+    @Override
+    public E getParent(E item) {
+        Preconditions.checkNotNullArgument(item);
+        K parentId = datasource.getParent(item.getId());
+        return datasource.getItem(parentId);
     }
 
     @Override

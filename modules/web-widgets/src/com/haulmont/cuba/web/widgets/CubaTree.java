@@ -18,6 +18,7 @@ package com.haulmont.cuba.web.widgets;
 
 import com.google.common.base.Preconditions;
 import com.haulmont.cuba.web.widgets.tree.EnhancedTreeDataProvider;
+import com.vaadin.data.SelectionModel;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.Query;
@@ -25,9 +26,13 @@ import com.vaadin.event.Action;
 import com.vaadin.event.ActionManager;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.shared.Registration;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
+import com.vaadin.ui.components.grid.MultiSelectionModel;
+import com.vaadin.ui.components.grid.NoSelectionModel;
+import com.vaadin.ui.components.grid.SingleSelectionModel;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,6 +60,20 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
 
     public void setGridSelectionModel(GridSelectionModel<T> model) {
         getCompositionRoot().setGridSelectionModel(model);
+    }
+
+    @Override
+    protected Grid.SelectionMode getSelectionMode() {
+        SelectionModel<T> selectionModel = getSelectionModel();
+        Grid.SelectionMode mode = null;
+        if (selectionModel instanceof SingleSelectionModel) {
+            mode = Grid.SelectionMode.SINGLE;
+        } else if (selectionModel instanceof MultiSelectionModel) {
+            mode = Grid.SelectionMode.MULTI;
+        } else if (selectionModel instanceof NoSelectionModel) {
+            mode = Grid.SelectionMode.NONE;
+        }
+        return mode;
     }
 
     @Override

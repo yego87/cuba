@@ -54,6 +54,7 @@ import com.vaadin.server.Sizeable;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.*;
 import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.components.grid.MultiSelectionModel;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
@@ -978,8 +979,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
                 break;
             case MULTI:
                 component.deselectAll();
-                ((com.vaadin.ui.Tree.TreeMultiSelectionModel) component.getSelectionModel())
-                        .selectItems(items.toArray());
+                ((MultiSelectionModel) component.getSelectionModel()).selectItems(items.toArray());
                 break;
         }
     }

@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 
 public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
 
-    protected Runnable beforePaintListener;
-
     /**
      * Keeps track of the ShortcutListeners added to this component, and manages the painting and handling as well.
      */
@@ -99,19 +97,6 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         if (shortcutActionManager != null) {
             shortcutActionManager.paintActions(null, target);
         }
-    }*/
-
-    // TODO: gg, replace
-    /*@Override
-    public void paintContent(PaintTarget target) throws PaintException {
-        if (beforePaintListener != null) {
-            beforePaintListener.run();
-        }
-
-        if (isNodeCaptionsAsHtml()) {
-            target.addAttribute("nodeCaptionsAsHtml", true);
-        }
-        super.paintContent(target);
     }*/
 
     public void expandAll() {
@@ -183,9 +168,5 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     public void repaint() {
         markAsDirtyRecursive();
         getCompositionRoot().repaint();
-    }
-
-    public void setBeforePaintListener(Runnable beforePaintListener) {
-        this.beforePaintListener = beforePaintListener;
     }
 }

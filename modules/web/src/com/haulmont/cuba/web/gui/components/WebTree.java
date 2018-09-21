@@ -32,6 +32,8 @@ import java.util.stream.Collectors;
 
 public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
 
+    protected com.vaadin.event.selection.SelectionListener<E> selectionListener;
+
     public WebTree() {
     }
 
@@ -45,7 +47,7 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
         super.initComponent(component);
 
         setSelectionMode(SelectionMode.SINGLE);
-        component.addSelectionListener(this::onSelectionChange);
+        selectionListener = this::onSelectionChange;
     }
 
     protected void onSelectionChange(SelectionEvent<E> event) {
@@ -73,6 +75,13 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
         publish(LookupSelectionChangeEvent.class, selectionChangeEvent);
 
         // todo implement selection change events
+    }
+
+    @Override
+    public void setSelectionMode(SelectionMode selectionMode) {
+        super.setSelectionMode(selectionMode);
+
+        component.addSelectionListener(selectionListener);
     }
 
     @Deprecated

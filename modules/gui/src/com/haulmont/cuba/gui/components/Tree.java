@@ -37,6 +37,10 @@ public interface Tree<E extends Entity> extends ListComponent<E>, HasButtonsPane
 
     void expandTree();
 
+    /**
+     * @param itemId the id of item to expand
+     * @deprecated Use {@link #expand(Entity)} instead
+     */
     @Deprecated
     void expand(Object itemId);
 
@@ -44,6 +48,10 @@ public interface Tree<E extends Entity> extends ListComponent<E>, HasButtonsPane
 
     void collapseTree();
 
+    /**
+     * @param itemId the id of item to collapse
+     * @deprecated Use {@link #collapse(Entity)} instead
+     */
     @Deprecated
     void collapse(Object itemId);
 
@@ -155,6 +163,11 @@ public interface Tree<E extends Entity> extends ListComponent<E>, HasButtonsPane
      */
     Action getEnterPressAction();
 
+    /**
+     * @param multiselect {@code true} for multiselect, {@code false} otherwise
+     * @deprecated Use {@link #setSelectionMode(SelectionMode)} instead
+     */
+    @Deprecated
     void setMultiSelect(boolean multiselect);
 
     /**

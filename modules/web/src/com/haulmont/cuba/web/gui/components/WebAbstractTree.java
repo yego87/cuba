@@ -48,8 +48,10 @@ import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.haulmont.cuba.web.widgets.grid.CubaGridContextMenu;
 import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
 import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
+import com.vaadin.server.Resource;
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.*;
@@ -277,7 +279,8 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
             this.dataBinding.unbind();
             this.dataBinding = null;
 
-            this.component.setDataProvider(null);
+            this.component.setDataProvider(
+                    new ListDataProvider<>(Collections.emptyList()));
         }
 
         if (treeSource != null) {
@@ -807,15 +810,11 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     protected void updateStyleGenerator() {
         if (this.styleGenerator == null) {
-            this.styleGenerator = createStyleGenerator();
+            this.styleGenerator = this::getGeneratedStyle;
             component.setStyleGenerator(this.styleGenerator);
         } else {
             component.markAsDirty();
         }
-    }
-
-    protected StyleGeneratorAdapter<E> createStyleGenerator() {
-        return new StyleGeneratorAdapter<>();
     }
 
     protected String getGeneratedStyle(E item) {
@@ -838,13 +837,6 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         return joinedStyle != null ? joinedStyle.toString() : null;
     }
 
-    protected class StyleGeneratorAdapter<T extends E> implements StyleGenerator<T> {
-        @Override
-        public String apply(T item) {
-            return getGeneratedStyle(item);
-        }
-    }
-
     @Override
     public void repaint() {
         component.markAsDirty();
@@ -858,16 +850,18 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
             if (iconProvider == null) {
                 component.setItemIconGenerator(item -> null);
             } else {
-                component.setItemIconGenerator(item -> {
-                    if (item == null) {
-                        return null;
-                    }
-
-                    String resourceUrl = this.iconProvider.apply(item);
-                    return iconResolver.getIconResource(resourceUrl);
-                });
+                component.setItemIconGenerator(this::getItemIcon);
             }
         }
+    }
+
+    protected Resource getItemIcon(E item) {
+        if (item == null) {
+            return null;
+        }
+
+        String resourceUrl = this.iconProvider.apply(item);
+        return iconResolver.getIconResource(resourceUrl);
     }
 
     @Override

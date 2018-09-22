@@ -46,8 +46,8 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
     public void initComponent(CubaTree<E> component) {
         super.initComponent(component);
 
-        setSelectionMode(SelectionMode.SINGLE);
         selectionListener = this::onSelectionChange;
+        setSelectionMode(SelectionMode.SINGLE);
     }
 
     protected void onSelectionChange(SelectionEvent<E> event) {
@@ -81,7 +81,9 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
     public void setSelectionMode(SelectionMode selectionMode) {
         super.setSelectionMode(selectionMode);
 
-        component.addSelectionListener(selectionListener);
+        if (!SelectionMode.NONE.equals(selectionMode)) {
+            component.addSelectionListener(selectionListener);
+        }
     }
 
     @Deprecated

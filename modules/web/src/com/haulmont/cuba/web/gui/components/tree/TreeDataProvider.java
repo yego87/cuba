@@ -98,17 +98,6 @@ public class TreeDataProvider<T> extends AbstractDataProvider<T, SerializablePre
     }
 
     @Override
-    public Stream<T> fetch(Query<T, SerializablePredicate<T>> query) {
-        if (treeSource.getState() == BindingState.INACTIVE) {
-            return Stream.empty();
-        }
-
-        return treeSource.getItems()
-                .skip(query.getOffset())
-                .limit(query.getLimit());
-    }
-
-    @Override
     public int getChildCount(HierarchicalQuery<T, SerializablePredicate<T>> query) {
         if (treeSource.getState() == BindingState.INACTIVE) {
             return 0;
@@ -131,6 +120,11 @@ public class TreeDataProvider<T> extends AbstractDataProvider<T, SerializablePre
     @Override
     public boolean hasChildren(T item) {
         return treeSource.hasChildren(item);
+    }
+
+    @Override
+    public Stream<T> getItems() {
+        return treeSource.getItems();
     }
 
     @Override

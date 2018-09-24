@@ -16,7 +16,11 @@
 
 package com.haulmont.cuba.web.widgets.tree;
 
+import java.util.stream.Stream;
+
 public interface EnhancedTreeDataProvider<T> {
+
+    Stream<T> getItems();
 
     T getParent(T item);
 }

@@ -21,7 +21,6 @@ import com.haulmont.cuba.web.widgets.tree.EnhancedTreeDataProvider;
 import com.vaadin.data.SelectionModel;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.HierarchicalQuery;
-import com.vaadin.data.provider.Query;
 import com.vaadin.event.Action;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Tree;
@@ -87,8 +86,9 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
         return getDataProvider().hasChildren(item);
     }
 
+    @SuppressWarnings("unchecked")
     public Stream<T> getItems() {
-        return getDataProvider().fetch(new Query<>());
+        return ((EnhancedTreeDataProvider<T>) getDataProvider()).getItems();
     }
 
     @SuppressWarnings("unchecked")

@@ -50,6 +50,7 @@ import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaTimer;
 import com.haulmont.cuba.web.widgets.CubaTree;
+import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
 import com.haulmont.cuba.web.widgets.tree.EnhancedTreeDataProvider;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.HierarchicalQuery;
@@ -468,7 +469,7 @@ public class CubaFoldersPane extends VerticalLayout {
         appFoldersTree = new CubaTree<>();
         appFoldersTree.setCubaId("appFoldersTree");
         appFoldersTree.setDataProvider(createTreeDataProvider());
-        appFoldersTree.setSelectionMode(Grid.SelectionMode.SINGLE);
+        appFoldersTree.setGridSelectionModel(new CubaSingleSelectionModel<>());
         appFoldersTree.setStyleGenerator(new FolderTreeStyleProvider<>());
         appFoldersTree.addShortcutListener(
                 new ShortcutListenerDelegate("applyAppFolder", ShortcutAction.KeyCode.ENTER, null)
@@ -517,7 +518,7 @@ public class CubaFoldersPane extends VerticalLayout {
         searchFoldersTree = new CubaTree<>();
         searchFoldersTree.setCubaId("searchFoldersTree");
         searchFoldersTree.setDataProvider(createTreeDataProvider());
-        searchFoldersTree.setSelectionMode(Grid.SelectionMode.SINGLE);
+        searchFoldersTree.setGridSelectionModel(new CubaSingleSelectionModel<>());
         searchFoldersTree.setStyleGenerator(new FolderTreeStyleProvider<>());
         searchFoldersTree.addShortcutListener(
                 new ShortcutListenerDelegate("applySearchFolder", ShortcutAction.KeyCode.ENTER, null)

@@ -42,6 +42,7 @@ import com.haulmont.cuba.web.gui.components.tree.TreeDataProvider;
 import com.haulmont.cuba.web.gui.components.tree.TreeSourceEventsDelegate;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
+import com.haulmont.cuba.web.widgets.CubaCssActionsLayout;
 import com.haulmont.cuba.web.widgets.CubaTree;
 import com.haulmont.cuba.web.widgets.CubaUI;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
@@ -55,7 +56,6 @@ import com.vaadin.server.Resource;
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.Registration;
 import com.vaadin.ui.*;
-import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.components.grid.MultiSelectionModel;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -89,7 +89,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     protected ButtonsPanel buttonsPanel;
     protected HorizontalLayout topPanel;
-    protected com.vaadin.ui.CssLayout componentComposition;
+    protected CubaCssActionsLayout componentComposition;
     protected Action enterPressAction;
     protected Function<? super E, String> iconProvider;
 
@@ -119,6 +119,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     public WebAbstractTree() {
         component = createComponent();
+        componentComposition = createComponentComposition();
         shortcutsDelegate = createShortcutsDelegate();
     }
 
@@ -132,7 +133,7 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
                         new ShortcutListenerDelegate(actionId, keyCombination.getKey().getCode(),
                                 KeyCombination.Modifier.codes(keyCombination.getModifiers())
                         ).withHandler((sender, target) -> {
-                            if (target == component) {
+                            if (sender == componentComposition) {
                                 Action action = getAction(actionId);
                                 if (action != null && action.isEnabled() && action.isVisible()) {
                                     action.actionPerform(WebAbstractTree.this);
@@ -140,13 +141,13 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
                             }
                         });
 
-                component.addShortcutListener(shortcut);
+                componentComposition.addShortcutListener(shortcut);
                 return shortcut;
             }
 
             @Override
             protected void detachShortcut(Action action, ShortcutListener shortcutDescriptor) {
-                component.removeShortcutListener(shortcutDescriptor);
+                componentComposition.removeShortcutListener(shortcutDescriptor);
             }
 
             @Override
@@ -158,22 +159,23 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        initComponentComposition(componentComposition);
         initComponent(component);
 
         initContextMenu();
     }
 
+    protected void initComponentComposition(CubaCssActionsLayout componentComposition) {
+        componentComposition.addShortcutListener(createEnterShortcutListener());
+    }
+
     protected void initComponent(CubaTree<E> component) {
-        componentComposition = createComponentComposition();
-
         component.setSizeFull();
-
-        component.addShortcutListener(createEnterShortcutListener());
         component.setItemCaptionGenerator(this::generateItemCaption);
     }
 
-    protected CssLayout createComponentComposition() {
-        CssLayout composition = new CssLayout();
+    protected CubaCssActionsLayout createComponentComposition() {
+        CubaCssActionsLayout composition = new CubaCssActionsLayout();
         composition.setPrimaryStyleName("c-tree-composition");
         composition.setWidthUndefined();
         composition.addComponent(component);
@@ -184,11 +186,9 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
     protected ShortcutListenerDelegate createEnterShortcutListener() {
         return new ShortcutListenerDelegate("treeEnter", KeyCode.ENTER, null)
                 .withHandler((sender, target) -> {
-                    C treeComponent = WebAbstractTree.this.component;
-
-                    if (target == treeComponent) {
-                        CubaUI ui = (CubaUI) treeComponent.getUI();
-                        if (!ui.isAccessibleForUser(treeComponent)) {
+                    if (sender == componentComposition) {
+                        CubaUI ui = (CubaUI) componentComposition.getUI();
+                        if (!ui.isAccessibleForUser(componentComposition)) {
                             LoggerFactory.getLogger(WebAbstractTree.class)
                                     .debug("Ignore click attempt because Tree is inaccessible for user");
                             return;

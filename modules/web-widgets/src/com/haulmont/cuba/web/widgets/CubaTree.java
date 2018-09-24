@@ -23,9 +23,6 @@ import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.HierarchicalQuery;
 import com.vaadin.data.provider.Query;
 import com.vaadin.event.Action;
-import com.vaadin.event.ActionManager;
-import com.vaadin.event.ShortcutListener;
-import com.vaadin.shared.Registration;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeGrid;
@@ -41,11 +38,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
-
-    /**
-     * Keeps track of the ShortcutListeners added to this component, and manages the painting and handling as well.
-     */
-    protected ActionManager shortcutActionManager;
 
     @Override
     protected TreeGrid<T> createTreeGrid() {
@@ -103,44 +95,6 @@ public class CubaTree<T> extends Tree<T> implements Action.ShortcutNotifier {
     protected T getParentItem(T item) {
         return ((EnhancedTreeDataProvider<T>) getDataProvider()).getParent(item);
     }
-
-    // TODO: gg, replace
-    /*@Override
-    public void changeVariables(Object source, Map<String, Object> variables) {
-        super.changeVariables(source, variables);
-
-        if (shortcutActionManager != null) {
-            shortcutActionManager.handleActions(variables, this);
-        }
-    }*/
-
-    @Override
-    public Registration addShortcutListener(ShortcutListener shortcut) {
-        if (shortcutActionManager == null) {
-            shortcutActionManager = new ShortcutActionManager(this);
-        }
-
-        shortcutActionManager.addAction(shortcut);
-
-        return () -> shortcutActionManager.removeAction(shortcut);
-    }
-
-    @Override
-    public void removeShortcutListener(ShortcutListener shortcut) {
-        if (shortcutActionManager != null) {
-            shortcutActionManager.removeAction(shortcut);
-        }
-    }
-
-    // TODO: gg, replace
-    /*@Override
-    protected void paintActions(PaintTarget target, Set<Action> actionSet) throws PaintException {
-        super.paintActions(target, actionSet);
-
-        if (shortcutActionManager != null) {
-            shortcutActionManager.paintActions(null, target);
-        }
-    }*/
 
     public void expandAll() {
         expand(getItems().collect(Collectors.toList()));

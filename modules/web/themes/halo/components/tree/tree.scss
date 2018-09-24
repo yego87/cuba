@@ -17,8 +17,6 @@
 
 @mixin halo-tree($primary-stylename: v-tree8) {
   .#{$primary-stylename} {
-    padding: round($v-unit-size/4);
-    border: valo-border();
     @include user-select(none);
   }
 

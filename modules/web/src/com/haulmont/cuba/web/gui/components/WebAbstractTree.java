@@ -31,6 +31,7 @@ import com.haulmont.cuba.gui.components.Tree;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.components.data.BindingState;
+import com.haulmont.cuba.gui.components.data.EntityTreeSource;
 import com.haulmont.cuba.gui.components.data.TreeSource;
 import com.haulmont.cuba.gui.components.data.tree.HierarchicalDatasourceTreeAdapter;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
@@ -511,16 +512,18 @@ public abstract class WebAbstractTree<C extends CubaTree<E>, E extends Entity>
         // #PL-2035, reload selection from ds
         Set<E> selectedItems = getSelected();
         Set<E> newSelection = new HashSet<>();
+        TreeSource<E> source = event.getSource();
         for (E item : selectedItems) {
             //noinspection unchecked
-            if (event.getSource().containsItem(item)) {
-                newSelection.add(event.getSource().getItem(item.getId()));
+            if (source.containsItem(item)) {
+                newSelection.add(source.getItem(item.getId()));
             }
         }
 
-        if (event.getSource().getState() == BindingState.ACTIVE
-                && event.getSource().getSelectedItem() != null) {
-            newSelection.add(event.getSource().getSelectedItem());
+        if (source.getState() == BindingState.ACTIVE
+                && source instanceof EntityTreeSource
+                && ((EntityTreeSource<E>) source).getSelectedItem() != null) {
+            newSelection.add(((EntityTreeSource<E>) source).getSelectedItem());
         }
 
         if (newSelection.isEmpty()) {

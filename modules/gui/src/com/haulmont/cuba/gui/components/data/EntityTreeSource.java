@@ -19,10 +19,25 @@ package com.haulmont.cuba.gui.components.data;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.Entity;
 
+import javax.annotation.Nullable;
+
 public interface EntityTreeSource<E extends Entity> extends TreeSource<E> {
 
     /**
      * @return {@link MetaClass} of an entity contained in the source
      */
     MetaClass getEntityMetaClass();
+
+    /**
+     * @return the current item contained in the source
+     */
+    @Nullable
+    E getSelectedItem();
+
+    /**
+     * Set current item in the source.
+     *
+     * @param item the item to set
+     */
+    void setSelectedItem(@Nullable E item);
 }

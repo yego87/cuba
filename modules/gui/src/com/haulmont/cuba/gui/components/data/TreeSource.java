@@ -80,19 +80,6 @@ public interface TreeSource<T> {
     int size();
 
     /**
-     * @return the current item contained in the source
-     */
-    @Nullable
-    T getSelectedItem();
-
-    /**
-     * Set current item in the source.
-     *
-     * @param item the item to set
-     */
-    void setSelectedItem(@Nullable T item);
-
-    /**
      * @param parent the parent item
      * @return child count of the given parent item
      */

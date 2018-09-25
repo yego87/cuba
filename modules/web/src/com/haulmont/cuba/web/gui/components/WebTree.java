@@ -17,18 +17,13 @@
 package com.haulmont.cuba.web.gui.components;
 
 import com.haulmont.cuba.core.entity.Entity;
-import com.haulmont.cuba.gui.components.Action;
 import com.haulmont.cuba.gui.components.data.BindingState;
+import com.haulmont.cuba.gui.components.data.EntityTreeSource;
 import com.haulmont.cuba.gui.components.data.TreeSource;
-import com.haulmont.cuba.gui.data.CollectionDatasource;
-import com.haulmont.cuba.gui.data.Datasource;
-import com.haulmont.cuba.gui.data.impl.CollectionDsListenersWrapper;
 import com.haulmont.cuba.web.widgets.CubaTree;
 import com.vaadin.event.selection.SelectionEvent;
 
-import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
 
@@ -59,16 +54,18 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
         }
 
         Set<E> selected = getSelected();
-        if (selected.isEmpty()) {
-            treeSource.setSelectedItem(null);
-        } else {
-            // reset selection and select new item
-            if (isMultiSelect()) {
-                treeSource.setSelectedItem(null);
-            }
+        if (treeSource instanceof EntityTreeSource) {
+            if (selected.isEmpty()) {
+                ((EntityTreeSource<E>) treeSource).setSelectedItem(null);
+            } else {
+                // reset selection and select new item
+                if (isMultiSelect()) {
+                    ((EntityTreeSource<E>) treeSource).setSelectedItem(null);
+                }
 
-            E newItem = selected.iterator().next();
-            treeSource.setSelectedItem(newItem);
+                E newItem = selected.iterator().next();
+                ((EntityTreeSource<E>) treeSource).setSelectedItem(newItem);
+            }
         }
 
         LookupSelectionChangeEvent selectionChangeEvent = new LookupSelectionChangeEvent(this);
@@ -83,68 +80,6 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
 
         if (!SelectionMode.NONE.equals(selectionMode)) {
             component.addSelectionListener(selectionListener);
-        }
-    }
-
-    @Deprecated
-    public class TreeCollectionDsListenersWrapper extends CollectionDsListenersWrapper {
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void collectionChanged(CollectionDatasource.CollectionChangeEvent e) {
-            // replacement for collectionChangeSelectionListener
-            // #PL-2035, reload selection from ds
-            Set<E> selectedItems = component.getSelectedItems();
-            if (selectedItems == null) {
-                selectedItems = Collections.emptySet();
-            }
-
-            //noinspection unchecked
-            Set<E> newSelection = selectedItems.stream()
-                    .filter(entity -> e.getDs().containsItem(entity.getId()))
-                    .collect(Collectors.toSet());
-
-            if (e.getDs().getState() == Datasource.State.VALID && e.getDs().getItem() != null) {
-                newSelection.add((E) e.getDs().getItem());
-            }
-
-            if (newSelection.isEmpty()) {
-                setSelected((E) null);
-            } else {
-                setSelectedInternal(newSelection);
-            }
-
-            super.collectionChanged(e);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void itemChanged(Datasource.ItemChangeEvent e) {
-            for (Action action : getActions()) {
-                action.refreshState();
-            }
-
-            super.itemChanged(e);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void itemPropertyChanged(Datasource.ItemPropertyChangeEvent e) {
-            for (Action action : getActions()) {
-                action.refreshState();
-            }
-
-            super.itemPropertyChanged(e);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void stateChanged(Datasource.StateChangeEvent e) {
-            for (Action action : getActions()) {
-                action.refreshState();
-            }
-
-            super.stateChanged(e);
         }
     }
 }

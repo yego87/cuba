@@ -44,29 +44,9 @@ public interface TreeSource<T> {
     T getItem(@Nullable Object itemId);
 
     /**
-     * @param item the item for obtaining the index
-     * @return the index of the given item
-     */
-    int indexOfItem(T item);
-
-    /**
-     * @param index the item index
-     * @return the item by the given index
-     */
-    @Nullable
-    T getItemByIndex(int index);
-
-    /**
      * @return the stream of all items
      */
     Stream<T> getItems();
-
-    /**
-     * @param startIndex    the start index
-     * @param numberOfItems the number of items
-     * @return items from the {@code startIndex} and size not exceeding the specified number
-     */
-    List<T> getItems(int startIndex, int numberOfItems);
 
     /**
      * @param item an item to check

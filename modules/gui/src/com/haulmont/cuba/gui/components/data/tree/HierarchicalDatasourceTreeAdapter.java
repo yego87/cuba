@@ -119,33 +119,9 @@ public class HierarchicalDatasourceTreeAdapter<E extends Entity<K>, K> implement
         return datasource.getItem((K) itemId);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public int indexOfItem(E item) {
-        Preconditions.checkNotNullArgument(item);
-        return ((CollectionDatasource.Indexed<E, K>) datasource).indexOfId(item.getId());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Nullable
-    @Override
-    public E getItemByIndex(int index) {
-        K id = ((CollectionDatasource.Indexed<E, K>) datasource).getIdByIndex(index);
-        return datasource.getItem(id);
-    }
-
     @Override
     public Stream<E> getItems() {
         return datasource.getItems().stream();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<E> getItems(int startIndex, int numberOfItems) {
-        return ((CollectionDatasource.Indexed<E, K>) datasource)
-                .getItemIds(startIndex, numberOfItems).stream()
-                .map(id -> datasource.getItem(id))
-                .collect(Collectors.toList());
     }
 
     @Override

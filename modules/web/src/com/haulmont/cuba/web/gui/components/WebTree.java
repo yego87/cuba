@@ -27,8 +27,6 @@ import java.util.Set;
 
 public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
 
-    protected com.vaadin.event.selection.SelectionListener<E> selectionListener;
-
     public WebTree() {
     }
 
@@ -41,7 +39,6 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
     public void initComponent(CubaTree<E> component) {
         super.initComponent(component);
 
-        selectionListener = this::onSelectionChange;
         setSelectionMode(SelectionMode.SINGLE);
     }
 
@@ -78,8 +75,10 @@ public class WebTree<E extends Entity> extends WebAbstractTree<CubaTree<E>, E> {
     public void setSelectionMode(SelectionMode selectionMode) {
         super.setSelectionMode(selectionMode);
 
+        // Every time we change selection mode, the new selection model is set,
+        // so we need to add selection listener again.
         if (!SelectionMode.NONE.equals(selectionMode)) {
-            component.addSelectionListener(selectionListener);
+            component.addSelectionListener(this::onSelectionChange);
         }
     }
 }

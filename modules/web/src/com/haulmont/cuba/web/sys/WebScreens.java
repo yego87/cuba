@@ -26,8 +26,6 @@ import com.haulmont.cuba.gui.Dialogs.OptionDialog;
 import com.haulmont.cuba.gui.Notifications.NotificationType;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.Component.Disposable;
-import com.haulmont.cuba.gui.components.Window.BeforeCloseWithCloseButtonEvent;
-import com.haulmont.cuba.gui.components.Window.BeforeCloseWithShortcutEvent;
 import com.haulmont.cuba.gui.components.Window.HasWorkArea;
 import com.haulmont.cuba.gui.components.compatibility.SelectHandlerAdapter;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
@@ -1517,15 +1515,17 @@ public class WebScreens implements Screens, WindowManager {
 
     // todo provide single BeforeClose event, move to screen
     protected boolean isCloseWithShortcutPrevented(Window window) {
-        BeforeCloseWithShortcutEvent event = new BeforeCloseWithShortcutEvent(window);
-        ((WebWindow) window).fireBeforeCloseWithShortcut(event);
+        Window.BeforeCloseEvent event = new Window.BeforeCloseEvent(window, CloseOriginType.SHORTCUT);
+        ((WebWindow) window).fireBeforeClose(event);
+
         return event.isClosePrevented();
     }
 
     // todo provide single BeforeClose event, move to screen
     protected boolean isCloseWithCloseButtonPrevented(Window window) {
-        BeforeCloseWithCloseButtonEvent event = new BeforeCloseWithCloseButtonEvent(window);
-        ((WebWindow) window).fireBeforeCloseWithCloseButton(event);
+        Window.BeforeCloseEvent event = new Window.BeforeCloseEvent(window, CloseOriginType.CLOSE_BUTTON);
+        ((WebWindow) window).fireBeforeClose(event);
+
         return event.isClosePrevented();
     }
 

@@ -16,11 +16,26 @@
 
 package com.haulmont.cuba.gui.components;
 
+import com.haulmont.cuba.client.ClientConfig;
+
+/**
+ * Describes the default ways a window was closed.
+ */
 public enum CloseOriginType implements Window.CloseOrigin {
 
+    /**
+     * A screen is closed by clicking on the breadcrumbs link.
+     */
+    BREADCRUMBS,
+
+    /**
+     * A screen is closed with one of the following approaches:
+     * screen's close button, TabSheet tabs' close actions (Close, Close All, Close Others).
+     */
     CLOSE_BUTTON,
 
-    SHORTCUT,
-
-    BREADCRUMBS
+    /**
+     * A screen is closed with {@link ClientConfig#getCloseShortcut()}.
+     */
+    SHORTCUT
 }

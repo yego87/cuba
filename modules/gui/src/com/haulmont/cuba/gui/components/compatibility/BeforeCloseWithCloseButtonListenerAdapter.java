@@ -21,6 +21,7 @@ import com.haulmont.cuba.gui.components.Window;
 
 import java.util.function.Consumer;
 
+@Deprecated
 public class BeforeCloseWithCloseButtonListenerAdapter implements Consumer<Window.BeforeCloseEvent> {
 
     protected final Consumer<Window.BeforeCloseWithCloseButtonEvent> listener;
@@ -46,7 +47,9 @@ public class BeforeCloseWithCloseButtonListenerAdapter implements Consumer<Windo
 
     @Override
     public void accept(Window.BeforeCloseEvent beforeCloseEvent) {
-        if (beforeCloseEvent.getCloseOrigin() == CloseOriginType.CLOSE_BUTTON) {
+        Window.CloseOrigin closeOrigin = beforeCloseEvent.getCloseOrigin();
+        if (closeOrigin == CloseOriginType.CLOSE_BUTTON
+                || closeOrigin == CloseOriginType.BREADCRUMBS) {
 
             listener.accept(new Window.BeforeCloseWithCloseButtonEvent(beforeCloseEvent.getSource()));
         }

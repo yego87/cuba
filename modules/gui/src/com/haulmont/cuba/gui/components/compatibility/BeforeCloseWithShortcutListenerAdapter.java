@@ -21,6 +21,7 @@ import com.haulmont.cuba.gui.components.Window;
 
 import java.util.function.Consumer;
 
+@Deprecated
 public class BeforeCloseWithShortcutListenerAdapter implements Consumer<Window.BeforeCloseEvent> {
 
     protected final Consumer<Window.BeforeCloseWithShortcutEvent> listener;

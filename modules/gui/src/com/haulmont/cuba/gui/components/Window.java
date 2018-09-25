@@ -545,7 +545,8 @@ public interface Window extends Frame, Component.HasCaption, Component.HasIcon {
     }
 
     /**
-     * TODO: gg, JavaDoc
+     *  An event that is fired before a screen is closed. The way a screen was closed
+     *  can be obtained via {@link #getCloseOrigin()}.
      */
     class BeforeCloseEvent extends EventObject {
         protected boolean closePrevented = false;
@@ -577,8 +578,21 @@ public interface Window extends Frame, Component.HasCaption, Component.HasIcon {
         }
     }
 
+    /**
+     * Registers a new before window close listener.
+     *
+     * @param listener the listener to register
+     * @return a registration object for removing an event listener added to a window
+     */
     Subscription addBeforeWindowCloseListener(Consumer<BeforeCloseEvent> listener);
 
+    /**
+     * Removes a previously added listener.
+     *
+     * @param listener the listener to remove
+     * @deprecated Use {@link Subscription} instead
+     */
+    @Deprecated
     void removeBeforeWindowCloseListener(Consumer<BeforeCloseEvent> listener);
 
     /**
@@ -662,6 +676,9 @@ public interface Window extends Frame, Component.HasCaption, Component.HasIcon {
         Window getWrappedWindow();
     }
 
+    /**
+     * Marker interface for all window close types, which describes the way a window was closed.
+     */
     interface CloseOrigin {
     }
 }

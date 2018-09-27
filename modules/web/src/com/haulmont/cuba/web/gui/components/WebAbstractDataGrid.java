@@ -392,23 +392,16 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     }
 
     protected void fireSelectionEvent(com.vaadin.event.selection.SelectionEvent<E> e) {
-        List<E> addedItems;
-        List<E> removedItems;
-        List<E> selectedItems;
+        Set<E> oldSelection;
         if (e instanceof MultiSelectionEvent) {
-            addedItems = ImmutableList.copyOf(((MultiSelectionEvent<E>) e).getAddedSelection());
-            removedItems = ImmutableList.copyOf(((MultiSelectionEvent<E>) e).getRemovedSelection());
-            selectedItems = ImmutableList.copyOf(e.getAllSelectedItems());
+            oldSelection = ((MultiSelectionEvent<E>) e).getOldSelection();
         } else {
-            addedItems = ImmutableList.copyOf(e.getAllSelectedItems());
             //noinspection unchecked
             E oldValue = ((HasValue.ValueChangeEvent<E>) e).getOldValue();
-            removedItems = oldValue != null ? Collections.singletonList(oldValue) : Collections.emptyList();
-            selectedItems = ImmutableList.copyOf(e.getAllSelectedItems());
+            oldSelection = oldValue != null ? Collections.singleton(oldValue) : Collections.emptySet();
         }
 
-        SelectionEvent<E> event = new SelectionEvent<>(WebAbstractDataGrid.this,
-                addedItems, removedItems, selectedItems, e.isUserOriginated());
+        SelectionEvent<E> event = new SelectionEvent<>(WebAbstractDataGrid.this, oldSelection, e.isUserOriginated());
         publish(SelectionEvent.class, event);
     }
 

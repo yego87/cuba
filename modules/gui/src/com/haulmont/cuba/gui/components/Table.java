@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import java.util.EventObject;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -720,7 +721,7 @@ public interface Table<E extends Entity>
      * selection took place.
      */
     class SelectionEvent<E extends Entity> extends EventObject {
-        protected final List<E> selected;
+        protected final Set<E> selected;
 
         /**
          * Constructor for a selection event.
@@ -728,7 +729,7 @@ public interface Table<E extends Entity>
          * @param component the Table from which this event originates
          * @param selected  items that are currently selected
          */
-        public SelectionEvent(Table<E> component,  List<E> selected) {
+        public SelectionEvent(Table<E> component, Set<E> selected) {
             super(component);
 
             this.selected = selected;
@@ -741,11 +742,11 @@ public interface Table<E extends Entity>
         }
 
         /**
-         * A {@link List} of all the items that are currently selected.
+         * A {@link Set} of all the items that are currently selected.
          *
          * @return a List of the items that are currently selected
          */
-        public List<E> getSelected() {
+        public Set<E> getSelected() {
             return selected;
         }
     }

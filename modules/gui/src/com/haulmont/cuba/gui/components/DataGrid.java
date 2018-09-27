@@ -32,10 +32,7 @@ import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.EventObject;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -49,7 +46,8 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
     String NAME = "dataGrid";
 
     static <T extends Entity> TypeToken<DataGrid<T>> of(Class<T> itemClass) {
-        return new TypeToken<DataGrid<T>>() {};
+        return new TypeToken<DataGrid<T>>() {
+        };
     }
 
     /**
@@ -1704,75 +1702,70 @@ public interface DataGrid<E extends Entity> extends ListComponent<E>, HasButtons
      * An event that specifies what in a selection has changed, and where the
      * selection took place.
      */
-    class SelectionEvent<E> extends AbstractDataGridEvent implements HasUserOriginated {
-        protected final List<E> added;
-        protected final List<E> removed;
-        protected final List<E> selected;
+    class SelectionEvent<E extends Entity> extends AbstractDataGridEvent implements HasUserOriginated {
+        protected final Set<E> selected;
+        protected final Set<E> oldSelection;
         protected final boolean userOriginated;
 
         /**
          * Constructor for a selection event.
          *
-         * @param component the DataGrid from which this event originates
-         * @param added     items that became selected
-         * @param removed   items that became deselected
-         * @param selected  items that are currently selected
-         */
-        public SelectionEvent(DataGrid component,
-                              List<E> added, List<E> removed, List<E> selected) {
-            this(component, added, removed, selected, false);
-        }
-
-        /**
-         * Constructor for a selection event.
-         *
          * @param component      the DataGrid from which this event originates
-         * @param added          items that became selected
-         * @param removed        items that became deselected
-         * @param selected       items that are currently selected
+         * @param oldSelection   the old set of selected items
          * @param userOriginated {@code true} if an event is a result of user interaction,
          *                       {@code false} if from the API call
          */
-        public SelectionEvent(DataGrid component,
-                              List<E> added, List<E> removed, List<E> selected, boolean userOriginated) {
+        public SelectionEvent(DataGrid<E> component, Set<E> oldSelection, boolean userOriginated) {
             super(component);
-            this.added = added;
-            this.removed = removed;
-            this.selected = selected;
+            this.oldSelection = oldSelection;
+            this.selected = component.getSelected();
             this.userOriginated = userOriginated;
         }
 
         /**
-         * A {@link List} of all the items that became selected.
+         * A {@link Set} of all the items that became selected.
          *
          * <em>Note:</em> this excludes all items that might have been previously
          * selected.
          *
-         * @return a List of the items that became selected
+         * @return a set of the items that became selected
          */
-        public List<E> getAdded() {
-            return added;
+        public Set<E> getAdded() {
+            LinkedHashSet<E> copy = new LinkedHashSet<>(getSelected());
+            copy.removeAll(getOldSelection());
+            return copy;
         }
 
         /**
-         * A {@link List} of all the items that became deselected.
+         * A {@link Set} of all the items that became deselected.
          *
          * <em>Note:</em> this excludes all items that might have been previously
          * deselected.
          *
-         * @return a List of the items that became deselected
+         * @return a set of the items that became deselected
          */
-        public List<E> getRemoved() {
-            return removed;
+        public Set<E> getRemoved() {
+            LinkedHashSet<E> copy = new LinkedHashSet<>(getOldSelection());
+            copy.removeAll(getSelected());
+            return copy;
         }
 
         /**
-         * A {@link List} of all the items that are currently selected.
+         * A {@link Set} of all the items that are currently selected.
          *
-         * @return a List of the items that are currently selected
+         * @return a set of the items that are currently selected
          */
-        public List<E> getSelected() {
+        public Set<E> getSelected() {
             return selected;
+        }
+
+        /**
+         * A {@link Set} of all the items that were selected before the selection was changed.
+         *
+         * @return a set of items selected before the selection was changed
+         */
+        public Set<E> getOldSelection() {
+            return oldSelection;
         }
 
         @Override

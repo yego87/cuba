@@ -62,8 +62,8 @@ import com.haulmont.cuba.web.gui.components.table.*;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaEnhancedTable;
-import com.haulmont.cuba.web.widgets.CubaTable;
 import com.haulmont.cuba.web.widgets.CubaUI;
+import com.haulmont.cuba.web.widgets.compatibility.CubaValueChangeEvent;
 import com.haulmont.cuba.web.widgets.data.AggregationContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.server.Resource;
@@ -998,8 +998,8 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
     }
 
     protected void fireSelectionEvent(Property.ValueChangeEvent e) {
-        boolean userOriginated = e instanceof CubaTable.ValueChangeEvent
-                && ((CubaTable.ValueChangeEvent) e).isUserOriginated();
+        boolean userOriginated = e instanceof CubaValueChangeEvent
+                && ((CubaValueChangeEvent) e).isUserOriginated();
 
         SelectionEvent<E> event =
                 new SelectionEvent<>(this, getSelected(), userOriginated);

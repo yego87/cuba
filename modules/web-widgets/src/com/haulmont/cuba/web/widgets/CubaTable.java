@@ -24,6 +24,7 @@ import com.haulmont.cuba.web.widgets.data.AggregationContainer;
 import com.haulmont.cuba.web.widgets.data.TableSortableContainer;
 import com.vaadin.event.Action;
 import com.vaadin.event.ActionManager;
+import com.vaadin.event.HasUserOriginated;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.Page;
 import com.vaadin.server.PaintException;
@@ -38,6 +39,7 @@ import com.vaadin.v7.data.Property;
 import com.vaadin.v7.data.util.ContainerOrderedWrapper;
 import com.vaadin.v7.ui.Field;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 
@@ -901,5 +903,59 @@ public class CubaTable extends com.vaadin.v7.ui.Table implements TableSortableCo
         }
 
         super.paintContent(target);
+    }
+
+    protected static final Method VALUE_CHANGE_METHOD;
+
+    static {
+        try {
+            VALUE_CHANGE_METHOD = Property.ValueChangeListener.class
+                    .getDeclaredMethod("valueChange", Property.ValueChangeEvent.class);
+        } catch (final NoSuchMethodException e) {
+            // This should never happen
+            throw new RuntimeException(
+                    "Internal error finding methods in AbstractField");
+        }
+    }
+
+    @Override
+    public void addValueChangeListener(Property.ValueChangeListener listener) {
+        addListener(ValueChangeEvent.class, listener, VALUE_CHANGE_METHOD);
+        // ensure "automatic immediate handling" works
+        markAsDirty();
+    }
+
+    @Override
+    public void removeValueChangeListener(Property.ValueChangeListener listener) {
+        removeListener(ValueChangeEvent.class, listener, VALUE_CHANGE_METHOD);
+        // ensure "automatic immediate handling" works
+        markAsDirty();
+    }
+
+    @Override
+    protected void fireValueChange(boolean repaintIsNotNeeded) {
+        fireEvent(new ValueChangeEvent(this, repaintIsNotNeeded));
+        if (!repaintIsNotNeeded) {
+            markAsDirty();
+        }
+    }
+
+    public static class ValueChangeEvent extends Field.ValueChangeEvent implements HasUserOriginated {
+        protected final boolean userOriginated;
+
+        /**
+         * Constructs a new event object with the specified source field object.
+         *
+         * @param source the field that caused the event.
+         */
+        public ValueChangeEvent(Field source, boolean userOriginated) {
+            super(source);
+            this.userOriginated = userOriginated;
+        }
+
+        @Override
+        public boolean isUserOriginated() {
+            return userOriginated;
+        }
     }
 }

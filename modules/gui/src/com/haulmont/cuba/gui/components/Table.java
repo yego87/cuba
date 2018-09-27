@@ -720,8 +720,9 @@ public interface Table<E extends Entity>
      * An event that specifies what in a selection has changed, and where the
      * selection took place.
      */
-    class SelectionEvent<E extends Entity> extends EventObject {
+    class SelectionEvent<E extends Entity> extends EventObject implements HasUserOriginated {
         protected final Set<E> selected;
+        protected final boolean userOriginated;
 
         /**
          * Constructor for a selection event.
@@ -729,10 +730,10 @@ public interface Table<E extends Entity>
          * @param component the Table from which this event originates
          * @param selected  items that are currently selected
          */
-        public SelectionEvent(Table<E> component, Set<E> selected) {
+        public SelectionEvent(Table<E> component, Set<E> selected, boolean userOriginated) {
             super(component);
-
             this.selected = selected;
+            this.userOriginated = userOriginated;
         }
 
         @SuppressWarnings("unchecked")
@@ -748,6 +749,11 @@ public interface Table<E extends Entity>
          */
         public Set<E> getSelected() {
             return selected;
+        }
+
+        @Override
+        public boolean isUserOriginated() {
+            return userOriginated;
         }
     }
 

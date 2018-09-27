@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.web.gui.components;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.util.Dom4j;
@@ -328,14 +329,12 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     }
 
     protected void onColumnReorder(Grid.ColumnReorderEvent e) {
-        if (e.isUserOriginated()) {
-            // Grid doesn't know about columns hidden by security permissions,
-            // so we need to return them back to they previous positions
-            columnsOrder = restoreColumnsOrder(getColumnsOrderInternal());
+        // Grid doesn't know about columns hidden by security permissions,
+        // so we need to return them back to they previous positions
+        columnsOrder = restoreColumnsOrder(getColumnsOrderInternal());
 
-            ColumnReorderEvent event = new ColumnReorderEvent(WebAbstractDataGrid.this);
-            publish(ColumnReorderEvent.class, event);
-        }
+        ColumnReorderEvent event = new ColumnReorderEvent(WebAbstractDataGrid.this, e.isUserOriginated());
+        publish(ColumnReorderEvent.class, event);
     }
 
     protected void onSort(com.vaadin.event.SortEvent<GridSortOrder<E>> e) {
@@ -359,12 +358,10 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             }
         }
 
-        if (e.isUserOriginated()) {
-            List<SortOrder> sortOrders = convertToDataGridSortOrder(e.getSortOrder());
+        List<SortOrder> sortOrders = convertToDataGridSortOrder(e.getSortOrder());
 
-            SortEvent event = new SortEvent(WebAbstractDataGrid.this, sortOrders);
-            publish(SortEvent.class, event);
-        }
+        SortEvent event = new SortEvent(WebAbstractDataGrid.this, sortOrders, e.isUserOriginated());
+        publish(SortEvent.class, event);
     }
 
     protected void onSelectionChange(com.vaadin.event.selection.SelectionEvent<E> e) {
@@ -399,19 +396,19 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         List<E> removedItems;
         List<E> selectedItems;
         if (e instanceof MultiSelectionEvent) {
-            addedItems = new ArrayList<>(((MultiSelectionEvent<E>) e).getAddedSelection());
-            removedItems = new ArrayList<>(((MultiSelectionEvent<E>) e).getRemovedSelection());
-            selectedItems = new ArrayList<>(e.getAllSelectedItems());
+            addedItems = ImmutableList.copyOf(((MultiSelectionEvent<E>) e).getAddedSelection());
+            removedItems = ImmutableList.copyOf(((MultiSelectionEvent<E>) e).getRemovedSelection());
+            selectedItems = ImmutableList.copyOf(e.getAllSelectedItems());
         } else {
-            addedItems = new ArrayList<>(e.getAllSelectedItems());
+            addedItems = ImmutableList.copyOf(e.getAllSelectedItems());
             //noinspection unchecked
             E oldValue = ((HasValue.ValueChangeEvent<E>) e).getOldValue();
             removedItems = oldValue != null ? Collections.singletonList(oldValue) : Collections.emptyList();
-            selectedItems = new ArrayList<>(e.getAllSelectedItems());
+            selectedItems = ImmutableList.copyOf(e.getAllSelectedItems());
         }
 
-        SelectionEvent<E> event =
-                new SelectionEvent<>(WebAbstractDataGrid.this, addedItems, removedItems, selectedItems);
+        SelectionEvent<E> event = new SelectionEvent<>(WebAbstractDataGrid.this,
+                addedItems, removedItems, selectedItems, e.isUserOriginated());
         publish(SelectionEvent.class, event);
     }
 
@@ -2287,12 +2284,10 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     }
 
     protected void onColumnVisibilityChanged(Grid.ColumnVisibilityChangeEvent e) {
-        if (e.isUserOriginated()) {
-            //noinspection unchecked
-            ColumnCollapsingChangeEvent event = new ColumnCollapsingChangeEvent(WebAbstractDataGrid.this,
-                    getColumnByGridColumn((Grid.Column<E, ?>) e.getColumn()), e.isHidden());
-            publish(ColumnCollapsingChangeEvent.class, event);
-        }
+        //noinspection unchecked
+        ColumnCollapsingChangeEvent event = new ColumnCollapsingChangeEvent(WebAbstractDataGrid.this,
+                getColumnByGridColumn((Grid.Column<E, ?>) e.getColumn()), e.isHidden(), e.isUserOriginated());
+        publish(ColumnCollapsingChangeEvent.class, event);
     }
 
     @Override
@@ -2321,7 +2316,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     protected void onColumnResize(Grid.ColumnResizeEvent e) {
         //noinspection unchecked
         ColumnResizeEvent event = new ColumnResizeEvent(WebAbstractDataGrid.this,
-                getColumnByGridColumn((Grid.Column<E, ?>) e.getColumn()));
+                getColumnByGridColumn((Grid.Column<E, ?>) e.getColumn()), e.isUserOriginated());
         publish(ColumnResizeEvent.class, event);
     }
 

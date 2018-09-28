@@ -30,5 +30,13 @@ public interface ValueBinding<V> extends Binding {
 
     void activate();
 
-    // todo buffering support
+    void write();
+
+    void discard();
+
+    boolean isBuffered();
+
+    void setBuffered(boolean buffered);
+
+    boolean isModified();
 }

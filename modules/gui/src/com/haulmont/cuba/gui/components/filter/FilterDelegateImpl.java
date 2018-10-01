@@ -174,6 +174,8 @@ public class FilterDelegateImpl implements FilterDelegate {
     protected int maxResults = -1;
     protected boolean useMaxResults;
     protected boolean textMaxResults;
+    protected boolean maxResultValueChanged = false;
+    protected boolean groupBoxExpandedChanged = false;
     protected Boolean manualApplyRequired;
     protected boolean folderActionsEnabled = true;
     protected boolean filtersLookupListenerEnabled = true;
@@ -236,7 +238,7 @@ public class FilterDelegateImpl implements FilterDelegate {
     protected void createLayout() {
         if (layout == null) {
             groupBoxLayout = componentsFactory.createComponent(GroupBoxLayout.class);
-            groupBoxLayout.addExpandedStateChangeListener(e -> fireExpandStateChange());
+            groupBoxLayout.addExpandedStateChangeListener(e -> fireExpandStateChange(e.isUserOriginated()));
             groupBoxLayout.setOrientation(GroupBoxLayout.Orientation.VERTICAL);
             groupBoxLayout.setWidth("100%");
             layout = componentsFactory.createComponent(VBoxLayout.class);
@@ -467,6 +469,7 @@ public class FilterDelegateImpl implements FilterDelegate {
         maxResultsLookupField.setStyleName("c-maxresults-select");
 
         maxResultsField = textMaxResults ? maxResultsTextField : maxResultsLookupField;
+        maxResultsField.addValueChangeListener(integerValueChangeEvent -> maxResultValueChanged = true);
         maxResultsLayout.add(maxResultsField);
     }
 
@@ -1372,6 +1375,9 @@ public class FilterDelegateImpl implements FilterDelegate {
             setUseMaxResults(false);
         } else if (useMaxResults) {
             initMaxResults();
+
+            // set to false because it's initial value
+            maxResultValueChanged = false;
         }
 
         if (ftsSwitch != null && !isEntityAvailableForFts()) {
@@ -1398,6 +1404,9 @@ public class FilterDelegateImpl implements FilterDelegate {
 
         if (useMaxResults) {
             initMaxResults();
+
+            // set to false because it's initial value
+            maxResultValueChanged = false;
         }
     }
 
@@ -1778,6 +1787,9 @@ public class FilterDelegateImpl implements FilterDelegate {
                 Integer maxResultsFromSettings = Integer.valueOf(maxResultsEl.getText());
                 adapter.setMaxResults(maxResultsFromSettings);
                 initMaxResults();
+
+                // set to false cause it's initial value from settings
+                maxResultValueChanged = false;
             } catch (NumberFormatException ex) {
                 log.error("Error on parsing maxResults setting value", ex);
             }
@@ -1828,31 +1840,30 @@ public class FilterDelegateImpl implements FilterDelegate {
             changed = true;
         }
 
-        Element groupBoxExpandedEl = element.element("groupBoxExpanded");
-        if (groupBoxExpandedEl == null)
-            groupBoxExpandedEl = element.addElement("groupBoxExpanded");
+        if (groupBoxExpandedChanged) {
+            Element groupBoxExpandedEl = element.element("groupBoxExpanded");
+            if (groupBoxExpandedEl == null)
+                groupBoxExpandedEl = element.addElement("groupBoxExpanded");
 
-        Boolean oldGroupBoxExpandedValue = Boolean.valueOf(groupBoxExpandedEl.getText());
-        Boolean newGroupBoxExpandedValue = groupBoxLayout.isExpanded();
-        if (!Objects.equals(oldGroupBoxExpandedValue, newGroupBoxExpandedValue)) {
-            groupBoxExpandedEl.setText(newGroupBoxExpandedValue.toString());
-            changed = true;
+            Boolean oldGroupBoxExpandedValue =
+                    groupBoxExpandedEl.getText().isEmpty() ? true : Boolean.valueOf(groupBoxExpandedEl.getText());
+            Boolean newGroupBoxExpandedValue = groupBoxLayout.isExpanded();
+            if (!Objects.equals(oldGroupBoxExpandedValue, newGroupBoxExpandedValue)) {
+                groupBoxExpandedEl.setText(newGroupBoxExpandedValue.toString());
+                changed = true;
+            }
         }
 
         if (isMaxResultsLayoutVisible()) {
-            Element maxResultsEl = element.element("maxResults");
-            if (maxResultsEl == null)
-                maxResultsEl = element.addElement("maxResults");
-            try {
-                Integer oldMaxResultsValue = !Strings.isNullOrEmpty(maxResultsEl.getText()) ?
-                        Integer.valueOf(maxResultsEl.getText()) : null;
-                Integer newMaxResultsValue = maxResultsField.getValue();
-                if (newMaxResultsValue != null && !Objects.equals(oldMaxResultsValue, newMaxResultsValue)) {
-                    maxResultsEl.setText(newMaxResultsValue.toString());
-                    changed = true;
+            if (maxResultValueChanged) {
+                Element maxResultsEl = element.element("maxResults");
+                if (maxResultsEl == null) {
+                    maxResultsEl = element.addElement("maxResults");
                 }
-            } catch (NumberFormatException ex) {
-                log.error("Error on parsing maxResults setting value", ex);
+
+                Integer newMaxResultsValue = maxResultsField.getValue();
+                maxResultsEl.setText(newMaxResultsValue.toString());
+                changed = true;
             }
         }
 
@@ -2089,12 +2100,16 @@ public class FilterDelegateImpl implements FilterDelegate {
         }
     }
 
-    protected void fireExpandStateChange() {
+    protected void fireExpandStateChange(boolean userOriginated) {
         if (expandedStateChangeListeners != null) {
-            FDExpandedStateChangeEvent event = new FDExpandedStateChangeEvent(this, isExpanded());
+            FDExpandedStateChangeEvent event = new FDExpandedStateChangeEvent(this, isExpanded(), userOriginated);
 
             for (FDExpandedStateChangeListener listener : expandedStateChangeListeners) {
                 listener.expandedStateChanged(event);
+            }
+
+            if (userOriginated) {
+                groupBoxExpandedChanged = true;
             }
         }
     }

@@ -58,7 +58,7 @@ public class WebFilter extends WebAbstractComponent<CubaCssActionsLayout> implem
         component.setWidth(100, Sizeable.Unit.PERCENTAGE);
         component.setPrimaryStyleName(FILTER_STYLENAME);
 
-        delegate.addExpandedStateChangeListener(e -> fireExpandStateChange(e.isExpanded()));
+        delegate.addExpandedStateChangeListener(e -> fireExpandStateChange(e.isExpanded(), e.isUserOriginated()));
         delegate.setCaptionChangedListener(this::updateCaptions);
     }
 
@@ -273,7 +273,7 @@ public class WebFilter extends WebAbstractComponent<CubaCssActionsLayout> implem
     public Subscription addExpandedStateChangeListener(Consumer<ExpandedStateChangeEvent> listener) {
         if (fdExpandedStateChangeListener == null) {
             fdExpandedStateChangeListener = e -> {
-                ExpandedStateChangeEvent event = new ExpandedStateChangeEvent(this, e.isExpanded());
+                ExpandedStateChangeEvent event = new ExpandedStateChangeEvent(this, e.isExpanded(), e.isUserOriginated());
                 getEventHub().publish(ExpandedStateChangeEvent.class, event);
             };
             delegate.addExpandedStateChangeListener(fdExpandedStateChangeListener);
@@ -288,8 +288,8 @@ public class WebFilter extends WebAbstractComponent<CubaCssActionsLayout> implem
         unsubscribe(ExpandedStateChangeEvent.class, listener);
     }
 
-    protected void fireExpandStateChange(boolean expanded) {
-        ExpandedStateChangeEvent event = new ExpandedStateChangeEvent(this, expanded);
+    protected void fireExpandStateChange(boolean expanded, boolean userOriginated) {
+        ExpandedStateChangeEvent event = new ExpandedStateChangeEvent(this, expanded, userOriginated);
         publish(ExpandedStateChangeEvent.class, event);
     }
 

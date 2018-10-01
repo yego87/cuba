@@ -1229,6 +1229,7 @@
                 <xs:attributeGroup ref="hasEditable"/>
                 <xs:attributeGroup ref="hasDatasource"/>
                 <xs:attributeGroup ref="hasContextHelp"/>
+                <xs:attributeGroup ref="hasBuffered"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -1346,6 +1347,8 @@
                 <xs:attribute name="currencyLabelPosition" type="currencyAlignMode"/>
                 <xs:attribute name="datatype" type="numericDatatypeEnum"/>
                 <xs:attribute name="stylename" type="currencyFieldStylename"/>
+
+                <xs:attributeGroup ref="hasBuffered"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -1757,6 +1760,7 @@
                 <xs:attributeGroup ref="isUploadComponent"/>
                 <xs:attributeGroup ref="hasTabIndex"/>
                 <xs:attributeGroup ref="hasContextHelp"/>
+                <xs:attributeGroup ref="hasBuffered"/>
 
                 <xs:attribute name="showClearButton" type="xs:boolean"/>
                 <xs:attribute name="clearButtonCaption" type="resourceString"/>

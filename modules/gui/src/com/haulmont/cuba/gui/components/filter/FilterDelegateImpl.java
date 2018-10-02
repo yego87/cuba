@@ -1862,8 +1862,10 @@ public class FilterDelegateImpl implements FilterDelegate {
                 }
 
                 Integer newMaxResultsValue = maxResultsField.getValue();
-                maxResultsEl.setText(newMaxResultsValue.toString());
-                changed = true;
+                if (newMaxResultsValue != null) {
+                    maxResultsEl.setText(newMaxResultsValue.toString());
+                    changed = true;
+                }
             }
         }
 

@@ -1867,7 +1867,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
             settingsChanged = true;
         }
 
-        String settingsDefaultPresentation = element.attributeValue("presentation");
+        String settingsDefaultPresentation = Strings.nullToEmpty(element.attributeValue("presentation"));
         String defaultPresentation = getDefaultPresentationId() == null ? "" : String.valueOf(getDefaultPresentationId());
         if (!Objects.equals(settingsDefaultPresentation, defaultPresentation)) {
             settingsChanged = true;

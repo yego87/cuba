@@ -23,7 +23,6 @@ import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributes;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesMetaProperty;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesTools;
-import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils;
 import com.haulmont.cuba.core.entity.CategoryAttribute;
 import com.haulmont.cuba.core.global.DevelopmentException;
 import com.haulmont.cuba.core.global.Security;
@@ -38,7 +37,6 @@ import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.RuntimePropsDatasource;
 import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributesGuiTools;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
-import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader;
 import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import org.apache.commons.lang3.StringUtils;
 

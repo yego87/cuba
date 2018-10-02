@@ -23,6 +23,7 @@ import com.haulmont.cuba.gui.components.FieldGroupFieldFactory;
 import com.haulmont.cuba.gui.components.UiComponentsGenerator;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.RuntimePropsDatasource;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 
 import javax.inject.Inject;
 
@@ -33,11 +34,11 @@ public class FieldGroupFieldFactoryImpl implements FieldGroupFieldFactory {
     protected UiComponentsGenerator uiComponentsGenerator;
 
     @Override
-    public GeneratedField createField(FieldGroup.FieldConfig fc) {
+    public GeneratedField createField(FieldConfig fc) {
         return createFieldComponent(fc);
     }
 
-    protected GeneratedField createFieldComponent(FieldGroup.FieldConfig fc) {
+    protected GeneratedField createFieldComponent(FieldConfig fc) {
         MetaClass metaClass = resolveMetaClass(fc.getTargetDatasource());
 
         ComponentGenerationContext context = new ComponentGenerationContext(metaClass, fc.getProperty())

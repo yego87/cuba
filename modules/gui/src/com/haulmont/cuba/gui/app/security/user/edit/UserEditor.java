@@ -41,6 +41,8 @@ import com.haulmont.cuba.gui.events.UserSubstitutionsChangedEvent;
 import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import com.haulmont.cuba.security.entity.*;
 import com.haulmont.cuba.security.global.UserSession;
 import org.apache.commons.lang3.BooleanUtils;
@@ -278,7 +280,7 @@ public class UserEditor extends AbstractEditor<User> {
     }
 
     protected void createTimeZoneField() {
-        FieldGroup.FieldConfig timeZoneFc = fieldGroupRight.getFieldNN("timeZone");
+        FieldConfig timeZoneFc = fieldGroupRight.getFieldNN("timeZone");
 
         HBoxLayout hbox = uiComponents.create(HBoxLayout.class);
         hbox.setSpacing(true);
@@ -317,7 +319,7 @@ public class UserEditor extends AbstractEditor<User> {
     }
 
     protected void createGroupField() {
-        FieldGroup.FieldConfig groupFc = fieldGroupRight.getFieldNN("group");
+        FieldConfig groupFc = fieldGroupRight.getFieldNN("group");
 
         PickerField<?> pickerField = uiComponents.create(PickerField.class);
 
@@ -378,7 +380,7 @@ public class UserEditor extends AbstractEditor<User> {
 
     protected void createLanguageLookup() {
         languageLookup = uiComponents.create(LookupField.TYPE_STRING);
-        FieldGroup.FieldConfig languageLookupFc = fieldGroupRight.getFieldNN("language");
+        FieldConfig languageLookupFc = fieldGroupRight.getFieldNN("language");
         languageLookup.setDatasource(languageLookupFc.getTargetDatasource(), languageLookupFc.getProperty());
         languageLookup.setRequired(false);
 

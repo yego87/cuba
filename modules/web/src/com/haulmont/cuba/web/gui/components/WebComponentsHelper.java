@@ -24,6 +24,7 @@ import com.haulmont.cuba.gui.components.ComponentContainer;
 import com.haulmont.cuba.gui.components.KeyCombination.Modifier;
 import com.haulmont.cuba.gui.components.TextField;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.widgets.*;
 import com.vaadin.event.ShortcutAction;
@@ -311,7 +312,7 @@ public class WebComponentsHelper {
                                                                                    Component target) {
         Component vaadinSource = fieldGroup.unwrap(CubaFieldGroupLayout.class);
         Collection<com.haulmont.cuba.gui.components.Component> components = fieldGroup.getFields().stream()
-                .map(FieldGroup.FieldConfig::getComponentNN)
+                .map(FieldConfig::getComponentNN)
                 .collect(Collectors.toList());
 
         return findChildComponent(components, vaadinSource, target);

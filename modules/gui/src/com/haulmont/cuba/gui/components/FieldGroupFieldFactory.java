@@ -16,6 +16,8 @@
 
 package com.haulmont.cuba.gui.components;
 
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
+
 /**
  * Factory that generates components for {@link FieldGroup} fields defined declaratively.
  */
@@ -28,7 +30,7 @@ public interface FieldGroupFieldFactory {
      * @param fieldConfig configuration of field
      * @return generated component info
      */
-    GeneratedField createField(FieldGroup.FieldConfig fieldConfig);
+    GeneratedField createField(FieldConfig fieldConfig);
 
     class GeneratedField {
         private Component component;

@@ -31,6 +31,8 @@ import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.GuiDevelopmentException;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.FieldGroup.FieldCaptionAlignment;
+import com.haulmont.cuba.gui.components.data.ValueSource;
+import com.haulmont.cuba.gui.components.data.value.DatasourceValueSource;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.DsContext;
@@ -47,6 +49,7 @@ import org.dom4j.Element;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -100,14 +103,14 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         resultComponent.setDatasource(ds);
 
         if (element.elements("column").isEmpty()) {
-            Iterable<FieldGroup.FieldConfig> rootFields = loadFields(resultComponent, element, ds, null);
-            Iterable<FieldGroup.FieldConfig> dynamicAttributeFields = loadDynamicAttributeFields(ds);
-            for (FieldGroup.FieldConfig field : dynamicAttributeFields) {
+            Iterable<FieldConfig> rootFields = loadFields(resultComponent, element, ds, null);
+            Iterable<FieldConfig> dynamicAttributeFields = loadDynamicAttributeFields(ds);
+            for (FieldConfig field : dynamicAttributeFields) {
                 if (resultComponent.getWidth() > 0 && field.getWidth() == null) {
                     field.setWidth("100%");
                 }
             }
-            for (FieldGroup.FieldConfig field : Iterables.concat(rootFields, dynamicAttributeFields)) {
+            for (FieldConfig field : Iterables.concat(rootFields, dynamicAttributeFields)) {
                 resultComponent.addField(field);
             }
         } else {
@@ -134,11 +137,11 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
                 String columnWidth = loadThemeString(columnElement.attributeValue("width"));
 
-                Iterable<FieldGroup.FieldConfig> columnFields = loadFields(resultComponent, columnElement, ds, columnWidth);
+                Iterable<FieldConfig> columnFields = loadFields(resultComponent, columnElement, ds, columnWidth);
                 if (colIndex == 0) {
                      columnFields = Iterables.concat(columnFields, loadDynamicAttributeFields(ds));
                 }
-                for (FieldGroup.FieldConfig field : columnFields) {
+                for (FieldConfig field : columnFields) {
                     resultComponent.addField(field, colIndex);
                 }
 
@@ -158,7 +161,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             }
         }
 
-        for (FieldGroup.FieldConfig field : resultComponent.getFields()) {
+        for (FieldConfig field : resultComponent.getFields()) {
             if (!field.isCustom()) {
                 if (!DynamicAttributesUtils.isDynamicAttribute(field.getProperty())) {
                     // the following does not make sense for dynamic attributes
@@ -173,7 +176,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
         resultComponent.bind();
 
-        for (FieldGroup.FieldConfig field : resultComponent.getFields()) {
+        for (FieldConfig field : resultComponent.getFields()) {
             if (field.getXmlDescriptor() != null) {
                 String generator = field.getXmlDescriptor().attributeValue("generator");
                 if (generator != null) {
@@ -215,7 +218,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected List<FieldGroup.FieldConfig> loadDynamicAttributeFields(Datasource ds) {
+    protected List<FieldConfig> loadDynamicAttributeFields(Datasource ds) {
         if (ds != null && getMetadataTools().isPersistent(ds.getMetaClass())) {
             String windowId = ComponentsHelper.getWindow(resultComponent).getId();
 
@@ -224,12 +227,12 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                             windowId, resultComponent.getId());
 
             if (!attributesToShow.isEmpty()) {
-                List<FieldGroup.FieldConfig> fields = new ArrayList<>();
+                List<FieldConfig> fields = new ArrayList<>();
 
                 ds.setLoadDynamicAttributes(true);
 
                 for (CategoryAttribute attribute : attributesToShow) {
-                    FieldGroup.FieldConfig field = resultComponent.createField(
+                    FieldConfig field = resultComponent.createField(
                             DynamicAttributesUtils.encodeAttributeCode(attribute.getCode()));
                     field.setProperty(DynamicAttributesUtils.encodeAttributeCode(attribute.getCode()));
                     field.setCaption(attribute.getLocaleName());
@@ -285,7 +288,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return null;
     }
 
-    protected List<FieldGroup.FieldConfig> loadFields(FieldGroup resultComponent, Element element, Datasource ds,
+    protected List<FieldConfig> loadFields(FieldGroup resultComponent, Element element, Datasource ds,
                                                       @Nullable String columnWidth) {
         @SuppressWarnings("unchecked")
         List<Element> fieldElements = element.elements("field");
@@ -295,12 +298,12 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return Collections.emptyList();
     }
 
-    protected List<FieldGroup.FieldConfig> loadFields(FieldGroup resultComponent, List<Element> elements, Datasource ds,
+    protected List<FieldConfig> loadFields(FieldGroup resultComponent, List<Element> elements, Datasource ds,
                                                       @Nullable String columnWidth) {
-        List<FieldGroup.FieldConfig> fields = new ArrayList<>(elements.size());
+        List<FieldConfig> fields = new ArrayList<>(elements.size());
         List<String> ids = new ArrayList<>();
         for (Element fieldElement : elements) {
-            FieldGroup.FieldConfig field = loadField(fieldElement, ds, columnWidth);
+            FieldConfig field = loadField(fieldElement, ds, columnWidth);
             if (ids.contains(field.getId())) {
                 Map<String, Object> params = new HashMap<>();
                 String fieldGroupId = resultComponent.getId();
@@ -335,7 +338,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected FieldGroup.FieldConfig loadField(Element element, Datasource ds, String columnWidth) {
+    protected FieldConfig loadField(Element element, Datasource ds, String columnWidth) {
         String id = element.attributeValue("id");
         String property = element.attributeValue("property");
 
@@ -403,7 +406,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                     "Only custom fields can have no datasource.", property), context.getFullFrameId());
         }
 
-        FieldGroup.FieldConfig field = resultComponent.createField(id);
+        FieldConfig field = resultComponent.createField(id);
         if (property != null) {
             field.setProperty(property);
         }
@@ -503,7 +506,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return field;
     }
 
-    protected void loadContextHelp(FieldGroup.FieldConfig field, Element element) {
+    protected void loadContextHelp(FieldConfig field, Element element) {
         String contextHelpText = element.attributeValue("contextHelpText");
         if (StringUtils.isNotEmpty(contextHelpText)) {
             contextHelpText = loadResourceString(contextHelpText);
@@ -516,7 +519,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected String getDefaultCaption(FieldGroup.FieldConfig fieldConfig, Datasource fieldDatasource) {
+    protected String getDefaultCaption(FieldConfig fieldConfig, Datasource fieldDatasource) {
         String caption = fieldConfig.getCaption();
         if (caption == null) {
             String propertyId = fieldConfig.getProperty();
@@ -532,7 +535,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return caption;
     }
 
-    protected void loadWidth(FieldGroup.FieldConfig field, String width) {
+    protected void loadWidth(FieldConfig field, String width) {
         if ("auto".equalsIgnoreCase(width)) {
             field.setWidth(Component.AUTO_SIZE);
         } else if (StringUtils.isNotBlank(width)) {
@@ -540,7 +543,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected void loadValidators(FieldGroup resultComponent, FieldGroup.FieldConfig field) {
+    protected void loadValidators(FieldGroup resultComponent, FieldConfig field) {
         Element descriptor = field.getXmlDescriptor();
         @SuppressWarnings("unchecked")
         List<Element> validatorElements = (descriptor == null) ? null : descriptor.elements("validator");
@@ -582,7 +585,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected void loadRequired(FieldGroup resultComponent, FieldGroup.FieldConfig field) {
+    protected void loadRequired(FieldGroup resultComponent, FieldConfig field) {
         if (field.isCustom()) {
             Element element = field.getXmlDescriptor();
             if (element == null) {
@@ -641,7 +644,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected MetaClass getMetaClass(FieldGroup resultComponent, FieldGroup.FieldConfig field) {
+    protected MetaClass getMetaClass(FieldGroup resultComponent, FieldConfig field) {
         if (field.isCustom()) {
             return null;
         }
@@ -657,7 +660,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return datasource.getMetaClass();
     }
 
-    protected void loadEditable(FieldGroup resultComponent, FieldGroup.FieldConfig field) {
+    protected void loadEditable(FieldGroup resultComponent, FieldConfig field) {
         Element element = field.getXmlDescriptor();
         if (element != null) {
             String editable = element.attributeValue("editable");
@@ -678,7 +681,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected void loadVisible(FieldGroup resultComponent, FieldGroup.FieldConfig field) {
+    protected void loadVisible(FieldGroup resultComponent, FieldConfig field) {
         Element element = field.getXmlDescriptor();
         if (element != null) {
             String visible = element.attributeValue("visible");
@@ -699,7 +702,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
     }
 
-    protected void loadEnable(FieldGroup resultComponent, FieldGroup.FieldConfig field) {
+    protected void loadEnable(FieldGroup resultComponent, FieldConfig field) {
         Element element = field.getXmlDescriptor();
         if (element != null) {
             String enable = element.attributeValue("enable");
@@ -714,5 +717,301 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         if (StringUtils.isNotEmpty(captionAlignment)) {
             resultComponent.setCaptionAlignment(FieldCaptionAlignment.valueOf(captionAlignment));
         }
+    }
+
+    /**
+     * Configuration of a field. Used as declarative configuration object.
+     * After component is set it can be used as Field API for a Component that does not implement {@link Field}.
+     */
+    public interface FieldConfig extends Component.HasXmlDescriptor, Component.HasCaption, HasFormatter, HasInputPrompt {
+        /**
+         * @return id
+         */
+        String getId();
+
+        /**
+         * @return true if this field config is connected to the concrete component and cannot be reconfigured.
+         */
+        boolean isBound();
+
+        /**
+         * @return width
+         */
+        String getWidth();
+        /**
+         * Set width parameter. <br>
+         * If {@link #isBound()} is true sets width to the connected Component.
+         *
+         * @param width width
+         */
+        void setWidth(String width);
+
+        /**
+         * @return style name
+         */
+        String getStyleName();
+        /**
+         * Set stylename parameter. <br>
+         * If {@link #isBound()} is true sets stylename to the connected Component.
+         *
+         * @param stylename style name
+         */
+        void setStyleName(String stylename);
+
+        ValueSource getTargetValueSource();
+
+        ValueSource getValueSource();
+
+        void setValueSource(ValueSource targetValueSource);
+
+        /**
+         * @return own datasource of a field or datasource of the parent FieldGroup
+         */
+        @Deprecated
+        default Datasource getTargetDatasource() {
+            ValueSource valueSource = getTargetValueSource();
+            return valueSource instanceof DatasourceValueSource
+                    ? ((DatasourceValueSource) valueSource).getDatasource()
+                    : null;
+        }
+
+        /**
+         * @return datasource
+         */
+        @Deprecated
+        default Datasource getDatasource() {
+            ValueSource valueSource = getTargetValueSource();
+            return valueSource instanceof DatasourceValueSource
+                    ? ((DatasourceValueSource) valueSource).getDatasource()
+                    : null;
+        }
+
+        /**
+         * Set datasource for declarative field. <br>
+         * Throws exception if FieldConfig is already connected to Component.
+         *
+         * @param datasource datasource
+         */
+        @Deprecated
+        default void setDatasource(Datasource datasource) {
+            // TODO: gg, that if the property is null?
+            setValueSource(datasource != null
+                    ? new DatasourceValueSource(datasource, getProperty())
+                    : null);
+        }
+
+        /**
+         * @return true if field is required, null if not set for declarative field
+         */
+        Boolean isRequired();
+        /**
+         * Set required for declarative field. <br>
+         * If {@link #isBound()} is true and Component implements {@link Field} then sets required to the connected Component.
+         *
+         * @param required required flag
+         */
+        void setRequired(Boolean required);
+
+        /**
+         * @return true if field is editable, null if not set for declarative field
+         */
+        Boolean isEditable();
+        /**
+         * Set editable for declarative field. <br>
+         * If {@link #isBound()} is true and Component implements {@link Field} then sets editable to the connected Component.
+         *
+         * @param editable editable flag
+         */
+        void setEditable(Boolean editable);
+
+        /**
+         * @return true if field is enabled, null if not set for declarative field
+         */
+        Boolean isEnabled();
+        /**
+         * Set enabled for declarative field. <br>
+         * If {@link #isBound()} is true then sets enabled to the connected Component.
+         *
+         * @param enabled enabled flag
+         */
+        void setEnabled(Boolean enabled);
+
+        /**
+         * @return true if field is visible, null if not set for declarative field
+         */
+        Boolean isVisible();
+        /**
+         * Set visible for declarative field. <br>
+         * If {@link #isBound()} is true then sets visible to the connected Component.
+         *
+         * @param visible visible flag
+         */
+        void setVisible(Boolean visible);
+
+        /**
+         * @return property name
+         */
+        String getProperty();
+        /**
+         * Set property for declarative field. <br>
+         * Throws exception if FieldConfig is already connected to Component.
+         *
+         * @param property property name
+         */
+        void setProperty(String property);
+
+        /**
+         * @return tab index
+         */
+        Integer getTabIndex();
+        /**
+         * Set tab index for declarative field. <br>
+         * If {@link #isBound()} is true and Component implements {@link Component.Focusable} then sets tab index to the connected Component.
+         *
+         * @param tabIndex tab index
+         */
+        void setTabIndex(Integer tabIndex);
+
+        /**
+         * @return required message
+         * @deprecated Use {@link #getRequiredMessage()}
+         */
+        @Deprecated
+        String getRequiredError();
+        /**
+         * @deprecated Use {@link #setRequiredMessage(String)}}
+         */
+        @Deprecated
+        void setRequiredError(String requiredError);
+
+        /**
+         * @return true if field is marked as custom
+         */
+        boolean isCustom();
+        /**
+         * Set custom flag. <br>
+         * If field is marked as custom then {@link #bind()} will not create Component for field even if it does not have connected Component.
+         *
+         * @param custom custom flag
+         */
+        void setCustom(boolean custom);
+
+        /**
+         * @return required message
+         */
+        String getRequiredMessage();
+        /**
+         * Set required message for declarative field. <br>
+         * If {@link #isBound()} is true and Component implements {@link Field} then sets required message to the connected Component.
+         *
+         * @param requiredMessage required message
+         */
+        void setRequiredMessage(String requiredMessage);
+
+        /**
+         * @return bound component
+         */
+        @Nullable
+        Component getComponent();
+        /**
+         * @return bound component. Throws exception if component is null.
+         */
+        Component getComponentNN();
+
+        /**
+         * Bind Component to this field config. Component cannot be changed if it is assigned. <br>
+         * FieldConfig will apply default values for caption, description, width, required and other Field properties.
+         * <p>
+         * When used with custom="true", the datasource and the property should be set up manually.
+         *
+         * @param component component
+         * @see FieldConfig#setComponent(Component, FieldGroup.FieldAttachMode)
+         */
+        void setComponent(Component component);
+
+        /**
+         * Bind Component to this field config. Component cannot be changed if it is assigned. <br>
+         * If {@code mode} is {@link FieldGroup.FieldAttachMode#APPLY_DEFAULTS} then FieldConfig will apply default values for
+         * caption, description, width, required and other Field properties otherwise it will not.
+         * <p>
+         * When used with custom="true", the datasource and the property should be set up manually.
+         *
+         * @param component component
+         * @param mode field attach mode
+         */
+        void setComponent(Component component, FieldGroup.FieldAttachMode mode);
+
+        /**
+         * Add validator for declarative field. <br>
+         * If field is bound to Component and Component implements {@link Field} then {@code validator} will be added
+         * to Component directly.
+         *
+         * @param validator validator
+         */
+        void addValidator(Field.Validator validator);
+
+        /**
+         * Remove validator. <br>
+         * If field is bound to Component and Component implements {@link Field} then {@code validator} will be removed
+         * from Component directly.
+         *
+         * @param validator validator
+         */
+        void removeValidator(Field.Validator validator);
+
+        /**
+         * Set options datasource for declarative field. <br>
+         * If field is bound to Component and Component implements {@link OptionsField} then {@code optionsDatasource}
+         * will be set to Component directly.
+         *
+         * @param optionsDatasource options datasource
+         */
+        void setOptionsDatasource(CollectionDatasource optionsDatasource);
+        /**
+         * @return options datasource
+         */
+        CollectionDatasource getOptionsDatasource();
+
+        /**
+         * @return context help text
+         */
+        String getContextHelpText();
+
+        /**
+         * Set context help text for declarative field.
+         *
+         * If {@link #isBound()} is true and Component implements {@link Field} then sets context help text
+         * to the connected Component.
+         *
+         * @param contextHelpText context help text to be set
+         */
+        void setContextHelpText(String contextHelpText);
+
+        /**
+         * @return true if field accepts context help text in HTML format, null if not set for a declarative field
+         */
+        Boolean isContextHelpTextHtmlEnabled();
+
+        /**
+         * Defines if context help text can be presented as HTML.
+         * <p>
+         * If {@link #isBound()} is true and Component implements {@link Field} then sets this attribute
+         * to the connected Component.
+         *
+         * @param enabled true if field accepts context help text in HTML format
+         */
+        void setContextHelpTextHtmlEnabled(Boolean enabled);
+
+        /**
+         * @return a context help icon click handler
+         */
+        Consumer<HasContextHelp.ContextHelpIconClickEvent> getContextHelpIconClickHandler();
+
+        /**
+         * Sets a context help icon click handler
+         *
+         * @param handler the handler to set
+         */
+        void setContextHelpIconClickHandler(Consumer<HasContextHelp.ContextHelpIconClickEvent> handler);
     }
 }

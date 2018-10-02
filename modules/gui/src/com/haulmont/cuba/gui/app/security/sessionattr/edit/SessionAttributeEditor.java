@@ -24,11 +24,11 @@ import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.FieldGroup;
 import com.haulmont.cuba.gui.components.LookupField;
 import com.haulmont.cuba.gui.data.Datasource;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import com.haulmont.cuba.security.entity.SessionAttribute;
 
 import java.text.ParseException;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 public class SessionAttributeEditor extends AbstractEditor {
@@ -40,7 +40,7 @@ public class SessionAttributeEditor extends AbstractEditor {
         datasource = getDsContext().get("attribute");
 
         FieldGroup fields = (FieldGroup) getComponent("fields");
-        FieldGroup.FieldConfig field = fields.getField("datatype");
+        FieldConfig field = fields.getField("datatype");
         fields.addCustomField(field,
                 new FieldGroup.CustomFieldGenerator() {
                     @Override

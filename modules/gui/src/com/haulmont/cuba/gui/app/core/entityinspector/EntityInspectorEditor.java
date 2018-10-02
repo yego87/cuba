@@ -39,6 +39,7 @@ import com.haulmont.cuba.gui.data.*;
 import com.haulmont.cuba.gui.data.impl.*;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import com.haulmont.cuba.security.entity.EntityAttrAccess;
 import com.haulmont.cuba.security.entity.EntityOp;
 import org.dom4j.DocumentHelper;
@@ -345,7 +346,7 @@ public class EntityInspectorEditor extends AbstractWindow {
         MetadataTools tools = metadata.getTools();
         MetaProperty primaryKeyProperty = tools.getPrimaryKeyProperty(metaClass);
 
-        LinkedList<FieldGroup.FieldConfig> customFields = new LinkedList<>();
+        LinkedList<FieldConfig> customFields = new LinkedList<>();
         for (MetaProperty metaProperty : metaClass.getProperties()) {
             boolean isRequired = isRequired(metaProperty);
             boolean isReadonly = metaProperty.isReadOnly();
@@ -420,7 +421,7 @@ public class EntityInspectorEditor extends AbstractWindow {
         fieldGroup.setFrame(frame);
 
         MetaClass embeddableMetaClass = embeddedMetaProperty.getRange().asClass();
-        Collection<FieldGroup.FieldConfig> customFields = new LinkedList<>();
+        Collection<FieldConfig> customFields = new LinkedList<>();
         MetaProperty nullIndicatorProperty = getNullIndicatorProperty(embeddedMetaProperty);
 
         List<String> dateTimeFields = new ArrayList<>();
@@ -467,7 +468,7 @@ public class EntityInspectorEditor extends AbstractWindow {
         createCustomFields(fieldGroup, customFields);
 
         for (String dateTimeField : dateTimeFields) {
-            FieldGroup.FieldConfig field = fieldGroup.getField(dateTimeField);
+            FieldConfig field = fieldGroup.getField(dateTimeField);
             if (field != null && field.getComponent() != null) {
                 ((DateField) field.getComponent()).setResolution(DateField.Resolution.SEC);
             }
@@ -574,7 +575,7 @@ public class EntityInspectorEditor extends AbstractWindow {
      */
     protected void addField(MetaClass metaClass, MetaProperty metaProperty, Entity item,
                             FieldGroup fieldGroup, boolean required, boolean custom, boolean readOnly,
-                            Collection<FieldGroup.FieldConfig> customFields) {
+                            Collection<FieldConfig> customFields) {
         if (!attrViewPermitted(metaClass, metaProperty))
             return;
 
@@ -583,7 +584,7 @@ public class EntityInspectorEditor extends AbstractWindow {
                 && !entityOpPermitted(metaProperty.getRange().asClass(), EntityOp.READ))
             return;
 
-        FieldGroup.FieldConfig field = fieldGroup.createField(metaProperty.getName());
+        FieldConfig field = fieldGroup.createField(metaProperty.getName());
         field.setProperty(metaProperty.getName());
         field.setCaption(getPropertyCaption(metaClass, metaProperty));
         field.setCustom(custom);
@@ -643,7 +644,7 @@ public class EntityInspectorEditor extends AbstractWindow {
             field.setValue(value);
         }
 
-        FieldGroup.FieldConfig fieldConfig = fieldGroup.createField(metaProperty.getName());
+        FieldConfig fieldConfig = fieldGroup.createField(metaProperty.getName());
         fieldConfig.setWidth("400px");
         fieldConfig.setComponent(field);
 
@@ -687,8 +688,8 @@ public class EntityInspectorEditor extends AbstractWindow {
     /**
      * Creates custom fields and adds them to the fieldGroup
      */
-    protected void createCustomFields(FieldGroup fieldGroup, Collection<FieldGroup.FieldConfig> customFields) {
-        for (FieldGroup.FieldConfig field : customFields) {
+    protected void createCustomFields(FieldGroup fieldGroup, Collection<FieldConfig> customFields) {
+        for (FieldConfig field : customFields) {
             //custom field generator creates an pickerField
             fieldGroup.addCustomField(field, new FieldGroup.CustomFieldGenerator() {
                 @Override

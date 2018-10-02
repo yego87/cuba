@@ -36,6 +36,7 @@ import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.screen.FrameOwner;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.screen.ScreenFragment;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import org.apache.commons.collections4.iterators.ReverseListIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -90,7 +91,7 @@ public abstract class ComponentsHelper {
                 String subPath = ValuePathHelper.format(subList.toArray(new String[0]));
 
                 FieldGroup fieldGroup = (FieldGroup) innerComponent;
-                FieldGroup.FieldConfig field = fieldGroup.getField(subPath);
+                FieldConfig field = fieldGroup.getField(subPath);
 
                 return field != null ? field.getComponent() : null;
             } else if (innerComponent instanceof ComponentContainer) {
@@ -124,7 +125,7 @@ public abstract class ComponentsHelper {
                 String subPath = ValuePathHelper.format(subList.toArray(new String[0]));
 
                 FieldGroup fieldGroup = (FieldGroup) innerComponent;
-                FieldGroup.FieldConfig field = fieldGroup.getField(subPath);
+                FieldConfig field = fieldGroup.getField(subPath);
 
                 return field != null ? field.getComponent() : null;
             } else if (innerComponent instanceof ComponentContainer) {
@@ -164,7 +165,7 @@ public abstract class ComponentsHelper {
                     String subPath = ValuePathHelper.format(subList.toArray(new String[0]));
 
                     FieldGroup fieldGroup = (FieldGroup) innerComponent;
-                    FieldGroup.FieldConfig field = fieldGroup.getField(subPath);
+                    FieldConfig field = fieldGroup.getField(subPath);
 
                     return field != null ? field.getComponent() : null;
                 } else if (innerComponent instanceof ComponentContainer) {

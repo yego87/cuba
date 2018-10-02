@@ -38,6 +38,8 @@ import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.RuntimePropsDatasource;
 import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributesGuiTools;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
@@ -161,11 +163,11 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         newRuntimeFieldGroup.setFrame(getFrame());
         add(newRuntimeFieldGroup);
 
-        for (FieldGroup.FieldConfig field : newRuntimeFieldGroup.getFields()) {
+        for (FieldConfig field : newRuntimeFieldGroup.getFields()) {
             newRuntimeFieldGroup.removeField(field);
         }
 
-        final java.util.List<FieldGroup.FieldConfig> fields = createFieldsForAttributes(newRuntimeFieldGroup);
+        final java.util.List<FieldConfig> fields = createFieldsForAttributes(newRuntimeFieldGroup);
         addFieldsToFieldGroup(newRuntimeFieldGroup, fields);
 
         if (!newRuntimeFieldGroup.getFields().isEmpty()) {
@@ -173,7 +175,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
             newRuntimeFieldGroup.bind();
         }
 
-        for (FieldGroup.FieldConfig fieldConfig : newRuntimeFieldGroup.getFields()) {
+        for (FieldConfig fieldConfig : newRuntimeFieldGroup.getFields()) {
             loadValidators(newRuntimeFieldGroup, fieldConfig);
             loadRequired(newRuntimeFieldGroup, fieldConfig);
             loadEditable(newRuntimeFieldGroup, fieldConfig);
@@ -207,12 +209,12 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         }
     }
 
-    protected java.util.List<FieldGroup.FieldConfig> createFieldsForAttributes(FieldGroup newRuntimeFieldGroup) {
+    protected java.util.List<FieldConfig> createFieldsForAttributes(FieldGroup newRuntimeFieldGroup) {
         @SuppressWarnings("unchecked")
         Collection<DynamicAttributesMetaProperty> metaProperties = rds.getPropertiesFilteredByCategory();
-        java.util.List<FieldGroup.FieldConfig> fields = new ArrayList<>();
+        java.util.List<FieldConfig> fields = new ArrayList<>();
         for (DynamicAttributesMetaProperty property : metaProperties) {
-            FieldGroup.FieldConfig field = newRuntimeFieldGroup.createField(property.getName());
+            FieldConfig field = newRuntimeFieldGroup.createField(property.getName());
             field.setProperty(property.getName());
             CategoryAttribute attribute = property.getAttribute();
             if (attribute != null) {
@@ -231,7 +233,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         return fields;
     }
 
-    protected void addFieldsToFieldGroup(FieldGroup newRuntimeFieldGroup, List<FieldGroup.FieldConfig> fields) {
+    protected void addFieldsToFieldGroup(FieldGroup newRuntimeFieldGroup, List<FieldConfig> fields) {
         int rowsPerColumn;
         int propertiesCount = rds.getPropertiesFilteredByCategory().size();
         if (StringUtils.isNotBlank(cols)) {
@@ -248,7 +250,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
 
         int columnNo = 0;
         int fieldsCount = 0;
-        for (final FieldGroup.FieldConfig field : fields) {
+        for (final FieldConfig field : fields) {
             fieldsCount++;
             newRuntimeFieldGroup.addField(field, columnNo);
             if (fieldsCount % rowsPerColumn == 0) {
@@ -279,7 +281,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         return validator;
     }
 
-    protected void loadValidators(FieldGroup fieldGroup, FieldGroup.FieldConfig field) {
+    protected void loadValidators(FieldGroup fieldGroup, FieldConfig field) {
         MetaPropertyPath metaPropertyPath = rds.getMetaClass().getPropertyPath(field.getProperty());
         if (metaPropertyPath != null) {
             MetaProperty metaProperty = metaPropertyPath.getMetaProperty();
@@ -291,7 +293,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         }
     }
 
-    protected void loadRequired(FieldGroup fieldGroup, FieldGroup.FieldConfig field) {
+    protected void loadRequired(FieldGroup fieldGroup, FieldConfig field) {
         CategoryAttribute attribute = dynamicAttributes.getAttributeForMetaClass(rds.resolveCategorizedEntityClass(), field.getId());
         if (attribute != null) {
             String requiredMessage = messages.formatMessage(
@@ -304,7 +306,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         }
     }
 
-    protected void loadEditable(FieldGroup fieldGroup, FieldGroup.FieldConfig field) {
+    protected void loadEditable(FieldGroup fieldGroup, FieldConfig field) {
         if (fieldGroup.isEditable()) {
             MetaClass metaClass = rds.resolveCategorizedEntityClass();
             MetaPropertyPath propertyPath = dynamicAttributesTools.getMetaPropertyPath(
@@ -333,7 +335,7 @@ public class RuntimePropertiesFrame extends AbstractFrame {
         this.requiredControlEnabled = requiredControlEnabled;
         FieldGroup newRuntime = (FieldGroup) getComponent("runtime");
         if (newRuntime != null) {
-            for (final FieldGroup.FieldConfig field : newRuntime.getFields()) {
+            for (final FieldConfig field : newRuntime.getFields()) {
                 loadRequired(newRuntime, field);
             }
         }

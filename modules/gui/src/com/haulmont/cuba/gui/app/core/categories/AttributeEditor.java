@@ -55,6 +55,7 @@ import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import com.haulmont.cuba.security.entity.FilterEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrBuilder;
@@ -437,7 +438,7 @@ public class AttributeEditor extends AbstractEditor<CategoryAttribute> {
     }
 
     private void setupVisibility() {
-        for (FieldGroup.FieldConfig fieldConfig : attributeFieldGroup.getFields()) {
+        for (FieldConfig fieldConfig : attributeFieldGroup.getFields()) {
             if (!ALWAYS_VISIBLE_FIELDS.contains(fieldConfig.getId())) {
                 attributeFieldGroup.setVisible(fieldConfig.getId(), false);
             }

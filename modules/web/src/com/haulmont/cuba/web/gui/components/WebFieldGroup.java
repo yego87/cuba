@@ -26,12 +26,11 @@ import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.data.HasValueBinding;
 import com.haulmont.cuba.gui.components.data.ValueSource;
 import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
-import com.haulmont.cuba.gui.components.data.value.DatasourceValueSource;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
-import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
 import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.widgets.CubaFieldGroup;
@@ -521,7 +520,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
                 FieldGroupFieldFactory.GeneratedField generatedField = fieldFactory.createField(fc);
                 Component fieldComponent = generatedField.getComponent();
-                
+
                 fci.assignComponent(fieldComponent);
                 fci.setAttachMode(generatedField.getAttachMode());
 
@@ -776,7 +775,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         final String screenId = permissionDescriptor.getScreenId();
 
         if (subComponentId != null) {
-            final FieldGroup.FieldConfig field = getField(subComponentId);
+            final FieldConfig field = getField(subComponentId);
             if (field != null) {
                 if (permissionValue == UiPermissionValue.HIDE) {
                     field.setVisible(false);
@@ -1101,7 +1100,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         public void setRequiredMessage(String requiredMessage) {
             if (component instanceof Field) {
                 ((Field) component).setRequiredMessage(requiredMessage);
-            } else if (composition!= null && isWrapped()) {
+            } else if (composition != null && isWrapped()) {
                 composition.setRequiredError(requiredMessage);
             } else {
                 this.targetRequiredMessage = requiredMessage;

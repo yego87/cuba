@@ -30,7 +30,6 @@ import com.haulmont.cuba.core.global.Security;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.GuiDevelopmentException;
 import com.haulmont.cuba.gui.components.*;
-import com.haulmont.cuba.gui.components.FieldGroup.CustomFieldGenerator;
 import com.haulmont.cuba.gui.components.FieldGroup.FieldCaptionAlignment;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
@@ -243,7 +242,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
                     // Currently, ListEditor does not support datasource binding so we create custom field
                     if (BooleanUtils.isTrue(attribute.getIsCollection())) {
-                        CustomFieldGenerator fieldGenerator = new DynamicAttributeCustomFieldGenerator();
+                        FieldGroup.CustomFieldGenerator fieldGenerator = new DynamicAttributeCustomFieldGenerator();
 
                         Component fieldComponent = fieldGenerator.generateField(ds, DynamicAttributesUtils.encodeAttributeCode(attribute.getCode()));
                         field.setCustom(true);

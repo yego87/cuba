@@ -17,6 +17,11 @@
 package com.haulmont.cuba.gui.components;
 
 import com.haulmont.cuba.gui.components.Field.Validator;
+import com.haulmont.cuba.gui.components.data.HasValueSourceProvider;
+import com.haulmont.cuba.gui.components.data.ValueSource;
+import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
+import com.haulmont.cuba.gui.components.data.value.DatasourceValueSource;
+import com.haulmont.cuba.gui.components.data.value.DatasourceValueSourceProvider;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
 
@@ -31,7 +36,7 @@ import java.util.function.Consumer;
 public interface FieldGroup extends Component, Component.BelongToFrame, Component.HasCaption, Component.HasIcon,
                                     HasBorder, HasContextHelp, Component.Editable, Validatable,
                                     EditableChangeNotifier, ChildEditableController,
-                                    ComponentContainer, HasSubParts {
+                                    ComponentContainer, HasSubParts, HasValueSourceProvider {
     String NAME = "fieldGroup";
 
     /**
@@ -147,14 +152,29 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
 
     /**
      * @return default datasource for declarative fields
+     * @deprecated Use {@link #getValueSourceProvider()} instead
      */
-    Datasource getDatasource();
+    @Deprecated
+    default Datasource getDatasource() {
+        ValueSourceProvider provider = getValueSourceProvider();
+        return provider instanceof DatasourceValueSourceProvider
+                ? ((DatasourceValueSourceProvider) provider).getDatasource()
+                : null;
+    }
+
     /**
      * Set default datasource for declarative fields.
      *
      * @param datasource datasource
+     * @deprecated Use {@link #setValueSourceProvider(ValueSourceProvider)} instead
      */
-    void setDatasource(Datasource datasource);
+    @SuppressWarnings("unchecked")
+    @Deprecated
+    default void setDatasource(Datasource datasource) {
+        setValueSourceProvider(datasource != null
+                ? new DatasourceValueSourceProvider(datasource)
+                : null);
+    }
 
     /**
      * Create and bind components for all declarative fields.
@@ -284,21 +304,47 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
          */
         void setStyleName(String stylename);
 
+        ValueSource getTargetValueSource();
+
+        ValueSource getValueSource();
+
+        void setValueSource(ValueSource targetValueSource);
+
         /**
          * @return own datasource of a field or datasource of the parent FieldGroup
          */
-        Datasource getTargetDatasource();
+        @Deprecated
+        default Datasource getTargetDatasource() {
+            ValueSource valueSource = getTargetValueSource();
+            return valueSource instanceof DatasourceValueSource
+                    ? ((DatasourceValueSource) valueSource).getDatasource()
+                    : null;
+        }
+
         /**
          * @return datasource
          */
-        Datasource getDatasource();
+        @Deprecated
+        default Datasource getDatasource() {
+            ValueSource valueSource = getTargetValueSource();
+            return valueSource instanceof DatasourceValueSource
+                    ? ((DatasourceValueSource) valueSource).getDatasource()
+                    : null;
+        }
+
         /**
          * Set datasource for declarative field. <br>
          * Throws exception if FieldConfig is already connected to Component.
          *
          * @param datasource datasource
          */
-        void setDatasource(Datasource datasource);
+        @Deprecated
+        default void setDatasource(Datasource datasource) {
+            // TODO: gg, that if the property is null?
+            setValueSource(datasource != null
+                    ? new DatasourceValueSource(datasource, getProperty())
+                    : null);
+        }
 
         /**
          * @return true if field is required, null if not set for declarative field

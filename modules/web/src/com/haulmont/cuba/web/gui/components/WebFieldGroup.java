@@ -18,12 +18,15 @@ package com.haulmont.cuba.web.gui.components;
 
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.chile.core.model.MetaPropertyPath;
-import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionDescriptor;
 import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionValue;
 import com.haulmont.cuba.gui.components.*;
+import com.haulmont.cuba.gui.components.data.HasValueBinding;
+import com.haulmont.cuba.gui.components.data.ValueSource;
+import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
+import com.haulmont.cuba.gui.components.data.value.DatasourceValueSource;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
@@ -64,7 +67,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         columnFieldMapping.add(new ArrayList<>());
     }
 
-    protected Datasource<Entity> datasource;
+    protected ValueSourceProvider valueSourceProvider;
 
     protected FieldGroupFieldFactory fieldFactory;
 
@@ -485,18 +488,18 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     }
 
     @Override
-    public Datasource getDatasource() {
-        return datasource;
+    public ValueSourceProvider getValueSourceProvider() {
+        return valueSourceProvider;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public void setDatasource(final Datasource datasource) {
-        if (this.datasource != null) {
-            throw new UnsupportedOperationException("Changing datasource is not supported by the FieldGroup component");
+    public void setValueSourceProvider(ValueSourceProvider provider) {
+        if (this.valueSourceProvider != null) {
+            throw new UnsupportedOperationException("Changing value source provider is not supported " +
+                    "by the FieldGroup component");
         }
 
-        this.datasource = datasource;
+        this.valueSourceProvider = provider;
     }
 
     @Override
@@ -511,9 +514,9 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
             if (!fc.isCustom() && !fc.isBound()) {
                 FieldConfigImpl fci = (FieldConfigImpl) fc;
 
-                Datasource targetDs = fc.getTargetDatasource();
-                if (targetDs == null) {
-                    throw new IllegalStateException(String.format("Unable to get datasource for field '%s'", id));
+                ValueSource targetVs = fc.getTargetValueSource();
+                if (targetVs == null) {
+                    throw new IllegalStateException(String.format("Unable to get value source for field '%s'", id));
                 }
 
                 FieldGroupFieldFactory.GeneratedField generatedField = fieldFactory.createField(fc);
@@ -754,9 +757,10 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         if (id != null) {
             return id;
         }
-        if (datasource != null && StringUtils.isNotEmpty(datasource.getId())) {
+        // TODO: gg, implement
+        /*if (datasource != null && StringUtils.isNotEmpty(datasource.getId())) {
             return "fieldGroup_" + datasource.getId();
-        }
+        }*/
 
         return getClass().getSimpleName();
     }
@@ -825,7 +829,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
         protected String targetWidth;
         protected String targetStylename;
-        protected Datasource targetDatasource;
+        protected ValueSource targetValueSource;
         protected Boolean targetRequired;
         protected Boolean targetEditable;
         protected Boolean targetEnabled;
@@ -913,31 +917,31 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
             return component != null && component.unwrapComposition(com.vaadin.ui.Component.class) != composition;
         }
 
-        @Override
-        public Datasource getTargetDatasource() {
-            if (component instanceof DatasourceComponent) {
-                return ((DatasourceComponent) component).getDatasource();
+        public ValueSource getTargetValueSource() {
+            if (component instanceof HasValueBinding) {
+                return ((HasValueBinding) component).getValueSource();
             }
-            if (targetDatasource != null) {
-                return targetDatasource;
+
+            if (targetValueSource != null) {
+                return targetValueSource;
             }
-            return WebFieldGroup.this.datasource;
+
+            // TODO: gg, that if the property is null?
+            return WebFieldGroup.this.valueSourceProvider.getValueSource(getProperty());
         }
 
-        @Override
-        public Datasource getDatasource() {
-            if (component instanceof DatasourceComponent) {
-                return ((DatasourceComponent) component).getDatasource();
+        public ValueSource getValueSource() {
+            if (component instanceof HasValueBinding) {
+                return ((HasValueBinding) component).getValueSource();
             }
 
-            return targetDatasource;
+            return targetValueSource;
         }
 
-        @Override
-        public void setDatasource(Datasource datasource) {
+        public void setValueSource(ValueSource targetValueSource) {
             checkState(this.component == null, "FieldConfig is already bound to component");
 
-            this.targetDatasource = datasource;
+            this.targetValueSource = targetValueSource;
         }
 
         @Override
@@ -1412,9 +1416,13 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
             this.targetStylename = targetStylename;
         }
 
-        public void setTargetDatasource(Datasource targetDatasource) {
-            this.targetDatasource = targetDatasource;
+        public void setTargetValueSource(ValueSource targetValueSource) {
+            this.targetValueSource = targetValueSource;
         }
+
+        /*public void setTargetDatasource(Datasource targetDatasource) {
+            this.targetDatasource = targetDatasource;
+        }*/
 
         public Boolean getTargetRequired() {
             return targetRequired;

@@ -25,8 +25,12 @@ import org.dom4j.Element;
 public abstract class AbstractDatasourceComponentLoader<T extends DatasourceComponent> extends AbstractComponentLoader<T> {
 
     protected void loadDatasource(DatasourceComponent component, Element element) {
-        final String datasource = element.attributeValue("datasource");
-        if (!StringUtils.isEmpty(datasource)) {
+        String datasource = element.attributeValue("datasource");
+        if (StringUtils.isEmpty(datasource)) {
+            datasource = element.getParent().attributeValue("datasource");
+        }
+
+        if (StringUtils.isNotEmpty(datasource)) {
             Datasource ds = context.getDsContext().get(datasource);
             if (ds == null) {
                 throw new GuiDevelopmentException(String.format("Datasource '%s' is not defined", datasource),

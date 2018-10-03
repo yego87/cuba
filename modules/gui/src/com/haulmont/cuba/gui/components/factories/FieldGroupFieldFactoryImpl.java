@@ -17,10 +17,8 @@
 package com.haulmont.cuba.gui.components.factories;
 
 import com.haulmont.chile.core.model.MetaClass;
-import com.haulmont.cuba.gui.components.ComponentGenerationContext;
-import com.haulmont.cuba.gui.components.FieldGroup;
-import com.haulmont.cuba.gui.components.FieldGroupFieldFactory;
-import com.haulmont.cuba.gui.components.UiComponentsGenerator;
+import com.haulmont.cuba.gui.UiComponents;
+import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.RuntimePropsDatasource;
 import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
@@ -33,12 +31,19 @@ public class FieldGroupFieldFactoryImpl implements FieldGroupFieldFactory {
     @Inject
     protected UiComponentsGenerator uiComponentsGenerator;
 
+    @Inject
+    protected UiComponents uiComponents;
+
     @Override
     public GeneratedField createField(FieldConfig fc) {
         return createFieldComponent(fc);
     }
 
     protected GeneratedField createFieldComponent(FieldConfig fc) {
+        if (fc.isCustom()) {
+            return new GeneratedField(uiComponents.create(FieldGroupEmptyField.NAME));
+        }
+
         MetaClass metaClass = resolveMetaClass(fc.getTargetDatasource());
 
         ComponentGenerationContext context = new ComponentGenerationContext(metaClass, fc.getProperty())

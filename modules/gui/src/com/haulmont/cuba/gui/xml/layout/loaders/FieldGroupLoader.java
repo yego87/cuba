@@ -17,7 +17,6 @@
 package com.haulmont.cuba.gui.xml.layout.loaders;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.haulmont.bali.util.Dom4j;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaProperty;
@@ -31,7 +30,9 @@ import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.GuiDevelopmentException;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.FieldGroup.FieldCaptionAlignment;
+import com.haulmont.cuba.gui.components.data.HasValueBinding;
 import com.haulmont.cuba.gui.components.data.ValueSource;
+import com.haulmont.cuba.gui.components.data.meta.EntityValueSource;
 import com.haulmont.cuba.gui.components.data.value.DatasourceValueSource;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.Datasource;
@@ -53,9 +54,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
+import static com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils.getCategoryAttribute;
+import static com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils.isDynamicAttribute;
 
 public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
+
+    protected FieldGroupFieldFactory fieldFactory;
 
     @Override
     public void createComponent() {
@@ -72,8 +78,9 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
         String fieldFactoryBean = element.attributeValue("fieldFactoryBean");
         if (StringUtils.isNotEmpty(fieldFactoryBean)) {
-            FieldGroupFieldFactory fieldFactory = beanLocator.get(fieldFactoryBean, FieldGroupFieldFactory.class);
-            resultComponent.setFieldFactory(fieldFactory);
+            fieldFactory = beanLocator.get(fieldFactoryBean, FieldGroupFieldFactory.class);
+        } else {
+            fieldFactory = beanLocator.get(FieldGroupFieldFactory.NAME);
         }
 
         assignXmlDescriptor(resultComponent, element);
@@ -103,15 +110,19 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         resultComponent.setDatasource(ds);
 
         if (element.elements("column").isEmpty()) {
-            Iterable<FieldConfig> rootFields = loadFields(resultComponent, element, ds, null);
+            Iterable<Component> rootFields = loadFields(resultComponent, element, ds, null);
             Iterable<FieldConfig> dynamicAttributeFields = loadDynamicAttributeFields(ds);
             for (FieldConfig field : dynamicAttributeFields) {
                 if (resultComponent.getWidth() > 0 && field.getWidth() == null) {
                     field.setWidth("100%");
                 }
             }
-            for (FieldConfig field : Iterables.concat(rootFields, dynamicAttributeFields)) {
+            /*for (FieldConfig field : Iterables.concat(rootFields, dynamicAttributeFields)) {
                 resultComponent.addField(field);
+            }*/
+            // TODO: gg, add usage of dynamic attributes
+            for (Component component : rootFields) {
+                resultComponent.add(component);
             }
         } else {
             @SuppressWarnings("unchecked")
@@ -137,12 +148,13 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
                 String columnWidth = loadThemeString(columnElement.attributeValue("width"));
 
-                Iterable<FieldConfig> columnFields = loadFields(resultComponent, columnElement, ds, columnWidth);
-                if (colIndex == 0) {
-                     columnFields = Iterables.concat(columnFields, loadDynamicAttributeFields(ds));
-                }
-                for (FieldConfig field : columnFields) {
-                    resultComponent.addField(field, colIndex);
+                Iterable<Component> columnFields = loadFields(resultComponent, columnElement, ds, columnWidth);
+                // TODO: gg, add usage of dynamic attributes
+//                if (colIndex == 0) {
+//                    columnFields = Iterables.concat(columnFields, loadDynamicAttributeFields(ds));
+//                }
+                for (Component field : columnFields) {
+                    resultComponent.add(field, colIndex);
                 }
 
                 String columnFieldCaptionWidth = columnElement.attributeValue("fieldCaptionWidth");
@@ -163,7 +175,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
         for (FieldConfig field : resultComponent.getFields()) {
             if (!field.isCustom()) {
-                if (!DynamicAttributesUtils.isDynamicAttribute(field.getProperty())) {
+                if (!isDynamicAttribute(field.getProperty())) {
                     // the following does not make sense for dynamic attributes
                     loadValidators(resultComponent, field);
                     loadRequired(resultComponent, field);
@@ -288,23 +300,29 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return null;
     }
 
-    protected List<FieldConfig> loadFields(FieldGroup resultComponent, Element element, Datasource ds,
+    protected List<Component> loadFields(FieldGroup resultComponent, Element element, Datasource ds,
                                                       @Nullable String columnWidth) {
         @SuppressWarnings("unchecked")
-        List<Element> fieldElements = element.elements("field");
-        if (!fieldElements.isEmpty()) {
-            return loadFields(resultComponent, fieldElements, ds, columnWidth);
-        }
-        return Collections.emptyList();
+        List<Element> fieldElements = element.elements();
+        return fieldElements.isEmpty()
+                ? Collections.emptyList()
+                : loadFields(resultComponent, fieldElements, ds, columnWidth);
     }
 
-    protected List<FieldConfig> loadFields(FieldGroup resultComponent, List<Element> elements, Datasource ds,
+    protected List<Component> loadFields(FieldGroup resultComponent, List<Element> elements, Datasource ds,
                                                       @Nullable String columnWidth) {
-        List<FieldConfig> fields = new ArrayList<>(elements.size());
+        List<Component> fields = new ArrayList<>(elements.size());
         List<String> ids = new ArrayList<>();
         for (Element fieldElement : elements) {
-            FieldConfig field = loadField(fieldElement, ds, columnWidth);
-            if (ids.contains(field.getId())) {
+            Component component;
+            if ("field".equals(fieldElement.getName())) {
+                FieldConfig field = loadField(fieldElement, ds, columnWidth);
+                component = buildComponent(field);
+            } else {
+                component = loadComponent(fieldElement, columnWidth);
+            }
+
+            if (ids.contains(component.getId())) {
                 Map<String, Object> params = new HashMap<>();
                 String fieldGroupId = resultComponent.getId();
                 if (StringUtils.isNotEmpty(fieldGroupId)) {
@@ -312,13 +330,128 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                 }
 
                 throw new GuiDevelopmentException(
-                        String.format("FieldGroup column contains duplicate fields '%s'.", field.getId()),
+                        String.format("FieldGroup column contains duplicate fields '%s'.", component.getId()),
                         context.getFullFrameId(), params);
             }
-            fields.add(field);
-            ids.add(field.getId());
+
+            fields.add(component);
+            ids.add(component.getId());
         }
         return fields;
+    }
+
+    protected Component buildComponent(FieldConfig fc) {
+        Component component;
+
+        if (fc.isCustom()) {
+            component = fc.getComponent();
+
+            if (component != null) {
+                    if (fc.getAttachMode() == FieldGroup.FieldAttachMode.APPLY_DEFAULTS) {
+                        applyFieldDefaults(component, fc);
+                    }
+            } else {
+                component = createComponentStub();
+            }
+        } else {
+            ValueSource targetVs = fc.getValueSource();
+            if (targetVs == null) {
+                targetVs = resultComponent.getValueSourceProvider().getValueSource(fc.getProperty());
+                if (targetVs == null) {
+                    throw new IllegalStateException(String.format("Unable to get value source for field '%s'", fc.getId()));
+                }
+            }
+
+            FieldGroupFieldFactory.GeneratedField generatedField = fieldFactory.createField(fc);
+            component = generatedField.getComponent();
+
+            if (generatedField.getAttachMode() == FieldGroup.FieldAttachMode.APPLY_DEFAULTS) {
+                applyFieldDefaults(component, fc);
+            }
+        }
+
+        if (component.getId() == null) {
+            component.setId(fc.getId());
+        }
+
+        return component;
+    }
+
+    protected Component createComponentStub() {
+        return null;
+    }
+
+    protected void applyFieldDefaults(Component fieldComponent, FieldConfig fc) {
+
+        if (fc.isVisible() != null) {
+            fieldComponent.setVisible(fc.isVisible());
+        }
+
+        if (fieldComponent instanceof Component.HasCaption) {
+            if (fc.getCaption() != null) {
+                ((Component.HasCaption) fieldComponent).setCaption(fc.getCaption());
+            }
+            if (fc.getDescription() != null) {
+                ((Component.HasCaption) fieldComponent).setDescription(fc.getDescription());
+            }
+        }
+
+        if (fieldComponent instanceof Field) {
+            Field cubaField = (Field) fieldComponent;
+
+            if (fc.isRequired() != null) {
+                cubaField.setRequired(fc.isRequired());
+            }
+            if (fc.getRequiredMessage() != null) {
+                cubaField.setRequiredMessage(fc.getRequiredMessage());
+            }
+            if (fc.isEditable() != null) {
+                cubaField.setEditable(fc.isEditable());
+            }
+
+            for (Field.Validator validator : fc.getValidators()) {
+                cubaField.addValidator(validator);
+            }
+
+            if (fc.getWidth() != null) {
+                fieldComponent.setWidth(fc.getWidth());
+            } else {
+                // FIXME: gg, how to replace?
+                /*if (App.isBound()) {
+                    ThemeConstants theme = App.getInstance().getThemeConstants();
+                    fieldComponent.setWidth(theme.get("cuba.web.WebFieldGroup.defaultFieldWidth"));
+                }*/
+            }
+        }
+
+        if (fieldComponent instanceof HasContextHelp) {
+            if (fc.getContextHelpText() != null) {
+                ((HasContextHelp) fieldComponent).setContextHelpText(fc.getContextHelpText());
+            }
+            if (fc.isContextHelpTextHtmlEnabled() != null) {
+                ((HasContextHelp) fieldComponent).setContextHelpTextHtmlEnabled(fc.isContextHelpTextHtmlEnabled());
+            }
+            if (fc.getContextHelpIconClickHandler() != null) {
+                ((HasContextHelp) fieldComponent).setContextHelpIconClickHandler(fc.getContextHelpIconClickHandler());
+            }
+        }
+
+        if (fieldComponent instanceof Component.Focusable && fc.getTabIndex() != null) {
+            ((Component.Focusable) fieldComponent).setTabIndex(fc.getTabIndex());
+        }
+
+        if (fieldComponent instanceof HasInputPrompt && fc.getInputPrompt() != null) {
+            ((HasInputPrompt) fieldComponent).setInputPrompt(fc.getInputPrompt());
+        }
+
+        if (fieldComponent instanceof HasFormatter && fc.getFormatter() != null) {
+            //noinspection unchecked
+            ((HasFormatter) fieldComponent).setFormatter(fc.getFormatter());
+        }
+
+        if (StringUtils.isNotEmpty(fc.getStyleName())) {
+            fieldComponent.setStyleName(fc.getStyleName());
+        }
     }
 
     protected CollectionDatasource findDatasourceRecursively(DsContext dsContext, String dsName) {
@@ -336,6 +469,65 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                 return null;
             }
         }
+    }
+
+    protected Component loadComponent(Element element, String columnWidth) {
+        String id = element.attributeValue("id");
+        String property = element.attributeValue("property");
+
+        if (Strings.isNullOrEmpty(id) && Strings.isNullOrEmpty(property)) {
+            throw new GuiDevelopmentException(String.format("id/property is not defined for field of FieldGroup '%s'. " +
+                    "Set id or property attribute.", resultComponent.getId()), context.getFullFrameId());
+        }
+
+        LayoutLoader loader = beanLocator.getPrototype(LayoutLoader.NAME, context);
+        loader.setLocale(getLocale());
+        loader.setMessagesPack(getMessagesPack());
+
+        ComponentLoader childComponentLoader = loader.createComponent(element);
+        childComponentLoader.loadComponent();
+
+        Component component = childComponentLoader.getResultComponent();
+
+        if (Strings.isNullOrEmpty(component.getId())) {
+            component.setId(property);
+        }
+
+        // TODO: gg, extract method
+        String width = element.attributeValue("width");
+        if (StringUtils.isEmpty(width)) {
+            width = columnWidth;
+        }
+        if ("auto".equalsIgnoreCase(width)) {
+            component.setWidth(Component.AUTO_SIZE);
+        } else if (StringUtils.isNotBlank(width)) {
+            component.setWidth(loadThemeString(width));
+        }
+
+        if (component instanceof HasValueBinding
+                && ((HasValueBinding) component).getValueSource() instanceof EntityValueSource
+                && component instanceof Component.HasCaption
+                && ((Component.HasCaption) component).getCaption() == null) {
+            EntityValueSource valueSource = ((EntityValueSource) ((HasValueBinding) component).getValueSource());
+
+            MetaPropertyPath metaPropertyPath = valueSource.getMetaPropertyPath();
+
+            String propertyName = metaPropertyPath != null ? metaPropertyPath.getMetaProperty().getName() : null;
+            if (metaPropertyPath != null) {
+                if (isDynamicAttribute(metaPropertyPath.getMetaProperty())) {
+                    CategoryAttribute categoryAttribute = getCategoryAttribute(metaPropertyPath.getMetaProperty());
+                    ((Component.HasCaption) component).setCaption(categoryAttribute != null
+                            ? categoryAttribute.getLocaleName()
+                            : propertyName);
+                } else {
+                    MetaClass propertyMetaClass = getMetadataTools().getPropertyEnclosingMetaClass(metaPropertyPath);
+                    String propertyCaption = getMessageTools().getPropertyCaption(propertyMetaClass, propertyName);
+                    ((Component.HasCaption) component).setCaption(propertyCaption);
+                }
+            }
+        }
+
+        return component;
     }
 
     protected FieldConfig loadField(Element element, Datasource ds, String columnWidth) {
@@ -406,12 +598,13 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                     "Only custom fields can have no datasource.", property), context.getFullFrameId());
         }
 
-        FieldConfig field = resultComponent.createField(id);
+        FieldConfig field = new FieldConfigImpl(id);
         if (property != null) {
             field.setProperty(property);
         }
-        if (datasource != null) {
-            field.setDatasource(datasource);
+        // TODO: gg, ValueSource
+        if (targetDs != null) {
+            field.setDatasource(targetDs);
         }
         if (optionsDs != null) {
             field.setOptionsDatasource(optionsDs);
@@ -434,8 +627,8 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             }
         }
         String propertyName = metaPropertyPath != null ? metaPropertyPath.getMetaProperty().getName() : null;
-        if (metaPropertyPath != null && DynamicAttributesUtils.isDynamicAttribute(metaPropertyPath.getMetaProperty())) {
-            CategoryAttribute categoryAttribute = DynamicAttributesUtils.getCategoryAttribute(metaPropertyPath.getMetaProperty());
+        if (metaPropertyPath != null && isDynamicAttribute(metaPropertyPath.getMetaProperty())) {
+            CategoryAttribute categoryAttribute = getCategoryAttribute(metaPropertyPath.getMetaProperty());
             field.setCaption(categoryAttribute != null ? categoryAttribute.getLocaleName() : propertyName);
         } else {
             loadCaption(field, element);
@@ -758,6 +951,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
          */
         void setStyleName(String stylename);
 
+        // TODO: gg, remove
         ValueSource getTargetValueSource();
 
         ValueSource getValueSource();
@@ -890,7 +1084,6 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         boolean isCustom();
         /**
          * Set custom flag. <br>
-         * If field is marked as custom then {@link #bind()} will not create Component for field even if it does not have connected Component.
          *
          * @param custom custom flag
          */
@@ -941,6 +1134,9 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
          */
         void setComponent(Component component, FieldGroup.FieldAttachMode mode);
 
+        // TODO: gg, JavaDoc
+        FieldGroup.FieldAttachMode getAttachMode();
+
         /**
          * Add validator for declarative field. <br>
          * If field is bound to Component and Component implements {@link Field} then {@code validator} will be added
@@ -958,6 +1154,9 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
          * @param validator validator
          */
         void removeValidator(Field.Validator validator);
+
+        // TODO: gg, JavaDoc
+        List<Field.Validator> getValidators();
 
         /**
          * Set options datasource for declarative field. <br>
@@ -1013,5 +1212,341 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
          * @param handler the handler to set
          */
         void setContextHelpIconClickHandler(Consumer<HasContextHelp.ContextHelpIconClickEvent> handler);
+    }
+
+    protected class FieldConfigImpl implements FieldConfig {
+        protected String id;
+        protected Element xmlDescriptor;
+        protected int column;
+
+        protected Component component;
+
+        protected boolean managed = false;
+
+        protected String targetWidth;
+        protected String targetStylename;
+        protected ValueSource targetValueSource;
+        protected Boolean targetRequired;
+        protected Boolean targetEditable;
+        protected Boolean targetEnabled;
+        protected Boolean targetVisible;
+        protected String targetProperty;
+        protected Integer targetTabIndex;
+        protected String targetRequiredMessage;
+        protected CollectionDatasource targetOptionsDatasource;
+        protected String targetCaption;
+        protected String targetDescription;
+        protected String targetContextHelpText;
+        protected Boolean targetContextHelpTextHtmlEnabled;
+        protected String targetInputPrompt;
+        protected Function targetFormatter;
+        protected boolean isTargetCustom;
+
+        protected List<Field.Validator> targetValidators = new ArrayList<>(0);
+        protected Consumer<HasContextHelp.ContextHelpIconClickEvent> targetContextHelpIconClickHandler;
+        protected FieldGroup.FieldAttachMode attachMode = FieldGroup.FieldAttachMode.APPLY_DEFAULTS;
+
+        public FieldConfigImpl(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public boolean isBound() {
+            return component != null;
+        }
+
+        @Override
+        public String getWidth() {
+            return targetWidth;
+        }
+
+        @Override
+        public void setWidth(String width) {
+            targetWidth = width;
+        }
+
+        @Override
+        public String getStyleName() {
+            return targetStylename;
+        }
+
+        @Override
+        public void setStyleName(String stylename) {
+            this.targetStylename = stylename;
+        }
+
+        // TODO: gg, remove
+        @Override
+        public ValueSource getTargetValueSource() {
+            return getValueSource();
+        }
+
+        @Override
+        public ValueSource getValueSource() {
+            return targetValueSource;
+        }
+
+        public void setValueSource(ValueSource targetValueSource) {
+            // TODO: gg, do we need this check?
+            checkState(this.component == null, "FieldConfig is already bound to component");
+
+            this.targetValueSource = targetValueSource;
+        }
+
+        @Override
+        public Boolean isRequired() {
+            return targetRequired;
+        }
+
+        @Override
+        public void setRequired(Boolean required) {
+            this.targetRequired = required;
+        }
+
+        @Override
+        public Boolean isEditable() {
+            return targetEditable;
+        }
+
+        @Override
+        public void setEditable(Boolean editable) {
+            this.targetEditable = editable;
+        }
+
+        @Override
+        public Boolean isEnabled() {
+            return targetEnabled;
+        }
+
+        @Override
+        public void setEnabled(Boolean enabled) {
+            this.targetEnabled = enabled;
+        }
+
+        @Override
+        public Boolean isVisible() {
+            return targetVisible;
+        }
+
+        @Override
+        public void setVisible(Boolean visible) {
+            this.targetVisible = visible;
+        }
+
+        @Override
+        public String getProperty() {
+            return targetProperty;
+        }
+
+        @Override
+        public void setProperty(String property) {
+            checkState(this.component == null, "Unable to change property for bound FieldConfig");
+
+            this.targetProperty = property;
+        }
+
+        @Override
+        public Integer getTabIndex() {
+            return targetTabIndex;
+        }
+
+        @Override
+        public void setTabIndex(Integer tabIndex) {
+            this.targetTabIndex = tabIndex;
+        }
+
+        @Override
+        public String getRequiredError() {
+            return getRequiredMessage();
+        }
+
+        @Override
+        public void setRequiredError(String requiredError) {
+            setRequiredMessage(requiredError);
+        }
+
+        @Override
+        public boolean isCustom() {
+            return isTargetCustom;
+        }
+
+        @Override
+        public void setCustom(boolean custom) {
+            checkState(this.component == null, "Unable to change custom flag for bound FieldConfig");
+
+            this.isTargetCustom = custom;
+        }
+
+        @Override
+        public String getRequiredMessage() {
+            return targetRequiredMessage;
+        }
+
+        @Override
+        public void setRequiredMessage(String requiredMessage) {
+            this.targetRequiredMessage = requiredMessage;
+        }
+
+        @Nullable
+        @Override
+        public Component getComponent() {
+            return component;
+        }
+
+        @Override
+        public Component getComponentNN() {
+            if (component == null) {
+                throw new IllegalStateException("FieldConfig is not bound to a Component");
+            }
+            return component;
+        }
+
+        @Override
+        public void setComponent(Component component) {
+            checkState(this.component == null, "Unable to change component for bound FieldConfig");
+
+            this.component = component;
+        }
+
+        @Override
+        public void setComponent(Component component, FieldGroup.FieldAttachMode mode) {
+            checkState(this.component == null, "Unable to change component for bound FieldConfig");
+
+            this.attachMode = mode;
+            this.component = component;
+        }
+
+        public void assignComponent(Component component) {
+            checkState(this.component == null, "Unable to change component for bound FieldConfig");
+
+            this.component = component;
+        }
+
+        public void setAttachMode(FieldGroup.FieldAttachMode attachMode) {
+            this.attachMode = attachMode;
+        }
+
+        @Override
+        public void addValidator(Field.Validator validator) {
+            if (!targetValidators.contains(validator)) {
+                targetValidators.add(validator);
+            }
+        }
+
+        @Override
+        public void removeValidator(Field.Validator validator) {
+            targetValidators.remove(validator);
+        }
+
+        @Override
+        public List<Field.Validator> getValidators() {
+            return targetValidators;
+        }
+
+        // TODO: gg, add OptionsSource
+        @Override
+        public void setOptionsDatasource(CollectionDatasource optionsDatasource) {
+            this.targetOptionsDatasource = optionsDatasource;
+        }
+
+        @Override
+        public CollectionDatasource getOptionsDatasource() {
+            return targetOptionsDatasource;
+        }
+
+        @Override
+        public String getCaption() {
+            return targetCaption;
+        }
+
+        @Override
+        public void setCaption(String caption) {
+            this.targetCaption = caption;
+        }
+
+        @Override
+        public String getDescription() {
+            return targetDescription;
+        }
+
+        @Override
+        public void setDescription(String description) {
+            this.targetDescription = description;
+        }
+
+        @Override
+        public String getInputPrompt() {
+            return targetInputPrompt;
+        }
+
+        @Override
+        public void setInputPrompt(String inputPrompt) {
+            this.targetInputPrompt = inputPrompt;
+        }
+
+        @Override
+        public String getContextHelpText() {
+            return targetContextHelpText;
+        }
+
+        @Override
+        public void setContextHelpText(String contextHelpText) {
+            this.targetContextHelpText = contextHelpText;
+        }
+
+        @Override
+        public Boolean isContextHelpTextHtmlEnabled() {
+            return BooleanUtils.isTrue(targetContextHelpTextHtmlEnabled);
+        }
+
+        @Override
+        public void setContextHelpTextHtmlEnabled(Boolean enabled) {
+            this.targetContextHelpTextHtmlEnabled = enabled;
+        }
+
+        @Override
+        public Consumer<HasContextHelp.ContextHelpIconClickEvent> getContextHelpIconClickHandler() {
+            return targetContextHelpIconClickHandler;
+        }
+
+        @Override
+        public void setContextHelpIconClickHandler(Consumer<HasContextHelp.ContextHelpIconClickEvent> handler) {
+            this.targetContextHelpIconClickHandler = handler;
+        }
+
+        @Override
+        public Function getFormatter() {
+            return targetFormatter;
+        }
+
+        @Override
+        public void setFormatter(Function formatter) {
+            this.targetFormatter = formatter;
+        }
+
+        @Override
+        public Element getXmlDescriptor() {
+            return xmlDescriptor;
+        }
+
+        @Override
+        public void setXmlDescriptor(Element element) {
+            this.xmlDescriptor = element;
+        }
+
+        @Override
+        public FieldGroup.FieldAttachMode getAttachMode() {
+            return attachMode;
+        }
+
+        @Override
+        public String toString() {
+            return "FieldConfig: " + id;
+        }
     }
 }

@@ -16,6 +16,7 @@
  */
 package com.haulmont.cuba.gui.xml.layout.loaders;
 
+import com.google.common.base.Strings;
 import com.haulmont.chile.core.model.MetaProperty;
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.gui.GuiDevelopmentException;
@@ -29,6 +30,7 @@ import com.haulmont.cuba.gui.screen.UiControllerUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class AbstractFieldLoader<T extends Field> extends AbstractDatasourceComponentLoader<T> {
@@ -66,7 +68,11 @@ public abstract class AbstractFieldLoader<T extends Field> extends AbstractDatas
     @SuppressWarnings("unchecked")
     protected void loadContainer(T component, Element element) {
         String containerId = element.attributeValue("dataContainer");
-        if (containerId != null) {
+        if (Strings.isNullOrEmpty(containerId)) {
+            containerId = element.getParent().attributeValue("dataContainer");
+        }
+
+        if (!Strings.isNullOrEmpty(containerId)) {
             FrameOwner frameOwner = context.getFrame().getFrameOwner();
             ScreenData screenData = UiControllerUtils.getScreenData(frameOwner);
             InstanceContainer container = screenData.getContainer(containerId);

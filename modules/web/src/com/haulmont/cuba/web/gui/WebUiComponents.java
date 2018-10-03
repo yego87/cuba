@@ -140,6 +140,9 @@ public class WebUiComponents implements UiComponents {
         /* Misc */
 
         classes.put(Timer.NAME, WebTimer.class);
+
+        /* Stubs */
+        classes.put(FieldGroupEmptyField.NAME, WebFieldGroupEmptyField.class);
     }
 
     @SuppressWarnings("unchecked")

@@ -43,17 +43,20 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param id field id
      * @return field config
      */
+    @Deprecated
     FieldConfig createField(String id);
 
     /**
      * @return all added field configs
      */
+    @Deprecated
     List<FieldConfig> getFields();
 
     /**
      * @param column column index
      * @return added field configs of {@code column}
      */
+    @Deprecated
     List<FieldConfig> getFields(int column);
 
     /**
@@ -61,6 +64,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param row    row index
      * @return field config
      */
+    @Deprecated
     FieldConfig getField(int column, int row);
 
     /**
@@ -69,6 +73,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param fieldId field id
      * @return field config or null
      */
+    @Deprecated
     @Nullable
     FieldConfig getField(String fieldId);
     /**
@@ -77,6 +82,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param fieldId field id
      * @return field config. Throws exception if not found.
      */
+    @Deprecated
     FieldConfig getFieldNN(String fieldId);
 
     /**
@@ -84,6 +90,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      *
      * @param field field config
      */
+    @Deprecated
     void addField(FieldConfig field);
     /**
      * Append field to {@code colIndex} column.
@@ -91,6 +98,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param fieldConfig field config
      * @param colIndex column index
      */
+    @Deprecated
     void addField(FieldConfig fieldConfig, int colIndex);
     /**
      * Insert field to {@code colIndex} column to {@code rowIndex} position.
@@ -99,6 +107,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param colIndex column index
      * @param rowIndex row index
      */
+    @Deprecated
     void addField(FieldConfig fieldConfig, int colIndex, int rowIndex);
 
     /**
@@ -112,7 +121,12 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      *
      * @param fieldConfig field id
      */
+    @Deprecated
     void removeField(FieldConfig fieldConfig);
+
+    void add(Component field, int colIndex);
+
+    void add(Component field, int colIndex, int rowIndex);
 
     /**
      * Request focus on field. <br>
@@ -292,17 +306,6 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
             this.problemFields = problemFields;
         }
     }
-
-    /**
-     * @return field factory for declarative fields
-     */
-    FieldGroupFieldFactory getFieldFactory();
-    /**
-     * Set field factory for declarative fields.
-     *
-     * @param fieldFactory field factory
-     */
-    void setFieldFactory(FieldGroupFieldFactory fieldFactory);
 
     @Override
     default boolean isValidateOnCommit() {

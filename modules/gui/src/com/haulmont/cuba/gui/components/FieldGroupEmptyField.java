@@ -16,7 +16,13 @@
 
 package com.haulmont.cuba.gui.components;
 
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader;
+
 public interface FieldGroupEmptyField extends Component {
 
     String NAME = "fieldGroupEmptyField";
+
+    FieldGroupLoader.FieldConfig getFieldConfig();
+
+    void setFieldConfig(FieldGroupLoader.FieldConfig fieldConfig);
 }

@@ -38,6 +38,9 @@ public class JmxInstanceEditor extends AbstractEditor<JmxInstance> {
     protected FieldGroup jmxFieldGroup;
 
     @Inject
+    protected Datasource<JmxInstance> jmxInstanceDs;
+
+    @Inject
     protected JmxControlAPI jmxControlAPI;
 
     @Inject
@@ -51,16 +54,16 @@ public class JmxInstanceEditor extends AbstractEditor<JmxInstance> {
 
         getDialogOptions().setWidth(themeConstants.get("cuba.web.JmxInstanceEditor.width"));
 
-        jmxFieldGroup.addCustomField("password", new FieldGroup.CustomFieldGenerator() {
-            @Override
-            public Component generateField(Datasource datasource, String propertyId) {
-                passwordField = factory.createComponent(PasswordField.class);
-                passwordField.setDatasource(datasource, propertyId);
-                passwordField.setRequired(true);
-                passwordField.setRequiredMessage(getMessage("passwordRequiredMsg"));
-                return passwordField;
-            }
-        });
+        initPasswordField();
+    }
+
+    protected void initPasswordField() {
+        passwordField = factory.createComponent(PasswordField.class);
+        passwordField.setDatasource(jmxInstanceDs, "password");
+        passwordField.setRequired(true);
+        passwordField.setRequiredMessage(getMessage("passwordRequiredMsg"));
+
+        jmxFieldGroup.setComponent("password", passwordField);
     }
 
     @Override

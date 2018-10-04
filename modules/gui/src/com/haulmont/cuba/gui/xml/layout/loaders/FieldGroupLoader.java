@@ -40,6 +40,7 @@ import com.haulmont.cuba.gui.data.DsContext;
 import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributeCustomFieldGenerator;
 import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributesGuiTools;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
+import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.xml.DeclarativeFieldGenerator;
 import com.haulmont.cuba.gui.xml.layout.ComponentLoader;
 import com.haulmont.cuba.gui.xml.layout.LayoutLoader;
@@ -398,6 +399,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             if (fc.getCaption() != null) {
                 ((Component.HasCaption) fieldComponent).setCaption(fc.getCaption());
             }
+
             if (fc.getDescription() != null) {
                 ((Component.HasCaption) fieldComponent).setDescription(fc.getDescription());
             }
@@ -423,11 +425,9 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             if (fc.getWidth() != null) {
                 fieldComponent.setWidth(fc.getWidth());
             } else {
-                // FIXME: gg, how to replace?
-                /*if (App.isBound()) {
-                    ThemeConstants theme = App.getInstance().getThemeConstants();
-                    fieldComponent.setWidth(theme.get("cuba.web.WebFieldGroup.defaultFieldWidth"));
-                }*/
+                // TODO: gg, how to replace?
+//                ThemeConstants theme = beanLocator.get(ThemeConstants.class);
+//                fieldComponent.setWidth(theme.get("cuba.web.WebFieldGroup.defaultFieldWidth"));
             }
         }
 

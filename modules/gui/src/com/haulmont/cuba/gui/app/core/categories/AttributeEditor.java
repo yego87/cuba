@@ -218,167 +218,15 @@ public class AttributeEditor extends AbstractEditor<CategoryAttribute> {
     }
 
     protected void initFieldGroup() {
-        attributeFieldGroup.addCustomField("defaultBoolean", new FieldGroup.CustomFieldGenerator() {
-            @Override
-            public Component generateField(Datasource datasource, String propertyId) {
-                LookupField lookupField = factory.createComponent(LookupField.class);
-                Map<String, Object> options = new TreeMap<>();
-                options.put(datatypeFormatter.formatBoolean(true), true);
-                options.put(datatypeFormatter.formatBoolean(false), false);
-                lookupField.setOptionsMap(options);
-                lookupField.setDatasource(attributeDs, "defaultBoolean");
-                return lookupField;
-            }
-        });
-
-        attributeFieldGroup.addCustomField("dataType", new FieldGroup.CustomFieldGenerator() {
-            @Override
-            public Component generateField(Datasource datasource, String propertyId) {
-                dataTypeField = factory.createComponent(LookupField.class);
-                Map<String, Object> options = new TreeMap<>();
-                PropertyType[] types = PropertyType.values();
-                for (PropertyType propertyType : types) {
-                    options.put(getMessage(propertyType.toString()), propertyType);
-                }
-                dataTypeField.setWidth(fieldWidth);
-
-                dataTypeField.setNewOptionAllowed(false);
-                dataTypeField.setRequired(true);
-                dataTypeField.setRequiredMessage(getMessage("dataTypeRequired"));
-                dataTypeField.setOptionsMap(options);
-                dataTypeField.setCaption(getMessage("dataType"));
-                dataTypeField.setFrame(frame);
-                dataTypeField.setDatasource(datasource, propertyId);
-
-                return dataTypeField;
-            }
-        });
-
-        attributeFieldGroup.addCustomField("screen", new FieldGroup.CustomFieldGenerator() {
-            @Override
-            public Component generateField(Datasource datasource, String propertyId) {
-                screenField = factory.createComponent(LookupField.class);
-                screenField.setId("screenField");
-                screenField.setCaption(getMessage("screen"));
-                screenField.setWidth(fieldWidth);
-                screenField.setRequired(true);
-                screenField.setRequiredMessage(getMessage("entityScreenRequired"));
-                screenField.setFrame(frame);
-                screenField.setDatasource(datasource, propertyId);
-
-                return screenField;
-            }
-        });
-
-        attributeFieldGroup.addCustomField("entityClass", new FieldGroup.CustomFieldGenerator() {
-            @Override
-            public Component generateField(Datasource datasource, String propertyId) {
-                entityTypeField = factory.createComponent(LookupField.class);
-                entityTypeField.setId("entityClass");
-                entityTypeField.setCaption(getMessage("entityType"));
-                entityTypeField.setRequired(true);
-                entityTypeField.setRequiredMessage(getMessage("entityTypeRequired"));
-                entityTypeField.setWidth(fieldWidth);
-                entityTypeField.setFrame(frame);
-                Map<String, Object> options = new TreeMap<>();
-                MetaClass entityType = null;
-                for (MetaClass metaClass : metadataTools.getAllPersistentMetaClasses()) {
-                    if (!metadataTools.isSystemLevel(metaClass)) {
-                        if (metadata.getTools().hasCompositePrimaryKey(metaClass) && !HasUuid.class.isAssignableFrom(metaClass.getJavaClass())) {
-                            continue;
-                        }
-                        options.put(messageTools.getDetailedEntityCaption(metaClass), metaClass.getJavaClass().getName());
-                        if (attribute != null && metaClass.getJavaClass().getName().equals(attribute.getEntityClass())) {
-                            entityType = metaClass;
-                        }
-                    }
-                }
-                entityTypeField.setOptionsMap(options);
-                entityTypeField.setValue(entityType);
-                entityTypeField.setDatasource(datasource, propertyId);
-
-                return entityTypeField;
-            }
-        });
-
-        attributeFieldGroup.addCustomField("defaultEntityId", (datasource, propertyId) -> {
-            defaultEntityField = factory.createComponent(PickerField.class);
-            defaultEntityField.setCaption(messages.getMessage(CategoryAttribute.class, "CategoryAttribute.defaultEntityId"));
-            defaultEntityField.addValueChangeListener(e -> {
-                Entity entity = (Entity) e.getValue();
-                if (entity != null) {
-                    attribute.setObjectDefaultEntityId(referenceToEntitySupport.getReferenceId(entity));
-                } else {
-                    attribute.setObjectDefaultEntityId(null);
-                }
-                ((AbstractDatasource) attributeDs).modified(attribute);
-            });
-            entityLookupAction = defaultEntityField.addLookupAction();
-            defaultEntityField.addClearAction();
-
-            return defaultEntityField;
-        });
-
-        attributeFieldGroup.addCustomField("enumeration", (datasource, propertyId) -> {
-            enumerationListEditor = factory.createComponent(ListEditor.class);
-            enumerationListEditor.setWidth("100%");
-            enumerationListEditor.setItemType(ListEditor.ItemType.STRING);
-            enumerationListEditor.setRequired(true);
-            enumerationListEditor.setRequiredMessage(getMessage("enumRequired"));
-            enumerationListEditor.addValueChangeListener(e -> {
-                List<String> value = (List<String>) e.getValue();
-                attribute.setEnumeration(Joiner.on(",").join(value));
-            });
-            if (localizedFrame != null) {
-                enumerationListEditor.setEditorWindowId("localizedEnumerationWindow");
-                enumerationListEditor.setEditorParamsSupplier(() ->
-                        ParamsMap.of("enumerationLocales", attribute.getEnumerationLocales()));
-                enumerationListEditor.addEditorCloseListener(closeEvent -> {
-                    if (closeEvent.getActionId().equals(COMMIT_ACTION_ID)) {
-                        LocalizedEnumerationWindow enumerationWindow = (LocalizedEnumerationWindow) closeEvent.getWindow();
-                        attribute.setEnumerationLocales(enumerationWindow.getLocalizedValues());
-                    }
-                });
-            }
-            return enumerationListEditor;
-        });
-
-        attributeFieldGroup.addCustomField("whereClause", (datasource, propertyId) -> {
-            whereField = factory.createComponent(SourceCodeEditor.class);
-            whereField.setDatasource(attributeDs, "whereClause");
-            whereField.setWidth("100%");
-            whereField.setHeight(themeConstants.get("cuba.gui.customConditionFrame.whereField.height"));
-            whereField.setSuggester((source, text, cursorPosition) -> requestHint(whereField, text, cursorPosition));
-            whereField.setHighlightActiveLine(false);
-            whereField.setShowGutter(false);
-            return whereField;
-        });
-
-        attributeFieldGroup.addCustomField("joinClause", (datasource, propertyId) -> {
-            joinField = factory.createComponent(SourceCodeEditor.class);
-            joinField.setDatasource(attributeDs, "joinClause");
-            joinField.setWidth("100%");
-            joinField.setHeight(themeConstants.get("cuba.gui.customConditionFrame.joinField.height"));
-            joinField.setSuggester((source, text, cursorPosition) -> requestHint(joinField, text, cursorPosition));
-            joinField.setHighlightActiveLine(false);
-            joinField.setShowGutter(false);
-            return joinField;
-        });
-
-        attributeFieldGroup.addCustomField("constraintWizard", (datasource, propertyId) -> {
-            HBoxLayout hbox = factory.createComponent(HBoxLayout.class);
-            hbox.setWidth("100%");
-            LinkButton linkButton = factory.createComponent(LinkButton.class);
-            linkButton.setAction(new BaseAction("constraintWizard")
-                    .withHandler(event ->
-                            openConstraintWizard()
-                    ));
-
-            linkButton.setCaption(getMessage("constraintWizard"));
-            linkButton.setAlignment(Alignment.MIDDLE_LEFT);
-            hbox.add(linkButton);
-            return hbox;
-        });
+        initDefaultBooleanField();
+        initDataTypeField();
+        initScreenField();
+        initEntityTypeField();
+        initDefaultEntityField();
+        initEnumerationListEditor();
+        initWhereField();
+        initJoinField();
+        initConstraintWizardField();
 
         attributeDs.addItemPropertyChangeListener(e -> {
             String property = e.getProperty();
@@ -396,6 +244,169 @@ public class AttributeEditor extends AbstractEditor<CategoryAttribute> {
                 dynamicAttributesGuiTools.initEntityPickerField(defaultEntityField, attribute);
             }
         });
+    }
+
+    protected void initConstraintWizardField() {
+        HBoxLayout hbox = factory.createComponent(HBoxLayout.class);
+        hbox.setId("constraintWizard");
+        hbox.setWidth("100%");
+        LinkButton linkButton = factory.createComponent(LinkButton.class);
+        linkButton.setAction(new BaseAction("constraintWizard")
+                .withHandler(event ->
+                        openConstraintWizard()
+                ));
+
+        linkButton.setCaption(getMessage("constraintWizard"));
+        linkButton.setAlignment(Alignment.MIDDLE_LEFT);
+        hbox.add(linkButton);
+
+        attributeFieldGroup.setComponent("constraintWizard", hbox);
+    }
+
+    protected void initJoinField() {
+        joinField = factory.createComponent(SourceCodeEditor.class);
+        joinField.setId("joinClause");
+        joinField.setDatasource(attributeDs, "joinClause");
+        joinField.setWidth("100%");
+        joinField.setHeight(themeConstants.get("cuba.gui.customConditionFrame.joinField.height"));
+        joinField.setSuggester((source, text, cursorPosition) -> requestHint(joinField, text, cursorPosition));
+        joinField.setHighlightActiveLine(false);
+        joinField.setShowGutter(false);
+
+        attributeFieldGroup.setComponent("joinClause", joinField);
+    }
+
+    protected void initWhereField() {
+        whereField = factory.createComponent(SourceCodeEditor.class);
+        whereField.setId("whereClause");
+        whereField.setDatasource(attributeDs, "whereClause");
+        whereField.setWidth("100%");
+        whereField.setHeight(themeConstants.get("cuba.gui.customConditionFrame.whereField.height"));
+        whereField.setSuggester((source, text, cursorPosition) -> requestHint(whereField, text, cursorPosition));
+        whereField.setHighlightActiveLine(false);
+        whereField.setShowGutter(false);
+
+        attributeFieldGroup.setComponent("whereClause", whereField);
+    }
+
+    protected void initEnumerationListEditor() {
+        enumerationListEditor = factory.createComponent(ListEditor.class);
+        enumerationListEditor.setId("enumeration");
+        enumerationListEditor.setWidth("100%");
+        enumerationListEditor.setItemType(ListEditor.ItemType.STRING);
+        enumerationListEditor.setRequired(true);
+        enumerationListEditor.setRequiredMessage(getMessage("enumRequired"));
+        enumerationListEditor.addValueChangeListener(e -> {
+            List<String> value = e.getValue();
+            attribute.setEnumeration(Joiner.on(",").join(value));
+        });
+        if (localizedFrame != null) {
+            enumerationListEditor.setEditorWindowId("localizedEnumerationWindow");
+            enumerationListEditor.setEditorParamsSupplier(() ->
+                    ParamsMap.of("enumerationLocales", attribute.getEnumerationLocales()));
+            enumerationListEditor.addEditorCloseListener(closeEvent -> {
+                if (closeEvent.getActionId().equals(COMMIT_ACTION_ID)) {
+                    LocalizedEnumerationWindow enumerationWindow = (LocalizedEnumerationWindow) closeEvent.getWindow();
+                    attribute.setEnumerationLocales(enumerationWindow.getLocalizedValues());
+                }
+            });
+        }
+
+        attributeFieldGroup.setComponent("enumeration", enumerationListEditor);
+    }
+
+    protected void initDefaultEntityField() {
+        defaultEntityField = factory.createComponent(PickerField.class);
+        defaultEntityField.setId("defaultEntityId");
+        defaultEntityField.setCaption(messages.getMessage(CategoryAttribute.class, "CategoryAttribute.defaultEntityId"));
+        defaultEntityField.addValueChangeListener(e -> {
+            Entity entity = e.getValue();
+            if (entity != null) {
+                attribute.setObjectDefaultEntityId(referenceToEntitySupport.getReferenceId(entity));
+            } else {
+                attribute.setObjectDefaultEntityId(null);
+            }
+            ((AbstractDatasource) attributeDs).modified(attribute);
+        });
+        entityLookupAction = defaultEntityField.addLookupAction();
+        defaultEntityField.addClearAction();
+
+        attributeFieldGroup.setComponent("defaultEntityId", defaultEntityField);
+    }
+
+    protected void initEntityTypeField() {
+        entityTypeField = factory.createComponent(LookupField.class);
+        entityTypeField.setId("entityClass");
+        entityTypeField.setCaption(getMessage("entityType"));
+        entityTypeField.setRequired(true);
+        entityTypeField.setRequiredMessage(getMessage("entityTypeRequired"));
+        entityTypeField.setWidth(fieldWidth);
+        entityTypeField.setFrame(frame);
+        Map<String, Object> options = new TreeMap<>();
+        MetaClass entityType = null;
+        for (MetaClass metaClass : metadataTools.getAllPersistentMetaClasses()) {
+            if (!metadataTools.isSystemLevel(metaClass)) {
+                if (metadata.getTools().hasCompositePrimaryKey(metaClass)
+                        && !HasUuid.class.isAssignableFrom(metaClass.getJavaClass())) {
+                    continue;
+                }
+                options.put(messageTools.getDetailedEntityCaption(metaClass), metaClass.getJavaClass().getName());
+                if (attribute != null && metaClass.getJavaClass().getName().equals(attribute.getEntityClass())) {
+                    entityType = metaClass;
+                }
+            }
+        }
+        entityTypeField.setOptionsMap(options);
+        entityTypeField.setValue(entityType);
+        entityTypeField.setDatasource(attributeDs, "entityClass");
+
+        attributeFieldGroup.setComponent("entityClass", entityTypeField);
+    }
+
+    protected void initScreenField() {
+        screenField = factory.createComponent(LookupField.class);
+        screenField.setId("screen");
+        screenField.setCaption(getMessage("screen"));
+        screenField.setWidth(fieldWidth);
+        screenField.setRequired(true);
+        screenField.setRequiredMessage(getMessage("entityScreenRequired"));
+        screenField.setFrame(frame);
+        screenField.setDatasource(attributeDs, "screen");
+
+        attributeFieldGroup.setComponent("screen", screenField);
+    }
+
+    protected void initDefaultBooleanField() {
+        LookupField lookupField = factory.createComponent(LookupField.class);
+        lookupField.setId("defaultBoolean");
+        Map<String, Object> options = new TreeMap<>();
+        options.put(datatypeFormatter.formatBoolean(true), true);
+        options.put(datatypeFormatter.formatBoolean(false), false);
+        lookupField.setOptionsMap(options);
+        lookupField.setDatasource(attributeDs, "defaultBoolean");
+
+        attributeFieldGroup.setComponent("defaultBoolean", lookupField);
+    }
+
+    protected void initDataTypeField() {
+        dataTypeField = factory.createComponent(LookupField.class);
+        Map<String, Object> options = new TreeMap<>();
+        PropertyType[] types = PropertyType.values();
+        for (PropertyType propertyType : types) {
+            options.put(getMessage(propertyType.toString()), propertyType);
+        }
+        dataTypeField.setId("dataType");
+        dataTypeField.setWidth(fieldWidth);
+
+        dataTypeField.setNewOptionAllowed(false);
+        dataTypeField.setRequired(true);
+        dataTypeField.setRequiredMessage(getMessage("dataTypeRequired"));
+        dataTypeField.setOptionsMap(options);
+        dataTypeField.setCaption(getMessage("dataType"));
+        dataTypeField.setFrame(frame);
+        dataTypeField.setDatasource(attributeDs, "dataType");
+
+        attributeFieldGroup.setComponent("dataType", dataTypeField);
     }
 
     public void openConstraintWizard() {
@@ -438,16 +449,16 @@ public class AttributeEditor extends AbstractEditor<CategoryAttribute> {
     }
 
     private void setupVisibility() {
-        for (FieldConfig fieldConfig : attributeFieldGroup.getFields()) {
-            if (!ALWAYS_VISIBLE_FIELDS.contains(fieldConfig.getId())) {
-                attributeFieldGroup.setVisible(fieldConfig.getId(), false);
+        for (Component field : attributeFieldGroup.getOwnComponents()) {
+            if (!ALWAYS_VISIBLE_FIELDS.contains(field.getId())) {
+                field.setVisible(false);
             }
         }
 
         Collection<String> componentIds = FIELDS_VISIBLE_FOR_DATATYPES.get(attribute.getDataType());
         if (componentIds != null) {
             for (String componentId : componentIds) {
-                attributeFieldGroup.setVisible(componentId, true);
+                attributeFieldGroup.getComponentNN(componentId).setVisible(true);
             }
         }
 
@@ -469,27 +480,25 @@ public class AttributeEditor extends AbstractEditor<CategoryAttribute> {
                 joinField.setEnabled(false);
             }
 
-            if (Boolean.TRUE.equals(attribute.getLookup())) {
-                attributeFieldGroup.setVisible("screen", false);
-            } else {
-                attributeFieldGroup.setVisible("screen", true);
-            }
+            attributeFieldGroup.getComponentNN("screen")
+                    .setVisible(!Boolean.TRUE.equals(attribute.getLookup()));
 
             getDialogOptions().center();
         }
 
         if (attribute.getDataType() == PropertyType.DATE) {
+            Component defaultDate = attributeFieldGroup.getComponentNN("defaultDate");
             if (Boolean.TRUE.equals(attribute.getDefaultDateIsCurrent())) {
-                attributeFieldGroup.setVisible("defaultDate", false);
-                attributeFieldGroup.setFieldValue("defaultDate", null);
+                defaultDate.setVisible(false);
+                ((HasValue<?>) defaultDate).setValue(null);
             } else {
-                attributeFieldGroup.setVisible("defaultDate", true);
+                defaultDate.setVisible(true);
             }
         }
 
         if (attribute.getDataType() == PropertyType.BOOLEAN ||
                 attribute.getDataType() == PropertyType.ENUMERATION) {
-            attributeFieldGroup.setFieldValue("isCollection", null);
+            ((HasValue<?>) attributeFieldGroup.getComponentNN("isCollection")).setValue(null);
         }
     }
 

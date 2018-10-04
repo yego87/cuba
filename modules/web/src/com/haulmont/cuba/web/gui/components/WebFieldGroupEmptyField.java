@@ -17,6 +17,19 @@
 package com.haulmont.cuba.web.gui.components;
 
 import com.haulmont.cuba.gui.components.FieldGroupEmptyField;
+import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader;
 
 public class WebFieldGroupEmptyField extends WebAbstractComponent implements FieldGroupEmptyField {
+
+    protected FieldGroupLoader.FieldConfig fieldConfig;
+
+    @Override
+    public FieldGroupLoader.FieldConfig getFieldConfig() {
+        return fieldConfig;
+    }
+
+    @Override
+    public void setFieldConfig(FieldGroupLoader.FieldConfig fieldConfig) {
+        this.fieldConfig = fieldConfig;
+    }
 }

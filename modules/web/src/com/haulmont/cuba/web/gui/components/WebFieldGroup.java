@@ -21,17 +21,19 @@ import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionDescriptor;
 import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionValue;
 import com.haulmont.cuba.gui.components.*;
-import com.haulmont.cuba.gui.components.Component.BelongToFrame;
 import com.haulmont.cuba.gui.components.data.ValueSource;
 import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.sys.TestIdManager;
+import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.xml.layout.loaders.FieldGroupLoader.FieldConfig;
+import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.widgets.CubaFieldGroup;
 import com.haulmont.cuba.web.widgets.CubaFieldGroupLayout;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,10 +151,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
     @Override
     public List<Component> getOwnComponents() {
-        return getColumnOrderedFields().stream()
-                .filter(FieldConfig::isBound)
-                .map(FieldConfig::getComponent)
-                .collect(Collectors.toList());
+        return getColumnOrderedComponents();
     }
 
     @Override
@@ -211,20 +210,103 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
     @Override
     public void setComponent(String id, Component field) {
-        Component component = fields.get(id);
-        if (component == null) {
+        Component emptyComponent = fields.get(id);
+        if (emptyComponent == null) {
             throw new IllegalArgumentException(String.format("Not found component with id '%s'", id));
         }
 
-        if (!(component instanceof FieldGroupEmptyField)) {
+        if (!(emptyComponent instanceof FieldGroupEmptyField)) {
             throw new IllegalStateException(String.format("Field '%s' must be defined as custom", id));
         }
 
-        int colIndex = findColumnIndex(component);
+        int colIndex = findColumnIndex(emptyComponent);
         List<Component> components = columnFieldMapping.get(colIndex);
-        int rowIndex = components.indexOf(component);
+        int rowIndex = components.indexOf(emptyComponent);
+
+        FieldConfig fieldConfig = ((FieldGroupEmptyField) emptyComponent).getFieldConfig();
+        if (fieldConfig != null) {
+            applyFieldDefaults(field, fieldConfig);
+        }
+
+        if (field instanceof HasCaption
+                && ((HasCaption) field).getCaption() == null) {
+            ((HasCaption) field).setCaption(" "); // use space in caption for proper layout
+        }
 
         setComponentInternal(id, field, colIndex, rowIndex);
+    }
+
+    // TODO: gg, move to the single place
+    protected void applyFieldDefaults(Component fieldComponent, FieldConfig fc) {
+
+        if (fc.isVisible() != null) {
+            fieldComponent.setVisible(fc.isVisible());
+        }
+
+        if (fieldComponent instanceof Component.HasCaption) {
+            if (fc.getCaption() != null) {
+                ((Component.HasCaption) fieldComponent).setCaption(fc.getCaption());
+            }
+            if (fc.getDescription() != null) {
+                ((Component.HasCaption) fieldComponent).setDescription(fc.getDescription());
+            }
+        }
+
+        if (fieldComponent instanceof Field) {
+            Field cubaField = (Field) fieldComponent;
+
+            if (fc.isRequired() != null) {
+                cubaField.setRequired(fc.isRequired());
+            }
+            if (fc.getRequiredMessage() != null) {
+                cubaField.setRequiredMessage(fc.getRequiredMessage());
+            }
+            if (fc.isEditable() != null) {
+                cubaField.setEditable(fc.isEditable());
+            }
+
+            for (Field.Validator validator : fc.getValidators()) {
+                cubaField.addValidator(validator);
+            }
+
+            if (fc.getWidth() != null) {
+                fieldComponent.setWidth(fc.getWidth());
+            } else {
+                if (App.isBound()) {
+                    ThemeConstants theme = App.getInstance().getThemeConstants();
+                    fieldComponent.setWidth(theme.get("cuba.web.WebFieldGroup.defaultFieldWidth"));
+                }
+            }
+        }
+
+        if (fieldComponent instanceof HasContextHelp) {
+            if (fc.getContextHelpText() != null) {
+                ((HasContextHelp) fieldComponent).setContextHelpText(fc.getContextHelpText());
+            }
+            if (fc.isContextHelpTextHtmlEnabled() != null) {
+                ((HasContextHelp) fieldComponent).setContextHelpTextHtmlEnabled(fc.isContextHelpTextHtmlEnabled());
+            }
+            if (fc.getContextHelpIconClickHandler() != null) {
+                ((HasContextHelp) fieldComponent).setContextHelpIconClickHandler(fc.getContextHelpIconClickHandler());
+            }
+        }
+
+        if (fieldComponent instanceof Component.Focusable && fc.getTabIndex() != null) {
+            ((Component.Focusable) fieldComponent).setTabIndex(fc.getTabIndex());
+        }
+
+        if (fieldComponent instanceof HasInputPrompt && fc.getInputPrompt() != null) {
+            ((HasInputPrompt) fieldComponent).setInputPrompt(fc.getInputPrompt());
+        }
+
+        if (fieldComponent instanceof HasFormatter && fc.getFormatter() != null) {
+            //noinspection unchecked
+            ((HasFormatter) fieldComponent).setFormatter(fc.getFormatter());
+        }
+
+        if (StringUtils.isNotEmpty(fc.getStyleName())) {
+            fieldComponent.setStyleName(fc.getStyleName());
+        }
     }
 
     protected int findColumnIndex(Component component) {
@@ -325,7 +407,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     }
 
     protected void managedFieldComponentAssigned(Component field, int colIndex) {
-        com.vaadin.ui.Component fieldImpl = field.unwrapComposition(com.vaadin.ui.Component.class);
+        com.vaadin.ui.Component fieldImpl = WebComponentsHelper.getComposition(field);
         assignTypicalAttributes(field);
         assignDebugId(fieldImpl, field.getId());
 
@@ -363,8 +445,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         int insertRowIndex = 0;
         for (Component field : columnFields) {
             if (!(field instanceof FieldGroupEmptyField)) {
-//                com.vaadin.ui.Component fieldImpl = field.unwrapComposition(com.vaadin.ui.Component.class);
-                com.vaadin.ui.Component fieldImpl = getFieldImplementation(field);
+                com.vaadin.ui.Component fieldImpl = WebComponentsHelper.getComposition(field);
                 this.component.addComponent(fieldImpl, colIndex, insertRowIndex);
                 insertRowIndex++;
             }
@@ -400,8 +481,8 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     }
 
     protected void managedFieldComponentAssigned(FieldConfigImpl fci, FieldAttachMode mode) {
-        com.vaadin.v7.ui.Field fieldImpl = getFieldImplementation(fci.getComponentNN());
-        fci.setComposition(fieldImpl);
+//        com.vaadin.v7.ui.Field fieldImpl = getFieldImplementation(fci.getComponentNN());
+//        fci.setComposition(fieldImpl);
 
         assignTypicalAttributes(fci.getComponentNN());
 
@@ -458,25 +539,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         component.setFieldCaptionWidth(column, width);
     }
 
-    @Override
-    @Deprecated
-    public void addCustomField(String fieldId, CustomFieldGenerator fieldGenerator) {
-        addCustomField(getFieldNN(fieldId), fieldGenerator);
-    }
-
-    @Override
-    @Deprecated
-    public void addCustomField(FieldConfig fc, CustomFieldGenerator fieldGenerator) {
-        if (!fc.isCustom()) {
-            throw new IllegalStateException(String.format("Field '%s' must be defined as custom", fc.getId()));
-        }
-
-        FieldConfigImpl fci = (FieldConfigImpl) fc;
-//        Component fieldComponent = fieldGenerator.generateField(fc.getTargetDatasource(), fci.getTargetProperty());
-//        fc.setComponent(fieldComponent);
-    }
-
-    protected com.vaadin.v7.ui.Field getFieldImplementation(Component c) {
+    /*protected com.vaadin.v7.ui.Field getFieldImplementation(Component c) {
         com.vaadin.ui.Component composition = WebComponentsHelper.getComposition(c);
 
         // TODO: gg, refactor?
@@ -486,7 +549,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         } else {
             return new CubaFieldWrapper(c);
         }
-    }
+    }*/
 
     @Override
     public ValueSourceProvider getValueSourceProvider() {
@@ -710,6 +773,12 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
                 .collect(Collectors.toList());*/
         // TODO: gg, rework
         return Collections.emptyList();
+    }
+
+    protected List<Component> getColumnOrderedComponents() {
+        return columnFieldMapping.stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -1375,9 +1444,9 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
                 if (targetRequiredMessage != null) {
                     composition.setRequiredError(targetRequiredMessage);
                 }
-                if (targetDescription != null) {
-                    ((CubaFieldWrapper) composition).setDescription(targetDescription);
-                }
+//                if (targetDescription != null) {
+//                    (composition).setDescription(targetDescription);
+//                }
             }
         }
 

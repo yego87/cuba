@@ -16,7 +16,6 @@
  */
 package com.haulmont.cuba.gui.components;
 
-import com.haulmont.cuba.gui.components.Field.Validator;
 import com.haulmont.cuba.gui.components.data.HasValueSourceProvider;
 import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
 import com.haulmont.cuba.gui.components.data.value.DatasourceValueSourceProvider;
@@ -31,9 +30,9 @@ import java.util.Map;
  * Multi-column form component.
  */
 public interface FieldGroup extends Component, Component.BelongToFrame, Component.HasCaption, Component.HasIcon,
-                                    HasBorder, HasContextHelp, Component.Editable, Validatable,
-                                    EditableChangeNotifier, ChildEditableController,
-                                    ComponentContainer, HasSubParts, HasValueSourceProvider {
+        HasBorder, HasContextHelp, Component.Editable, Validatable,
+        EditableChangeNotifier, ChildEditableController,
+        ComponentContainer, HasSubParts, HasValueSourceProvider {
     String NAME = "fieldGroup";
 
     /**
@@ -76,6 +75,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
     @Deprecated
     @Nullable
     FieldConfig getField(String fieldId);
+
     /**
      * Get field config by id.
      *
@@ -92,20 +92,22 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      */
     @Deprecated
     void addField(FieldConfig field);
+
     /**
      * Append field to {@code colIndex} column.
      *
      * @param fieldConfig field config
-     * @param colIndex column index
+     * @param colIndex    column index
      */
     @Deprecated
     void addField(FieldConfig fieldConfig, int colIndex);
+
     /**
      * Insert field to {@code colIndex} column to {@code rowIndex} position.
      *
      * @param fieldConfig field config
-     * @param colIndex column index
-     * @param rowIndex row index
+     * @param colIndex    column index
+     * @param rowIndex    row index
      */
     @Deprecated
     void addField(FieldConfig fieldConfig, int colIndex, int rowIndex);
@@ -116,6 +118,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @param fieldId field id
      */
     void removeField(String fieldId);
+
     /**
      * Remove field associated with {@code fieldConfig}.
      *
@@ -205,6 +208,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @return alignment of field captions
      */
     FieldCaptionAlignment getCaptionAlignment();
+
     /**
      * Set alignment of field captions
      *
@@ -216,6 +220,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @return fixed field caption width
      */
     int getFieldCaptionWidth();
+
     /**
      * Set fixed field captions width. Set -1 to use auto size.
      *
@@ -228,11 +233,12 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @return fixed field caption width for column {@code colIndex}
      */
     int getFieldCaptionWidth(int colIndex);
+
     /**
      * Set fixed field captions width for column {@code colIndex}. Set -1 to use auto size.
      *
      * @param colIndex column index
-     * @param width width
+     * @param width    width
      */
     void setFieldCaptionWidth(int colIndex, int width);
 
@@ -240,6 +246,7 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @return column count
      */
     int getColumns();
+
     /**
      * Set column count.
      *
@@ -252,11 +259,12 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      * @return column expand ratio
      */
     float getColumnExpandRatio(int colIndex);
+
     /**
      * Set column expand ratio.
      *
      * @param colIndex column index
-     * @param ratio column expand ratio
+     * @param ratio    column expand ratio
      */
     void setColumnExpandRatio(int colIndex, float ratio);
 
@@ -327,27 +335,6 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
      */
 
     /**
-     * Generate and set Component to custom field.
-     *
-     * @deprecated Set Component implementation directly to {@link FieldConfig} using {@link FieldConfig#setComponent(Component)} method.
-     *
-     * @param field field config
-     * @param fieldGenerator field generator
-     */
-    @Deprecated
-    void addCustomField(FieldConfig field, CustomFieldGenerator fieldGenerator);
-    /**
-     * Generate and set Component to custom field.
-     *
-     * @deprecated Set Component implementation directly to {@link FieldConfig} using {@link FieldConfig#setComponent(Component)} method.
-     *
-     * @param fieldId field id
-     * @param fieldGenerator field generator
-     */
-    @Deprecated
-    void addCustomField(String fieldId, CustomFieldGenerator fieldGenerator);
-
-    /**
      * Allows to show an arbitrary field inside a {@link FieldGroup}. Implementors of this interface have to be passed
      * to one of <code>FieldGroup.addCustomField</code> methods.
      *
@@ -358,9 +345,9 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
         /**
          * Called by the {@link FieldGroup} to get a generated field instance.
          *
-         * @param datasource    a datasource specified for the field or the whole FieldGroup in XML
-         * @param propertyId    field identifier as defined in XML, with <code>custom</code> attribute set to true
-         * @return  a component to be rendered for the field
+         * @param datasource a datasource specified for the field or the whole FieldGroup in XML
+         * @param propertyId field identifier as defined in XML, with <code>custom</code> attribute set to true
+         * @return a component to be rendered for the field
          */
         Component generateField(Datasource datasource, String propertyId);
     }

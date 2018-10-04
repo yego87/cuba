@@ -41,7 +41,9 @@ public class FieldGroupFieldFactoryImpl implements FieldGroupFieldFactory {
 
     protected GeneratedField createFieldComponent(FieldConfig fc) {
         if (fc.isCustom()) {
-            return new GeneratedField(uiComponents.create(FieldGroupEmptyField.NAME));
+            FieldGroupEmptyField emptyField = uiComponents.create(FieldGroupEmptyField.NAME);
+            emptyField.setFieldConfig(fc);
+            return new GeneratedField(emptyField);
         }
 
         MetaClass metaClass = resolveMetaClass(fc.getTargetDatasource());

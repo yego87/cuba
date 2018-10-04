@@ -28,7 +28,6 @@ import com.haulmont.cuba.gui.AppConfig;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.DataSupplier;
-import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.export.ByteArrayDataProvider;
 import com.haulmont.cuba.gui.export.ExportDisplay;
 import com.haulmont.cuba.gui.export.ExportFormat;
@@ -91,46 +90,44 @@ public class SendingMessageBrowser extends AbstractWindow {
 
     @Override
     public void init(Map<String, Object> params) {
-        fg.addCustomField(CONTENT_TEXT, new FieldGroup.CustomFieldGenerator() {
-            @Override
-            public Component generateField(Datasource datasource, String propertyId) {
-                VBoxLayout contentArea = factory.createComponent(VBoxLayout.class);
-                contentArea.setSpacing(true);
-
-                contentTextArea = factory.createComponent(TextArea.class);
-                contentTextArea.setWidth("100%");
-                contentTextArea.setEditable(false);
-                contentTextArea.setHeight(themeConstants.get("cuba.gui.SendingMessageBrowser.contentTextArea.height"));
-
-                showContentButton = factory.createComponent(Button.class);
-                showContentButton.setAction(new AbstractAction("") {
-                    @Override
-                    public void actionPerform(Component component) {
-                        String textAreaValue = contentTextArea.getValue();
-                        if (textAreaValue != null) {
-                            ByteArrayDataProvider dataProvider = new ByteArrayDataProvider(textAreaValue.getBytes(StandardCharsets.UTF_8));
-
-                            String type = bodyContentTypeField.getRawValue();
-                            if (StringUtils.containsIgnoreCase(type, ExportFormat.HTML.getContentType())) {
-                                exportDisplay.show(dataProvider, "email-preview.html", ExportFormat.HTML);
-                            } else {
-                                exportDisplay.show(dataProvider, "email-preview.txt", ExportFormat.TEXT);
-                            }
-                        }
-                    }
-                });
-                showContentButton.setEnabled(false);
-                showContentButton.setCaption(messages.getMessage(getClass(), "sendingMessage.showContent"));
-
-                contentArea.add(contentTextArea);
-                contentArea.add(showContentButton);
-
-                return contentArea;
-            }
-        });
-        fg.setEditable(CONTENT_TEXT, false);
+        BoxLayout contentArea = createContentTextField();
+        fg.setComponent(CONTENT_TEXT, contentArea);
 
         sendingMessageDs.addItemChangeListener(e -> selectedItemChanged(e.getItem()));
+    }
+
+    protected BoxLayout createContentTextField() {
+        VBoxLayout contentArea = factory.createComponent(VBoxLayout.class);
+        contentArea.setSpacing(true);
+
+        contentTextArea = factory.createComponent(TextArea.NAME);
+        contentTextArea.setWidth("100%");
+        contentTextArea.setEditable(false);
+        contentTextArea.setHeight(themeConstants.get("cuba.gui.SendingMessageBrowser.contentTextArea.height"));
+
+        showContentButton = factory.createComponent(Button.class);
+        showContentButton.setAction(new AbstractAction("") {
+            @Override
+            public void actionPerform(Component component) {
+                String textAreaValue = contentTextArea.getValue();
+                if (textAreaValue != null) {
+                    ByteArrayDataProvider dataProvider = new ByteArrayDataProvider(textAreaValue.getBytes(StandardCharsets.UTF_8));
+
+                    String type = bodyContentTypeField.getRawValue();
+                    if (StringUtils.containsIgnoreCase(type, ExportFormat.HTML.getContentType())) {
+                        exportDisplay.show(dataProvider, "email-preview.html", ExportFormat.HTML);
+                    } else {
+                        exportDisplay.show(dataProvider, "email-preview.txt", ExportFormat.TEXT);
+                    }
+                }
+            }
+        });
+        showContentButton.setEnabled(false);
+        showContentButton.setCaption(messages.getMessage(getClass(), "sendingMessage.showContent"));
+
+        contentArea.add(contentTextArea);
+        contentArea.add(showContentButton);
+        return contentArea;
     }
 
     protected void selectedItemChanged(SendingMessage item) {

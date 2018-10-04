@@ -291,10 +291,6 @@ public class WebComponentsHelper {
             targetComponent = targetComponent.getParent();
         }
 
-        if (targetComponent instanceof CubaFieldWrapper) {
-            targetComponent = ((CubaFieldWrapper) targetComponent).getContent();
-        }
-
         return targetComponent;
     }
 

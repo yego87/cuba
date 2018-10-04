@@ -351,7 +351,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                         applyFieldDefaults(component, fc);
                     }
             } else {
-                component = createComponentStub();
+                component = createComponentStub(fc);
             }
         } else {
             ValueSource targetVs = fc.getValueSource();
@@ -360,6 +360,11 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                 if (targetVs == null) {
                     throw new IllegalStateException(String.format("Unable to get value source for field '%s'", fc.getId()));
                 }
+            }
+
+            // TODO: gg, set VS
+            if (fc.getDatasource() == null) {
+                fc.setDatasource(resultComponent.getDatasource());
             }
 
             FieldGroupFieldFactory.GeneratedField generatedField = fieldFactory.createField(fc);
@@ -377,8 +382,9 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         return component;
     }
 
-    protected Component createComponentStub() {
-        return null;
+    protected Component createComponentStub(FieldConfig fc) {
+        FieldGroupFieldFactory.GeneratedField field = fieldFactory.createField(fc);
+        return field.getComponent();
     }
 
     protected void applyFieldDefaults(Component fieldComponent, FieldConfig fc) {
@@ -599,13 +605,18 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
 
         FieldConfig field = new FieldConfigImpl(id);
+
         if (property != null) {
             field.setProperty(property);
         }
+
+        // TODO: gg, check for cases like VS and DS, property etc.
         // TODO: gg, ValueSource
-        if (targetDs != null) {
-            field.setDatasource(targetDs);
+        if (datasource != null) {
+            field.setDatasource(datasource);
         }
+
+        // TODO: gg, options VS
         if (optionsDs != null) {
             field.setOptionsDatasource(optionsDs);
         }

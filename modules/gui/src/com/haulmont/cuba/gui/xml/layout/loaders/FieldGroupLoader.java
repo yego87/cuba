@@ -186,7 +186,8 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             }
         }
 
-        resultComponent.bind();
+        // TODO: gg, remove
+//        resultComponent.bind();
 
         for (FieldConfig field : resultComponent.getFields()) {
             if (field.getXmlDescriptor() != null) {

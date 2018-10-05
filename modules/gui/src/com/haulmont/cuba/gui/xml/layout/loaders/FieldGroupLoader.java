@@ -40,8 +40,7 @@ import com.haulmont.cuba.gui.data.DsContext;
 import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributeCustomFieldGenerator;
 import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributesGuiTools;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
-import com.haulmont.cuba.gui.theme.ThemeConstants;
-import com.haulmont.cuba.gui.xml.DeclarativeFieldGenerator;
+import com.haulmont.cuba.gui.theme.ThemeConstantsManager;
 import com.haulmont.cuba.gui.xml.layout.ComponentLoader;
 import com.haulmont.cuba.gui.xml.layout.LayoutLoader;
 import com.haulmont.cuba.security.entity.EntityOp;
@@ -174,7 +173,8 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             }
         }
 
-        for (FieldConfig field : resultComponent.getFields()) {
+        // TODO: gg, move to the field loading
+        /*for (FieldConfig field : resultComponent.getFields()) {
             if (!field.isCustom()) {
                 if (!isDynamicAttribute(field.getProperty())) {
                     // the following does not make sense for dynamic attributes
@@ -185,12 +185,13 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                 loadVisible(resultComponent, field);
                 loadEditable(resultComponent, field);
             }
-        }
+        }*/
 
         // TODO: gg, remove
 //        resultComponent.bind();
 
-        for (FieldConfig field : resultComponent.getFields()) {
+        // TODO: gg, move to the field loading
+        /*for (FieldConfig field : resultComponent.getFields()) {
             if (field.getXmlDescriptor() != null) {
                 String generator = field.getXmlDescriptor().attributeValue("generator");
                 if (generator != null) {
@@ -199,7 +200,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                     field.setComponent(fieldComponent);
                 }
             }
-        }
+        }*/
     }
 
     protected DynamicAttributesGuiTools getDynamicAttributesGuiTools() {
@@ -320,6 +321,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             if ("field".equals(fieldElement.getName())) {
                 FieldConfig field = loadField(fieldElement, ds, columnWidth);
                 component = buildComponent(field);
+                resultComponent.assignFieldId(field.getId(), component);
             } else {
                 component = loadComponent(fieldElement, columnWidth);
             }
@@ -418,16 +420,14 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
                 cubaField.setEditable(fc.isEditable());
             }
 
-            for (Field.Validator validator : fc.getValidators()) {
+            for (Consumer validator : fc.getValidators()) {
                 cubaField.addValidator(validator);
             }
 
             if (fc.getWidth() != null) {
                 fieldComponent.setWidth(fc.getWidth());
             } else {
-                // TODO: gg, how to replace?
-//                ThemeConstants theme = beanLocator.get(ThemeConstants.class);
-//                fieldComponent.setWidth(theme.get("cuba.web.WebFieldGroup.defaultFieldWidth"));
+                fieldComponent.setWidth(getDefaultWidth());
             }
         }
 
@@ -509,6 +509,8 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
             component.setWidth(Component.AUTO_SIZE);
         } else if (StringUtils.isNotBlank(width)) {
             component.setWidth(loadThemeString(width));
+        } else {
+            component.setWidth(getDefaultWidth());
         }
 
         if (component instanceof HasValueBinding
@@ -535,6 +537,11 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
 
         return component;
+    }
+
+    protected String getDefaultWidth() {
+        ThemeConstantsManager theme = beanLocator.get(ThemeConstantsManager.NAME);
+        return theme.getConstants().get("cuba.web.WebFieldGroup.defaultFieldWidth");
     }
 
     protected FieldConfig loadField(Element element, Datasource ds, String columnWidth) {
@@ -968,7 +975,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
 
         ValueSource getValueSource();
 
-        void setValueSource(ValueSource targetValueSource);
+        void setValueSource(ValueSource valueSource);
 
         /**
          * @return own datasource of a field or datasource of the parent FieldGroup
@@ -1156,7 +1163,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
          *
          * @param validator validator
          */
-        void addValidator(Field.Validator validator);
+        void addValidator(Consumer validator);
 
         /**
          * Remove validator. <br>
@@ -1165,10 +1172,10 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
          *
          * @param validator validator
          */
-        void removeValidator(Field.Validator validator);
+        void removeValidator(Consumer validator);
 
         // TODO: gg, JavaDoc
-        List<Field.Validator> getValidators();
+        List<Consumer> getValidators();
 
         /**
          * Set options datasource for declarative field. <br>
@@ -1254,7 +1261,7 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         protected Function targetFormatter;
         protected boolean isTargetCustom;
 
-        protected List<Field.Validator> targetValidators = new ArrayList<>(0);
+        protected List<Consumer> targetValidators = new ArrayList<>(0);
         protected Consumer<HasContextHelp.ContextHelpIconClickEvent> targetContextHelpIconClickHandler;
         protected FieldGroup.FieldAttachMode attachMode = FieldGroup.FieldAttachMode.APPLY_DEFAULTS;
 
@@ -1444,19 +1451,19 @@ public class FieldGroupLoader extends AbstractComponentLoader<FieldGroup> {
         }
 
         @Override
-        public void addValidator(Field.Validator validator) {
+        public void addValidator(Consumer validator) {
             if (!targetValidators.contains(validator)) {
                 targetValidators.add(validator);
             }
         }
 
         @Override
-        public void removeValidator(Field.Validator validator) {
+        public void removeValidator(Consumer validator) {
             targetValidators.remove(validator);
         }
 
         @Override
-        public List<Field.Validator> getValidators() {
+        public List<Consumer> getValidators() {
             return targetValidators;
         }
 

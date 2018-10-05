@@ -17,10 +17,13 @@
 package com.haulmont.cuba.web.gui.components;
 
 import com.haulmont.bali.events.Subscription;
+import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.gui.ComponentsHelper;
+import com.haulmont.cuba.gui.UiComponents;
 import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionDescriptor;
 import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionValue;
 import com.haulmont.cuba.gui.components.*;
+import com.haulmont.cuba.gui.components.data.HasValueBinding;
 import com.haulmont.cuba.gui.components.data.ValueSource;
 import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
@@ -32,13 +35,14 @@ import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.widgets.CubaFieldGroup;
 import com.haulmont.cuba.web.widgets.CubaFieldGroupLayout;
-import org.apache.commons.lang3.BooleanUtils;
+import com.vaadin.ui.AbstractComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -53,8 +57,10 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     protected CubaFieldGroup wrapper;
     protected boolean wrapperAttached = false;
 
-    protected Map<String, Component> fields = new HashMap<>();
+    protected Map<String, Component> fields = new HashMap<>(); // TODO: gg, remove
     protected List<List<Component>> columnFieldMapping = new ArrayList<>();
+
+    protected UiComponents uiComponents;
 
     protected boolean editable = true;
 
@@ -75,6 +81,11 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
     protected CubaFieldGroup createWrapper() {
         return new CubaFieldGroup();
+    }
+
+    @Inject
+    public void setUiComponents(UiComponents uiComponents) {
+        this.uiComponents = uiComponents;
     }
 
     @Override
@@ -108,7 +119,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
     @Override
     public FieldConfig createField(String id) {
-        return new FieldConfigImpl(id);
+        return new FieldConfigImpl(id, null);
     }
 
     @Override
@@ -118,35 +129,33 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
     @Override
     public List<FieldConfig> getFields(int column) {
-        // TODO: gg, wrap with FC
-//        return Collections.unmodifiableList(columnFieldMapping.get(column));
-        return Collections.emptyList();
+        List<Component> colComponents = columnFieldMapping.get(column);
+        return wrapComponents(colComponents);
     }
 
     @Override
     public FieldConfig getField(int column, int row) {
-//        return columnFieldMapping.get(column).get(row);
-        // TODO: gg, wrap with FC
-        return null;
+        Component component = columnFieldMapping.get(column).get(row);
+        String fieldId = getFieldId(component);
+        return fieldId != null ? wrapComponent(fieldId, component) : null;
     }
 
     @Override
     public FieldConfig getField(String fieldId) {
-//        return fields.get(fieldId);
-        // TODO: gg, wrap with FC
-        return null;
+        Component component = findComponent(fieldId);
+        return component != null
+                ? wrapComponent(fieldId, component)
+                : null;
     }
 
     @Override
     public FieldConfig getFieldNN(String fieldId) {
-        /*FieldConfig fieldConfig = fields.get(fieldId);
-        if (fieldConfig == null) {
+        Component component = findComponent(fieldId);
+        if (component == null) {
             throw new IllegalArgumentException("Unable to find field with id " + fieldId);
         }
 
-        return fieldConfig;*/
-        // TODO: gg, wrap with FC
-        return null;
+        return wrapComponent(fieldId, component);
     }
 
     @Override
@@ -174,15 +183,8 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
     @Override
     public void addField(FieldConfig fc, int colIndex) {
-        checkArgument(!fields.containsKey(fc.getId()), "Field '%s' is already registered", fc.getId());
-        checkArgument(this == ((FieldConfigImpl) fc).getOwner(), "Field does not belong to this FieldGroup");
-
-        if (colIndex < 0 || colIndex >= component.getColumns()) {
-            throw new IllegalArgumentException(String.format("Illegal column number %s, available amount of columns is %s",
-                    colIndex, component.getColumns()));
-        }
-
-        addFieldInternal(fc, colIndex, -1);
+        List<Component> colFields = columnFieldMapping.get(colIndex);
+        addFieldInternal(fc, colIndex, colFields.size());
     }
 
     @Override
@@ -226,6 +228,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         FieldConfig fieldConfig = ((FieldGroupEmptyField) emptyComponent).getFieldConfig();
         if (fieldConfig != null) {
             applyFieldDefaults(field, fieldConfig);
+            assignFieldId(fieldConfig.getId(), field);
         }
 
         if (field instanceof HasCaption
@@ -265,7 +268,8 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
                 cubaField.setEditable(fc.isEditable());
             }
 
-            for (Field.Validator validator : fc.getValidators()) {
+            for (Consumer validator : fc.getValidators()) {
+                //noinspection unchecked
                 cubaField.addValidator(validator);
             }
 
@@ -363,26 +367,19 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         fields.put(field.getId(), field);
         colFields.add(rowIndex, field);
 
-        /*FieldConfigImpl fci = (FieldConfigImpl) fc;
-
-        fci.setColumn(colIndex);
-        fci.setManaged(true);*/
-
         if (!(field instanceof FieldGroupEmptyField)) {
             managedFieldComponentAssigned(field, colIndex);
         }
     }
 
-    @Override
-    public void remove(Component childComponent) {
-        // TODO: gg, supported now?
-        throw new UnsupportedOperationException("Remove component is not supported by FieldGroup component");
-    }
+    protected void managedFieldComponentAssigned(Component field, int colIndex) {
+        com.vaadin.ui.Component fieldImpl = WebComponentsHelper.getComposition(field);
+        assignTypicalAttributes(field);
+        assignDebugId(fieldImpl, field.getId());
 
-    @Override
-    public void removeAll() {
-        // TODO: gg, supported now?
-        throw new UnsupportedOperationException("Remove all components are not supported by FieldGroup component");
+        this.component.setRows(detectRowsCount());
+
+        reattachColumnFields(colIndex);
     }
 
     @Nullable
@@ -406,34 +403,16 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         return ComponentsHelper.getComponents(this);
     }
 
-    protected void managedFieldComponentAssigned(Component field, int colIndex) {
-        com.vaadin.ui.Component fieldImpl = WebComponentsHelper.getComposition(field);
-        assignTypicalAttributes(field);
-        assignDebugId(fieldImpl, field.getId());
-
-        this.component.setRows(detectRowsCount());
-
-        reattachColumnFields(colIndex);
-    }
-
     protected void addFieldInternal(FieldConfig fc, int colIndex, int rowIndex) {
-        // TODO: gg, rework with component
-        /*List<FieldConfig> colFields = columnFieldMapping.get(colIndex);
-        if (rowIndex == -1) {
-            rowIndex = colFields.size();
+        Component component = fc.getComponent();
+        if (component == null) {
+            component = uiComponents.create(FieldGroupEmptyField.NAME);
+            ((FieldGroupEmptyField) component).setFieldConfig(fc);
+        } else {
+            assignFieldId(fc.getId(), component);
         }
 
-        fields.put(fc.getId(), fc);
-        colFields.add(rowIndex, fc);
-
-        FieldConfigImpl fci = (FieldConfigImpl) fc;
-
-        fci.setColumn(colIndex);
-        fci.setManaged(true);
-
-        if (fc.getComponent() != null) {
-            managedFieldComponentAssigned(fci, fci.getAttachMode());
-        }*/
+        addComponentInternal(component, colIndex, rowIndex);
     }
 
     protected void reattachColumnFields(int colIndex) {
@@ -460,42 +439,34 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     @Override
     public void removeField(FieldConfig fc) {
         checkArgument(this == ((FieldConfigImpl) fc).getOwner(), "Field is not belong to this FieldGroup");
+        Component component = findComponent(fc.getId());
+        removeComponentInternal(component);
+    }
 
-        if (fields.values().contains(fc)) {
-            int colIndex = ((FieldConfigImpl) fc).getColumn();
-            columnFieldMapping.get(colIndex).remove(fc);
-            fields.remove(fc.getId());
+    @Override
+    public void remove(Component childComponent) {
+        checkArgument(this == childComponent.getParent(), "Component is not belong to this FieldGroup");
+        removeComponentInternal(childComponent);
+    }
 
-            if (fc.isBound()) {
-                reattachColumnFields(colIndex);
+    protected void removeComponentInternal(Component childComponent) {
+        if (fields.values().contains(childComponent)) {
+            // TODO: gg, what if id is null?
+            int colIndex = findColumnIndex(childComponent);
+            columnFieldMapping.get(colIndex).remove(childComponent);
+            fields.remove(childComponent.getId());
 
-                component.setRows(detectRowsCount());
-            }
+            component.setRows(detectRowsCount());
 
-            ((FieldConfigImpl) fc).setManaged(false);
-
-            if (fc.getComponent() != null) {
-                fc.getComponent().setParent(null);
-            }
+            childComponent.setParent(null);
         }
     }
 
-    protected void managedFieldComponentAssigned(FieldConfigImpl fci, FieldAttachMode mode) {
-//        com.vaadin.v7.ui.Field fieldImpl = getFieldImplementation(fci.getComponentNN());
-//        fci.setComposition(fieldImpl);
-
-        assignTypicalAttributes(fci.getComponentNN());
-
-        if (mode == FieldAttachMode.APPLY_DEFAULTS) {
-            // TODO: gg, how to replace?
-//            applyFieldDefaults(fci);
+    @Override
+    public void removeAll() {
+        for (Component component : getColumnOrderedComponents()) {
+            remove(component);
         }
-
-//        assignDebugId(fci, fieldImpl);
-
-        component.setRows(detectRowsCount());
-
-        reattachColumnFields(fci.getColumn());
     }
 
     protected void assignTypicalAttributes(Component c) {
@@ -538,18 +509,6 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     public void setFieldCaptionWidth(int column, int width) {
         component.setFieldCaptionWidth(column, width);
     }
-
-    /*protected com.vaadin.v7.ui.Field getFieldImplementation(Component c) {
-        com.vaadin.ui.Component composition = WebComponentsHelper.getComposition(c);
-
-        // TODO: gg, refactor?
-        // vaadin8 !
-        if (composition instanceof com.vaadin.v7.ui.Field) {
-            return (com.vaadin.v7.ui.Field) composition;
-        } else {
-            return new CubaFieldWrapper(c);
-        }
-    }*/
 
     @Override
     public ValueSourceProvider getValueSourceProvider() {
@@ -596,11 +555,10 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
     protected int detectRowsCount() {
         int rowsCount = 0;
         for (List<Component> fields : columnFieldMapping) {
-            /*long boundCount = fields.stream()
-            // TODO: gg, check for stub component
-                    .filter(FieldConfig::isBound)
-                    .count();*/
-            long boundCount = fields.size();
+            long boundCount = fields.stream()
+                    .filter(component ->
+                            !(component instanceof FieldGroupEmptyField))
+                    .count();
 
             rowsCount = (int) Math.max(rowsCount, boundCount);
         }
@@ -764,21 +722,70 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         ((Focusable) componentField).focus();
     }
 
-    /**
-     * @return flat list of column fields
-     */
-    protected List<FieldConfig> getColumnOrderedFields() {
-        /*return columnFieldMapping.stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());*/
-        // TODO: gg, rework
-        return Collections.emptyList();
-    }
-
     protected List<Component> getColumnOrderedComponents() {
         return columnFieldMapping.stream()
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * @return flat list of column fields
+     */
+    protected List<FieldConfig> getColumnOrderedFields() {
+        return wrapComponents(getColumnOrderedComponents());
+    }
+
+    protected List<FieldConfig> wrapComponents(Collection<Component> components) {
+        return components.stream()
+                .filter(component -> getFieldId(component) != null)
+                .map(component -> {
+                    String fieldId = getFieldId(component);
+                    return wrapComponent(fieldId, component);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Nullable
+    protected Component findComponent(String fieldId) {
+        List<Component> components = getColumnOrderedComponents();
+        for (Component component : components) {
+            Object componentFieldId = getFieldId(component);
+            if (Objects.equals(fieldId, componentFieldId)) {
+                return component;
+            }
+        }
+        return null;
+    }
+
+    protected FieldConfig wrapComponent(String fieldId, Component component) {
+        boolean custom = component instanceof FieldGroupEmptyField;
+        FieldConfigImpl fieldConfig = new FieldConfigImpl(fieldId, custom ? null : component);
+        fieldConfig.setCustom(custom);
+        return fieldConfig;
+    }
+
+    @Nullable
+    protected String getFieldId(Component component) {
+        if (component instanceof FieldGroupEmptyField) {
+            FieldConfig fieldConfig = ((FieldGroupEmptyField) component).getFieldConfig();
+            return fieldConfig != null ? fieldConfig.getId() : null;
+        }
+
+        AbstractComponent vComponent = component.unwrapComposition(AbstractComponent.class);
+        //noinspection unchecked
+        return vComponent.getData() instanceof FieldGroupFieldData
+                ? ((FieldGroupFieldData) vComponent.getData()).getFieldId()
+                : null;
+    }
+
+    @Override
+    public void assignFieldId(String fieldId, Component component) {
+        if (component instanceof FieldGroupEmptyField) {
+            return;
+        }
+
+        AbstractComponent vComponent = component.unwrapComposition(AbstractComponent.class);
+        vComponent.setData(new FieldGroupFieldData().setFieldId(fieldId));
     }
 
     @Override
@@ -846,41 +853,31 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
         unsubscribe(EditableChangeEvent.class, listener);
     }
 
+    protected class FieldGroupFieldData {
+        protected String fieldId;
+
+        public String getFieldId() {
+            return fieldId;
+        }
+
+        public FieldGroupFieldData setFieldId(String fieldId) {
+            this.fieldId = fieldId;
+            return this;
+        }
+    }
+
     public class FieldConfigImpl implements FieldConfig {
         protected String id;
-        protected Element xmlDescriptor;
-        protected int column;
 
         protected Component component;
-        protected com.vaadin.v7.ui.Field composition;
-
-        protected boolean managed = false;
-
-        protected String targetWidth;
-        protected String targetStylename;
-        protected ValueSource targetValueSource;
-        protected Boolean targetRequired;
-        protected Boolean targetEditable;
-        protected Boolean targetEnabled;
-        protected Boolean targetVisible;
-        protected String targetProperty;
-        protected Integer targetTabIndex;
-        protected String targetRequiredMessage;
-        protected CollectionDatasource targetOptionsDatasource;
-        protected String targetCaption;
-        protected String targetDescription;
-        protected String targetContextHelpText;
-        protected Boolean targetContextHelpTextHtmlEnabled;
-        protected String targetInputPrompt;
-        protected Function targetFormatter;
-        protected boolean isTargetCustom;
-
-        protected List<Field.Validator> targetValidators = new ArrayList<>(0);
-        protected Consumer<HasContextHelp.ContextHelpIconClickEvent> targetContextHelpIconClickHandler;
         protected FieldAttachMode attachMode = FieldAttachMode.APPLY_DEFAULTS;
+        private boolean custom;
 
-        public FieldConfigImpl(String id) {
+        public FieldConfigImpl(String id, Component component) {
+            // TODO: gg, check for nulls
+
             this.id = id;
+            this.component = component;
         }
 
         @Override
@@ -899,54 +896,27 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
         @Override
         public String getWidth() {
-            /*if (composition != null && isWrapped()) {
-                float width = composition.getWidth();
-                Sizeable.Unit widthUnit = composition.getWidthUnits();
-                return width + widthUnit.getSymbol();
-            }
-            if (component != null) {
-                return ComponentsHelper.getComponentWidth(component);
-            }*/
-            return targetWidth;
+            return ComponentsHelper.getComponentWidth(component);
         }
 
         @Override
         public void setWidth(String width) {
-            /*if (composition != null && isWrapped()) {
-                composition.setWidth(width);
-            } else if (component != null) {
-                component.setWidth(width);
-            } else {
-                targetWidth = width;
-            }*/
-            targetWidth = width;
+            component.setWidth(width);
         }
 
         @Override
         public String getStyleName() {
-            /*if (component != null) {
-                return component.getStyleName();
-            }*/
-            return targetStylename;
+            return component.getStyleName();
         }
 
         @Override
         public void setStyleName(String stylename) {
-            /*if (component != null) {
-                component.setStyleName(stylename);
-
-                if (composition != null && isWrapped()) {
-                    composition.setStyleName(stylename);
-                }
-            } else {
-                this.targetStylename = stylename;
-            }*/
-            this.targetStylename = stylename;
+            component.setStyleName(stylename);
         }
 
-        protected boolean isWrapped() {
+        /*protected boolean isWrapped() {
             return component != null && component.unwrapComposition(com.vaadin.ui.Component.class) != composition;
-        }
+        }*/
 
         // TODO: gg, remove
         @Override
@@ -955,9 +925,9 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
                 return ((HasValueBinding) component).getValueSource();
             }*/
 
-            if (targetValueSource != null) {
+            /*if (targetValueSource != null) {
                 return targetValueSource;
-            }
+            }*/
 
             // TODO: gg, that if the property is null?
             return WebFieldGroup.this.valueSourceProvider.getValueSource(getProperty());
@@ -965,142 +935,106 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
         @Override
         public ValueSource getValueSource() {
-            /*if (component instanceof HasValueBinding) {
-                return ((HasValueBinding) component).getValueSource();
-            }*/
-
-            return targetValueSource;
-        }
-
-        public void setValueSource(ValueSource targetValueSource) {
-            checkState(this.component == null, "FieldConfig is already bound to component");
-
-            this.targetValueSource = targetValueSource;
+            return component instanceof HasValueBinding
+                    ? ((HasValueBinding) component).getValueSource()
+                    : null;
         }
 
         @Override
+        public void setValueSource(ValueSource valueSource) {
+            if (component instanceof HasValueBinding) {
+                //noinspection unchecked
+                ((HasValueBinding) component).setValueSource(valueSource);
+            }
+        }
+
+        /*public void setValueSource(ValueSource targetValueSource) {
+            if (component instanceof HasValueBinding) {
+                ((HasValueBinding) component).setValueSource(targetValueSource);
+            }
+        }*/
+
+        @Override
         public Boolean isRequired() {
-            /*if (component instanceof Field) {
-                return ((Field) component).isRequired();
-            }*/
-            return targetRequired;
+            return component instanceof Field
+                    && ((Field) component).isRequired();
         }
 
         @Override
         public void setRequired(Boolean required) {
-            /*if (component instanceof Field) {
+            if (component instanceof Field) {
                 checkNotNullArgument(required, "Unable to reset required flag for the bound FieldConfig");
-
                 ((Field) component).setRequired(required);
-            } else if (composition != null && isWrapped()) {
-                composition.setRequired(required);
-            } else {
-                this.targetRequired = required;
-            }*/
-            this.targetRequired = required;
+            }
         }
 
         @Override
         public Boolean isEditable() {
-            /*if (component instanceof Editable) {
-                return ((Field) component).isEditable();
-            }*/
-            return targetEditable;
+            return component instanceof Editable
+                    && ((Field) component).isEditable();
         }
 
         @Override
         public void setEditable(Boolean editable) {
-            /*if (component instanceof Editable) {
+            if (component instanceof Editable) {
                 checkNotNullArgument(editable, "Unable to reset editable flag for the bound FieldConfig");
-
                 ((Editable) component).setEditable(editable);
-            } else if (composition != null && isWrapped()) {
-                composition.setReadOnly(!editable);
-            } else {
-                this.targetEditable = editable;
-            }*/
-            this.targetEditable = editable;
+            }
         }
 
         @Override
         public Boolean isEnabled() {
-            /*if (component != null) {
-                return component.isEnabled();
-            }*/
-            return targetEnabled;
+            return component.isEnabled();
         }
 
         @Override
         public void setEnabled(Boolean enabled) {
-            /*if (component != null) {
-                checkNotNullArgument(enabled, "Unable to reset enabled flag for the bound FieldConfig");
-
-                component.setEnabled(enabled);
-
-                if (composition != null && isWrapped()) {
-                    composition.setEnabled(enabled);
-                }
-            } else {
-                this.targetEnabled = enabled;
-            }*/
-            this.targetEnabled = enabled;
+            checkNotNullArgument(enabled, "Unable to reset enabled flag for the bound FieldConfig");
+            component.setEnabled(enabled);
         }
 
         @Override
         public Boolean isVisible() {
-            /*if (component != null) {
-                return component.isVisible();
-            }*/
-            return targetVisible;
+            return component.isVisible();
         }
 
         @Override
         public void setVisible(Boolean visible) {
-            /*if (component != null) {
-                checkNotNullArgument(visible, "Unable to reset visible flag for the bound FieldConfig");
-
-                component.setVisible(visible);
-
-                if (composition != null && isWrapped()) {
-                    composition.setVisible(visible);
-                }
-            } else {
-                this.targetVisible = visible;
-            }*/
-            this.targetVisible = visible;
+            checkNotNullArgument(visible, "Unable to reset visible flag for the bound FieldConfig");
+            component.setVisible(visible);
         }
 
         @Override
         public String getProperty() {
-            /*if (component instanceof DatasourceComponent) {
+            // TODO: gg, VS?
+            if (component instanceof DatasourceComponent) {
                 MetaPropertyPath metaPropertyPath = ((DatasourceComponent) component).getMetaPropertyPath();
                 return metaPropertyPath != null ? metaPropertyPath.toString() : null;
-            }*/
-            return targetProperty;
+            }
+            return null;
         }
 
         @Override
         public void setProperty(String property) {
-            checkState(this.component == null, "Unable to change property for bound FieldConfig");
+            // TODO: gg, throw new UnsupportedOperationException?
+            /*checkState(this.component == null, "Unable to change property for bound FieldConfig");
 
-            this.targetProperty = property;
+            this.targetProperty = property;*/
         }
 
         @Override
         public Integer getTabIndex() {
-            return targetTabIndex;
+            return component instanceof Focusable
+                    ? ((Focusable) component).getTabIndex()
+                    : null;
         }
 
         @Override
         public void setTabIndex(Integer tabIndex) {
-            /*if (component instanceof Focusable) {
+            if (component instanceof Focusable) {
                 checkNotNullArgument(tabIndex, "Unable to reset tabIndex for the bound FieldConfig");
-
                 ((Focusable) component).setTabIndex(tabIndex);
-            } else {
-                this.targetTabIndex = tabIndex;
-            }*/
-            this.targetTabIndex = tabIndex;
+            }
         }
 
         @Override
@@ -1115,37 +1049,26 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
         @Override
         public boolean isCustom() {
-            return isTargetCustom;
+            return custom;
         }
 
         @Override
         public void setCustom(boolean custom) {
-            checkState(this.component == null, "Unable to change custom flag for bound FieldConfig");
-
-            this.isTargetCustom = custom;
+            this.custom = custom;
         }
 
         @Override
         public String getRequiredMessage() {
-            /*if (component instanceof Field) {
-                return ((Field) component).getRequiredMessage();
-            }
-            if (composition != null && isWrapped()) {
-                return composition.getRequiredError();
-            }*/
-            return targetRequiredMessage;
+            return component instanceof Field
+                    ? ((Field) component).getRequiredMessage()
+                    : null;
         }
 
         @Override
         public void setRequiredMessage(String requiredMessage) {
-            /*if (component instanceof Field) {
+            if (component instanceof Field) {
                 ((Field) component).setRequiredMessage(requiredMessage);
-            } else if (composition != null && isWrapped()) {
-                composition.setRequiredError(requiredMessage);
-            } else {
-                this.targetRequiredMessage = requiredMessage;
-            }*/
-            this.targetRequiredMessage = requiredMessage;
+            }
         }
 
         @Nullable
@@ -1164,13 +1087,7 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
 
         @Override
         public void setComponent(Component component) {
-            checkState(this.component == null, "Unable to change component for bound FieldConfig");
-
-            this.component = component;
-
-            if (managed && component != null) {
-                managedFieldComponentAssigned(this, FieldAttachMode.APPLY_DEFAULTS);
-            }
+            setComponent(component, FieldAttachMode.APPLY_DEFAULTS);
         }
 
         @Override
@@ -1180,282 +1097,162 @@ public class WebFieldGroup extends WebAbstractComponent<CubaFieldGroupLayout> im
             this.attachMode = mode;
             this.component = component;
 
-            if (managed && component != null) {
-                managedFieldComponentAssigned(this, mode);
+            if (component != null) {
+                // TODO: gg, fix use etc
+//                managedFieldComponentAssigned(component, mode);
+
             }
         }
 
-        public void assignComponent(Component component) {
-            checkState(this.component == null, "Unable to change component for bound FieldConfig");
-
-            this.component = component;
-        }
-
-        public void setAttachMode(FieldAttachMode attachMode) {
-            this.attachMode = attachMode;
-        }
-
         @Override
-        public void addValidator(Field.Validator validator) {
-            /*if (component instanceof Field) {
+        public void addValidator(Consumer validator) {
+            if (component instanceof Field) {
+                //noinspection unchecked
                 ((Field) component).addValidator(validator);
-            } else {
-                if (!targetValidators.contains(validator)) {
-                    targetValidators.add(validator);
-                }
-            }*/
-            if (!targetValidators.contains(validator)) {
-                targetValidators.add(validator);
             }
         }
 
         @Override
-        public void removeValidator(Field.Validator validator) {
-            /*if (component instanceof Field) {
+        public void removeValidator(Consumer validator) {
+            if (component instanceof Field) {
+                //noinspection unchecked
                 ((Field) component).removeValidator(validator);
-            }*/
-            targetValidators.remove(validator);
+            }
         }
 
         @Override
-        public List<Field.Validator> getValidators() {
-            return targetValidators;
+        public List<Consumer> getValidators() {
+            //noinspection unchecked
+            return component instanceof Field
+                    ? new ArrayList<>(((Field) component).getValidators())
+                    : Collections.emptyList();
         }
 
         // TODO: gg, add OptionsSource
         @Override
         public void setOptionsDatasource(CollectionDatasource optionsDatasource) {
-            /*if (component instanceof OptionsField) {
+            if (component instanceof OptionsField) {
                 ((OptionsField) component).setOptionsDatasource(optionsDatasource);
-            } else {
-                this.targetOptionsDatasource = optionsDatasource;
-            }*/
-            this.targetOptionsDatasource = optionsDatasource;
+            }
         }
 
         @Override
         public CollectionDatasource getOptionsDatasource() {
-            /*if (component instanceof OptionsField) {
+            if (component instanceof OptionsField) {
                 return ((OptionsField) component).getOptionsDatasource();
-            }*/
-            return targetOptionsDatasource;
+            } else {
+                return null;
+            }
         }
 
         @Override
         public String getCaption() {
-            /*if (component instanceof Field) {
-                return ((Field) component).getCaption();
-            }
-            if (composition != null && isWrapped()) {
-                return composition.getCaption();
-            }*/
-            return targetCaption;
+            return component instanceof HasCaption
+                    ? ((HasCaption) component).getCaption()
+                    : null;
         }
 
         @Override
         public void setCaption(String caption) {
-            /*if (component instanceof Field) {
-                ((Field) component).setCaption(caption);
-            } else if (composition != null && isWrapped()) {
-                composition.setCaption(caption);
-            } else {
-                this.targetCaption = caption;
-            }*/
-
-            this.targetCaption = caption;
+            if (component instanceof HasCaption) {
+                ((HasCaption) component).setCaption(caption);
+            }
         }
 
         @Override
         public String getDescription() {
-            /*if (component instanceof Field) {
-                return ((Field) component).getDescription();
-            }
-            if (composition != null && isWrapped()) {
-                return composition.getDescription();
-            }*/
-            return targetDescription;
+            return component instanceof HasCaption
+                    ? ((HasCaption) component).getDescription()
+                    : null;
         }
 
         @Override
         public void setDescription(String description) {
-            /*if (component instanceof Field) {
-                ((Field) component).setDescription(description);
-            } else if (composition != null && isWrapped()) {
-                ((CubaFieldWrapper) composition).setDescription(description);
-            } else {
-                this.targetDescription = description;
-            }*/
-            this.targetDescription = description;
+            if (component instanceof HasCaption) {
+                ((HasCaption) component).setDescription(description);
+            }
         }
 
         @Override
         public String getInputPrompt() {
-            /*if (component instanceof HasInputPrompt) {
-                return ((HasInputPrompt) component).getInputPrompt();
-            }*/
-            return targetInputPrompt;
+            return component instanceof HasInputPrompt
+                    ? ((HasInputPrompt) component).getInputPrompt()
+                    : null;
         }
 
         @Override
         public void setInputPrompt(String inputPrompt) {
-            /*if (component instanceof HasInputPrompt) {
+            if (component instanceof HasInputPrompt) {
                 ((HasInputPrompt) component).setInputPrompt(inputPrompt);
-            } else {
-                this.targetInputPrompt = inputPrompt;
-            }*/
-            this.targetInputPrompt = inputPrompt;
+            }
         }
 
         @Override
         public String getContextHelpText() {
-            /*if (component instanceof Field) {
-                return ((Field) component).getContextHelpText();
-            }
-            if (composition != null && isWrapped()) {
-//                // vaadin8 rework
-//                return composition.getContextHelpText();
-                return null;
-            }*/
-            return targetContextHelpText;
+            return component instanceof HasContextHelp
+                    ? ((HasContextHelp) component).getContextHelpText()
+                    : null;
         }
 
         @Override
         public void setContextHelpText(String contextHelpText) {
-            /*if (component instanceof Field) {
-                ((Field) component).setContextHelpText(contextHelpText);
-            } else if (composition != null && isWrapped()) {
-                // vaadin8 rework
-//                composition.setContextHelpText(contextHelpText);
-            } else {
-                this.targetContextHelpText = contextHelpText;
-            }*/
-            this.targetContextHelpText = contextHelpText;
+            if (component instanceof HasContextHelp) {
+                ((HasContextHelp) component).setContextHelpText(contextHelpText);
+            }
         }
 
         @Override
         public Boolean isContextHelpTextHtmlEnabled() {
-            /*if (component instanceof Field) {
-                return ((Field) component).isContextHelpTextHtmlEnabled();
-            }
-            if (composition != null && isWrapped()) {
-                return false;
-                // vaadin8 rework
-//                return composition.isContextHelpTextHtmlEnabled();
-            }*/
-            return BooleanUtils.isTrue(targetContextHelpTextHtmlEnabled);
+            return component instanceof HasContextHelp
+                    && ((HasContextHelp) component).isContextHelpTextHtmlEnabled();
         }
 
         @Override
         public void setContextHelpTextHtmlEnabled(Boolean enabled) {
-            /*if (component instanceof Field) {
+            if (component instanceof HasContextHelp) {
                 checkNotNullArgument(enabled, "Unable to reset contextHelpTextHtmlEnabled " +
                         "flag for the bound FieldConfig");
-                ((Field) component).setContextHelpTextHtmlEnabled(enabled);
-            } else if (composition != null && isWrapped()) {
-                checkNotNullArgument(enabled, "Unable to reset contextHelpTextHtmlEnabled " +
-                        "flag for the bound FieldConfig");
-
-                // vaadin8 rework
-//                composition.setContextHelpTextHtmlEnabled(enabled);
-            } else {
-                this.targetContextHelpTextHtmlEnabled = enabled;
-            }*/
-            this.targetContextHelpTextHtmlEnabled = enabled;
+                ((HasContextHelp) component).setContextHelpTextHtmlEnabled(enabled);
+            }
         }
 
         @Override
         public Consumer<HasContextHelp.ContextHelpIconClickEvent> getContextHelpIconClickHandler() {
-            /*if (component instanceof Field) {
-                return ((Field) component).getContextHelpIconClickHandler();
-            }*/
-            return targetContextHelpIconClickHandler;
+            return component instanceof HasContextHelp
+                    ? ((HasContextHelp) component).getContextHelpIconClickHandler()
+                    : null;
         }
 
         @Override
         public void setContextHelpIconClickHandler(Consumer<HasContextHelp.ContextHelpIconClickEvent> handler) {
-            /*if (component instanceof Field) {
-                ((Field) component).setContextHelpIconClickHandler(handler);
-            } else {
-                this.targetContextHelpIconClickHandler = handler;
-            }*/
-            this.targetContextHelpIconClickHandler = handler;
+            if (component instanceof HasContextHelp) {
+                ((HasContextHelp) component).setContextHelpIconClickHandler(handler);
+            }
         }
 
         @Override
         public Function getFormatter() {
-            /*if (component instanceof HasFormatter) {
-                return ((HasFormatter) component).getFormatter();
-            }*/
-            return targetFormatter;
+            return component instanceof HasFormatter
+                    ? ((HasFormatter) component).getFormatter()
+                    : null;
         }
 
         @Override
         public void setFormatter(Function formatter) {
-            /*if (component instanceof HasFormatter) {
+            if (component instanceof HasFormatter) {
+                //noinspection unchecked
                 ((HasFormatter) component).setFormatter(formatter);
-            } else {
-                this.targetFormatter = formatter;
-            }*/
-            this.targetFormatter = formatter;
+            }
         }
 
         @Override
         public Element getXmlDescriptor() {
-            return xmlDescriptor;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public void setXmlDescriptor(Element element) {
-            this.xmlDescriptor = element;
-        }
-
-        public int getColumn() {
-            return column;
-        }
-
-        public void setColumn(int column) {
-            this.column = column;
-        }
-
-        @Nullable
-        public com.vaadin.v7.ui.Field getComposition() {
-            return composition;
-        }
-
-        public com.vaadin.v7.ui.Field getCompositionNN() {
-            if (composition == null) {
-                throw new IllegalStateException("FieldConfig is not bound to a Component");
-            }
-            return composition;
-        }
-
-        public void setComposition(com.vaadin.v7.ui.Field composition) {
-            checkState(this.composition == null, "Unable to change composition for bound FieldConfig");
-
-            this.composition = composition;
-
-            if (isWrapped()) {
-                if (targetCaption != null) {
-                    composition.setCaption(targetCaption);
-                }
-                if (targetRequired != null) {
-                    composition.setRequired(targetRequired);
-                }
-                if (targetRequiredMessage != null) {
-                    composition.setRequiredError(targetRequiredMessage);
-                }
-//                if (targetDescription != null) {
-//                    (composition).setDescription(targetDescription);
-//                }
-            }
-        }
-
-        public boolean isManaged() {
-            return managed;
-        }
-
-        public void setManaged(boolean managed) {
-            this.managed = managed;
+            throw new UnsupportedOperationException();
         }
 
         @Override

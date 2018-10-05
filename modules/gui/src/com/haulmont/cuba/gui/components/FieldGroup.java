@@ -273,6 +273,12 @@ public interface FieldGroup extends Component, Component.BelongToFrame, Componen
     void validate() throws ValidationException;
 
     /**
+     * For internal use only
+     */
+    @Deprecated
+    void assignFieldId(String fieldId, Component component);
+
+    /**
      * Field caption alignment.
      */
     enum FieldCaptionAlignment {

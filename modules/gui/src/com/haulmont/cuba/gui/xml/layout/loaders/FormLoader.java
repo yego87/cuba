@@ -17,31 +17,33 @@
 package com.haulmont.cuba.gui.xml.layout.loaders;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaPropertyPath;
+import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils;
 import com.haulmont.cuba.core.entity.CategoryAttribute;
 import com.haulmont.cuba.core.global.MessageTools;
 import com.haulmont.cuba.core.global.MetadataTools;
+import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.GuiDevelopmentException;
-import com.haulmont.cuba.gui.components.Component;
-import com.haulmont.cuba.gui.components.Form;
+import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.data.HasValueSource;
+import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
 import com.haulmont.cuba.gui.components.data.meta.EntityValueSource;
 import com.haulmont.cuba.gui.components.data.value.ContainerValueSourceProvider;
+import com.haulmont.cuba.gui.dynamicattributes.DynamicAttributesGuiTools;
 import com.haulmont.cuba.gui.model.InstanceContainer;
 import com.haulmont.cuba.gui.model.ScreenData;
 import com.haulmont.cuba.gui.screen.FrameOwner;
 import com.haulmont.cuba.gui.screen.UiControllerUtils;
 import com.haulmont.cuba.gui.xml.layout.ComponentLoader;
 import com.haulmont.cuba.gui.xml.layout.LayoutLoader;
+import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils.getCategoryAttribute;
 import static com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils.isDynamicAttribute;
@@ -94,10 +96,11 @@ public class FormLoader extends AbstractComponentLoader<Form> {
     }
 
     protected void loadColumns(Form resultComponent, Element element) {
+        ValueSourceProvider valueSourceProvider = resultComponent.getValueSourceProvider();
         if (element.elements("column").isEmpty()) {
-            List<Component> components = loadComponents(element, null);
-            // TODO: gg, dynamic attributes
-            for (Component component : components) {
+            Iterable<Component> rootComponents = loadComponents(element, null);
+            Iterable<Component> dynamicAttributeComponents = loadDynamicAttributeComponents(valueSourceProvider);
+            for (Component component : Iterables.concat(rootComponents, dynamicAttributeComponents)) {
                 resultComponent.add(component);
             }
         } else {
@@ -116,9 +119,12 @@ public class FormLoader extends AbstractComponentLoader<Form> {
             int colIndex = 0;
             for (Element columnElement : columnElements) {
                 String columnWidth = loadThemeString(columnElement.attributeValue("width"));
-                List<Component> components = loadComponents(columnElement, columnWidth);
-                // TODO: gg, dynamic attributes
-                for (Component component : components) {
+                Iterable<Component> columnComponents = loadComponents(columnElement, columnWidth);
+                if (colIndex == 0) {
+                    columnComponents = Iterables.concat(columnComponents,
+                            loadDynamicAttributeComponents(valueSourceProvider));
+                }
+                for (Component component : columnComponents) {
                     resultComponent.add(component, colIndex);
                 }
 
@@ -160,7 +166,6 @@ public class FormLoader extends AbstractComponentLoader<Form> {
             component.setWidth(columnWidth);
         }
 
-        // TEST: gg,
         // Set default caption
         if (component instanceof HasValueSource
                 && ((HasValueSource) component).getValueSource() instanceof EntityValueSource
@@ -188,8 +193,77 @@ public class FormLoader extends AbstractComponentLoader<Form> {
         return component;
     }
 
+    protected List<Component> loadDynamicAttributeComponents(ValueSourceProvider provider) {
+        if (provider instanceof ContainerValueSourceProvider
+                && getMetadataTools().isPersistent(
+                ((ContainerValueSourceProvider) provider).getContainer().getEntityMetaClass())) {
+            String windowId = ComponentsHelper.getWindowNN(resultComponent).getId();
+            InstanceContainer instanceContainer = ((ContainerValueSourceProvider) provider).getContainer();
+            MetaClass metaClass = instanceContainer.getEntityMetaClass();
+
+            Set<CategoryAttribute> attributesToShow =
+                    getDynamicAttributesGuiTools().getAttributesToShowOnTheScreen(
+                            metaClass, windowId, resultComponent.getId());
+
+            if (!attributesToShow.isEmpty()) {
+                List<Component> components = new ArrayList<>();
+
+                // TODO: gg, how to replace?
+//                instanceContainer.setLoadDynamicAttributes(true);
+
+                for (CategoryAttribute attribute : attributesToShow) {
+                    String code = DynamicAttributesUtils.encodeAttributeCode(attribute.getCode());
+
+                    ComponentGenerationContext context = new ComponentGenerationContext(metaClass, code);
+                    // FIXME: gg, check before cast?
+                    Field field = (Field) getUiComponentsGenerator().generate(context);
+                    field.setCaption(attribute.getLocaleName());
+                    field.setValueSource(provider.getValueSource(code));
+                    field.setRequired(attribute.getRequired());
+                    field.setRequiredMessage(getMessages()
+                            .formatMainMessage("validation.required.defaultMsg", attribute.getLocaleName()));
+                    loadWidth(field, attribute.getWidth());
+
+                    // Currently, ListEditor does not support datasource binding so we create custom field
+                    if (Boolean.TRUE.equals(attribute.getIsCollection())) {
+                        // TODO: gg, how to replace?
+                        /*CustomFieldGenerator fieldGenerator = new DynamicAttributeCustomFieldGenerator();
+
+                        Component fieldComponent = fieldGenerator.generateField(ds, code);
+                        field.setCustom(true);
+                        field.setComponent(fieldComponent);
+                        applyPermissions(fieldComponent);*/
+                    }
+                    components.add(field);
+                }
+
+                // TODO: gg, how to replace?
+//                getDynamicAttributesGuiTools().listenDynamicAttributesChanges(ds);
+                return components;
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    protected void loadWidth(Component component, String width) {
+        if ("auto".equalsIgnoreCase(width)) {
+            component.setWidth(Component.AUTO_SIZE);
+        } else if (StringUtils.isNotBlank(width)) {
+            component.setWidth(loadThemeString(width));
+        }
+    }
+
     protected MetadataTools getMetadataTools() {
         return beanLocator.get(MetadataTools.NAME);
+    }
+
+    protected DynamicAttributesGuiTools getDynamicAttributesGuiTools() {
+        return beanLocator.get(DynamicAttributesGuiTools.NAME);
+    }
+
+    protected UiComponentsGenerator getUiComponentsGenerator() {
+        return beanLocator.get(UiComponentsGenerator.NAME);
     }
 
     protected void loadCaptionAlignment(Form resultComponent, Element element) {

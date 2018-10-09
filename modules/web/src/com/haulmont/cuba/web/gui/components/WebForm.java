@@ -21,10 +21,12 @@ import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.EditableChangeNotifier;
+import com.haulmont.cuba.gui.components.EditableChangeNotifier.EditableChangeEvent;
 import com.haulmont.cuba.gui.components.Form;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.widgets.CubaFieldGroupLayout;
+import com.vaadin.ui.GridLayout;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -87,12 +89,11 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public void setEditable(boolean editable) {
-        // TEST: gg,
         if (editable != isEditable()) {
             this.editable = editable;
 
-            EditableChangeNotifier.EditableChangeEvent event = new EditableChangeNotifier.EditableChangeEvent(this);
-            publish(EditableChangeNotifier.EditableChangeEvent.class, event);
+            EditableChangeEvent event = new EditableChangeEvent(this);
+            publish(EditableChangeEvent.class, event);
         }
     }
 
@@ -119,7 +120,6 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public void add(Component childComponent, int column, int row) {
-        // TEST: gg,
         checkArgument(column >= 0 && column < this.component.getColumns(),
                 "Illegal column number %s, available amount of columns is %s", column, this.component.getColumns());
 
@@ -203,7 +203,6 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public void remove(Component childComponent) {
-        // TEST: gg,
         int column = 0;
         for (List<Component> components : columnComponentMapping) {
             if (components.remove(childComponent)) {
@@ -218,7 +217,7 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public void removeAll() {
-        // TEST: gg,
+        // FIXME: gg, the component remains its size
         /*for (Component component : new ArrayList<>(getOwnComponents())) {
             remove(component);
         }*/
@@ -238,7 +237,6 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
     @Nullable
     @Override
     public Component getOwnComponent(String id) {
-        // TEST: gg,
         Preconditions.checkNotNullArgument(id);
 
         return getOwnComponents().stream()
@@ -250,13 +248,11 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
     @Nullable
     @Override
     public Component getComponent(String id) {
-        // TEST: gg,
         return ComponentsHelper.getComponent(this, id);
     }
 
     @Override
     public Collection<Component> getOwnComponents() {
-        // TEST: gg,
         return columnComponentMapping.stream()
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
@@ -264,25 +260,21 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public Collection<Component> getComponents() {
-        // TEST: gg,
         return ComponentsHelper.getComponents(this);
     }
 
     @Override
     public Collection<Component> getComponents(int column) {
-        // TEST: gg,
         return Collections.unmodifiableCollection(columnComponentMapping.get(column));
     }
 
     @Override
     public Component getComponent(int column, int row) {
-        // TEST: gg,
         return columnComponentMapping.get(column).get(row);
     }
 
     @Override
     public CaptionAlignment getChildCaptionAlignment() {
-        // TEST: gg,
         return component.isUseInlineCaption()
                 ? CaptionAlignment.LEFT
                 : CaptionAlignment.TOP;
@@ -290,47 +282,51 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public void setChildCaptionAlignment(CaptionAlignment captionAlignment) {
-        // TEST: gg,
         component.setUseInlineCaption(CaptionAlignment.LEFT.equals(captionAlignment));
     }
 
     @Override
     public int getChildCaptionWidth() {
-        // TEST: gg,
         return component.getFixedCaptionWidth();
     }
 
     @Override
     public void setChildCaptionWidth(int width) {
-        // TEST: gg,
         component.setFixedCaptionWidth(width);
     }
 
     @Override
+    public int getChildCaptionWidth(int column) {
+        return component.getFieldCaptionWidth(column);
+    }
+
+    @Override
     public void setChildCaptionWidth(int column, int width) {
-        // TEST: gg,
         component.setFieldCaptionWidth(column, width);
     }
 
     @Override
     public int getColumns() {
-        // TEST: gg,
         return component.getColumns();
     }
 
     @Override
     public void setColumns(int columns) {
-        // TEST: gg,
         if (component.getColumns() != columns) {
-            component.setColumns(columns);
+            try {
+                component.setColumns(columns);
+            } catch (GridLayout.OutOfBoundsException e) {
+                // Replace the default exception with something more meaningful
+                throw new IllegalStateException("Can't shrink columns with components within them");
+            }
 
-            List<List<Component>> oldColumnComponents = this.columnComponentMapping;
-            this.columnComponentMapping = new ArrayList<>();
+            List<List<Component>> oldColumnComponents = columnComponentMapping;
+            columnComponentMapping = new ArrayList<>();
             for (int i = 0; i < columns; i++) {
                 if (i < oldColumnComponents.size()) {
-                    oldColumnComponents.add(oldColumnComponents.get(i));
+                    columnComponentMapping.add(oldColumnComponents.get(i));
                 } else {
-                    oldColumnComponents.add(new ArrayList<>());
+                    columnComponentMapping.add(new ArrayList<>());
                 }
             }
         }

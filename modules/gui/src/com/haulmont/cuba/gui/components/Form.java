@@ -39,6 +39,7 @@ public interface Form extends Component, Component.BelongToFrame, Component.HasC
      * @return fixed field caption width
      */
     int getChildCaptionWidth();
+
     /**
      * Set fixed captions width. Set -1 to use auto size.
      *
@@ -47,10 +48,16 @@ public interface Form extends Component, Component.BelongToFrame, Component.HasC
     void setChildCaptionWidth(int width);
 
     /**
+     * @param column column index
+     * @return fixed field caption width for column {@code colIndex}
+     */
+    int getChildCaptionWidth(int column);
+
+    /**
      * Set fixed field captions width for column {@code colIndex}. Set -1 to use auto size.
      *
      * @param column column index
-     * @param width width
+     * @param width  width
      */
     void setChildCaptionWidth(int column, int width);
 
@@ -58,6 +65,7 @@ public interface Form extends Component, Component.BelongToFrame, Component.HasC
      * @return column count
      */
     int getColumns();
+
     /**
      * Set column count.
      *

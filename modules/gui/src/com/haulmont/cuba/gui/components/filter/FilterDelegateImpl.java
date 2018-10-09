@@ -1354,9 +1354,8 @@ public class FilterDelegateImpl implements FilterDelegate {
     @Override
     public String getEntityAlias() {
         checkState();
-        String query = adapter.getQuery();
-        QueryParser parser = QueryTransformerFactory.createParser(query);
-        return parser.getEntityAlias(adapter.getMetaClass().getName());
+        DataStoreSupport dataStoreSupport = null;
+        return dataStoreSupport.getEntityAlias(adapter.getMetaClass().getName(), adapter.getQuery());
     }
 
     @Override
@@ -2821,19 +2820,33 @@ public class FilterDelegateImpl implements FilterDelegate {
     protected interface Adapter {
 
         MetaClass getMetaClass();
+
         int getMaxResults();
+
         void setMaxResults(int maxResults);
+
         int getFirstResult();
+
         void setFirstResult(int firstResult);
+
         void setQueryFilter(QueryFilter filter);
+
         void setDataLoaderCondition(com.haulmont.cuba.core.global.queryconditions.Condition dataLoaderCondition);
+
         Map<String, Object> getLastRefreshParameters();
+
         void refresh(Map<String, Object> parameters);
+
         void refreshIfNotSuspended(Map<String, Object> parameters);
+
         boolean supportsApplyToSelected();
+
         void pinQuery();
+
         void unpinAllQuery();
+
         String getQuery();
+
         void beforeApplyDefault();
     }
 

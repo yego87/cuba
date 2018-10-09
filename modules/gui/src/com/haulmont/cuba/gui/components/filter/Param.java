@@ -109,6 +109,7 @@ public class Param {
     protected MetadataTools metadataTools = AppBeans.get(MetadataTools.class);
     protected DatatypeRegistry datatypeRegistry = AppBeans.get(DatatypeRegistry.class);
     protected ThemeConstants theme = AppBeans.get(ThemeConstantsManager.class).getConstants();
+    protected DataManager dataManager = AppBeans.get(DataManager.NAME);
 
     protected List<ParamValueChangeListener> listeners = new ArrayList<>();
 
@@ -417,8 +418,7 @@ public class Param {
             }
         }
         LoadContext ctx = new LoadContext(javaClass).setId(objectId);
-        DataService dataService = AppBeans.get(DataService.NAME);
-        return dataService.load(ctx);
+        return dataManager.load(ctx);
     }
 
     public String formatValue(Object value) {

@@ -28,6 +28,7 @@ import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.dateinterval.DateIntervalValue;
 import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.PropertyOperationEditor;
 import com.haulmont.cuba.gui.data.Datasource;
@@ -40,7 +41,7 @@ import java.util.regex.Pattern;
 
 @MetaClass(name = "sec$PropertyCondition")
 @SystemLevel
-public class PropertyCondition extends AbstractCondition {
+public class PropertyCondition extends AbstractJPQLCondition {
 
     private static Pattern PATTERN = Pattern.compile("\\s*(\\S+)\\s+((?:not\\s+)*\\S+)\\s+(\\S+)\\s*(?:ESCAPE '\\S+')?\\s*");
     private static Pattern PATTERN_NOT_IN = Pattern.compile("\\s*[(]\\s*[(]\\s*(\\S+)\\s+((:not\\s+)*\\S+)\\s+(\\S+)[\\S\\s]*");
@@ -80,7 +81,7 @@ public class PropertyCondition extends AbstractCondition {
     }
 
     @SuppressWarnings("unchecked")
-    public PropertyCondition(AbstractConditionDescriptor descriptor, String entityAlias) {
+    public PropertyCondition(AbstractJPQLConditionDescriptor descriptor, String entityAlias) {
         super(descriptor);
         this.entityAlias = entityAlias;
     }

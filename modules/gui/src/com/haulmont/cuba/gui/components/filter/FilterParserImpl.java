@@ -54,7 +54,7 @@ public class FilterParserImpl implements FilterParser {
     }
 
     protected void recursiveFromXml(Element element, Node<AbstractCondition> parentNode, Filter filter, String xml, ConditionsTree conditions) {
-        for (Element el : Dom4j.elements(element)) {
+        for (Element el : element.elements()) {
             AbstractCondition condition;
             if ("c".equals(el.getName())) {
                 String name = el.attributeValue("name");
@@ -90,7 +90,7 @@ public class FilterParserImpl implements FilterParser {
 
         Class<? extends FrameOwner> controllerClass = filter.getFrame().getFrameOwner().getClass();
         String messagesPack = controllerClass.getPackage().getName(); // todo rework
-        CollectionDatasource datasource = filter.getDatasource();
+
         switch (type) {
             case GROUP:
                 return new GroupCondition(element, filterComponentName);

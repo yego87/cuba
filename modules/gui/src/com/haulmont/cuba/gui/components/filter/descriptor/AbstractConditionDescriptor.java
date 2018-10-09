@@ -40,17 +40,14 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
     protected String locCaption;
     protected String filterComponentName;
     protected MetaClass datasourceMetaClass;
-    protected String entityAlias;
     protected Boolean inExpr = false;
     protected Boolean showImmediately = false;
     protected String messagesPack;
 
-    public AbstractConditionDescriptor(String name, String filterComponentName, MetaClass metaClass, String entityAlias) {
+    public AbstractConditionDescriptor(String name, String filterComponentName, MetaClass metaClass) {
         this.name = name;
         this.filterComponentName = filterComponentName;
         this.datasourceMetaClass = metaClass;
-
-        this.entityAlias = entityAlias;
     }
 
     public String getName() {
@@ -99,10 +96,6 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
     public abstract AbstractCondition createCondition();
 
     public abstract Class getJavaClass();
-
-    public abstract String getEntityParamWhere();
-
-    public abstract String getEntityParamView();
 
     @MetaProperty
     public String getTreeCaption() {

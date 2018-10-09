@@ -21,6 +21,7 @@ import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.Form;
+import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.widgets.CubaFieldGroupLayout;
@@ -36,6 +37,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implements Form {
 
     protected List<List<Component>> columnComponentMapping = new ArrayList<>();
+
+    protected ValueSourceProvider valueSourceProvider;
 
     {
         columnComponentMapping.add(new ArrayList<>());
@@ -336,5 +339,20 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
                 }
             }
         }
+    }
+
+    @Override
+    public ValueSourceProvider getValueSourceProvider() {
+        return valueSourceProvider;
+    }
+
+    @Override
+    public void setValueSourceProvider(ValueSourceProvider provider) {
+        if (this.valueSourceProvider != null) {
+            throw new UnsupportedOperationException("Changing value source provider is not supported " +
+                    "by the FieldGroup component");
+        }
+
+        this.valueSourceProvider = provider;
     }
 }

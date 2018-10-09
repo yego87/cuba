@@ -28,6 +28,11 @@ import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.Form;
 import com.haulmont.cuba.gui.components.data.HasValueSource;
 import com.haulmont.cuba.gui.components.data.meta.EntityValueSource;
+import com.haulmont.cuba.gui.components.data.value.ContainerValueSourceProvider;
+import com.haulmont.cuba.gui.model.InstanceContainer;
+import com.haulmont.cuba.gui.model.ScreenData;
+import com.haulmont.cuba.gui.screen.FrameOwner;
+import com.haulmont.cuba.gui.screen.UiControllerUtils;
 import com.haulmont.cuba.gui.xml.layout.ComponentLoader;
 import com.haulmont.cuba.gui.xml.layout.LayoutLoader;
 import org.dom4j.Element;
@@ -72,7 +77,20 @@ public class FormLoader extends AbstractComponentLoader<Form> {
         loadCaptionAlignment(resultComponent, element);
         loadChildrenCaptionWidth(resultComponent, element);
 
+        loadDataContainer(resultComponent, element);
+
         loadColumns(resultComponent, element);
+    }
+
+    protected void loadDataContainer(Form resultComponent, Element element) {
+        String containerId = element.attributeValue("dataContainer");
+        if (!Strings.isNullOrEmpty(containerId)) {
+            FrameOwner frameOwner = context.getFrame().getFrameOwner();
+            ScreenData screenData = UiControllerUtils.getScreenData(frameOwner);
+            InstanceContainer container = screenData.getContainer(containerId);
+            //noinspection unchecked
+            resultComponent.setValueSourceProvider(new ContainerValueSourceProvider(container));
+        }
     }
 
     protected void loadColumns(Form resultComponent, Element element) {

@@ -2389,6 +2389,7 @@
                 <xs:attributeGroup ref="hasEditState"/>
                 <xs:attributeGroup ref="hasContextHelp"/>
 
+                <xs:attribute name="dataContainer" type="xs:string"/>
                 <xs:attribute name="captionAlignment" type="formCaptionAlignment"/>
                 <xs:attribute name="childrenCaptionWidth" type="xs:string"/>
             </xs:extension>

@@ -16,10 +16,13 @@
 
 package com.haulmont.cuba.gui.components;
 
+import com.haulmont.cuba.gui.components.data.HasValueSourceProvider;
+
 import java.util.Collection;
 
 public interface Form extends Component, Component.BelongToFrame, Component.HasCaption, Component.HasIcon,
-        ComponentContainer, Component.Editable, EditableChangeNotifier, HasContextHelp, ChildEditableController {
+        ComponentContainer, Component.Editable, EditableChangeNotifier, HasContextHelp, ChildEditableController,
+        HasValueSourceProvider {
 
     String NAME = "form";
 

@@ -495,12 +495,27 @@ public class CubaVaadinServletService extends VaadinServletService
         @Override
         public void unlock() {
             super.unlock();
+            clearLogMdc();
         }
 
         protected void setupLogMdc() {
-            SecurityContext securityContext = AppContext.getSecurityContext();
-            if (securityContext != null) {
-                LogMdc.setup(securityContext);
+            try {
+                SecurityContext securityContext = AppContext.getSecurityContext();
+                if (securityContext != null) {
+                    LogMdc.setup(securityContext);
+                }
+            } catch (Exception e) {
+                Logger log = LoggerFactory.getLogger(CubaVaadinServletService.class);
+                log.debug("Unable to set MDC", e);
+            }
+        }
+
+        protected void clearLogMdc() {
+            try {
+                LogMdc.setup(null);
+            } catch (Exception e) {
+                Logger log = LoggerFactory.getLogger(CubaVaadinServletService.class);
+                log.debug("Unable to clear MDC", e);
             }
         }
     }

@@ -31,27 +31,27 @@ public interface Form extends Component, Component.BelongToFrame, Component.HasC
 
     Component getComponent(int column, int row);
 
-    CaptionAlignment getChildCaptionAlignment();
+    CaptionAlignment getCaptionAlignment();
 
-    void setChildCaptionAlignment(CaptionAlignment captionAlignment);
+    void setCaptionAlignment(CaptionAlignment captionAlignment);
 
     /**
      * @return fixed field caption width
      */
-    int getChildCaptionWidth();
+    int getChildrenCaptionWidth();
 
     /**
      * Set fixed captions width. Set -1 to use auto size.
      *
      * @param width fixed field caption width
      */
-    void setChildCaptionWidth(int width);
+    void setChildrenCaptionWidth(int width);
 
     /**
      * @param column column index
      * @return fixed field caption width for column {@code colIndex}
      */
-    int getChildCaptionWidth(int column);
+    int getChildrenCaptionWidth(int column);
 
     /**
      * Set fixed field captions width for column {@code colIndex}. Set -1 to use auto size.
@@ -59,7 +59,7 @@ public interface Form extends Component, Component.BelongToFrame, Component.HasC
      * @param column column index
      * @param width  width
      */
-    void setChildCaptionWidth(int column, int width);
+    void setChildrenCaptionWidth(int column, int width);
 
     /**
      * @return column count

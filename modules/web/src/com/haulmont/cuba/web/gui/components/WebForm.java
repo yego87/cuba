@@ -20,8 +20,6 @@ import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.Component;
-import com.haulmont.cuba.gui.components.EditableChangeNotifier;
-import com.haulmont.cuba.gui.components.EditableChangeNotifier.EditableChangeEvent;
 import com.haulmont.cuba.gui.components.Form;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.web.AppUI;
@@ -141,10 +139,18 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
         com.vaadin.ui.Component vComponent = WebComponentsHelper.getComposition(childComponent);
         assignTypicalAttributes(childComponent);
         assignDebugId(vComponent, childComponent.getId());
+        applyDefaults(childComponent);
 
         this.component.setRows(detectRowsCount());
 
         reattachColumnFields(column);
+    }
+
+    protected void applyDefaults(Component childComponent) {
+        if (childComponent instanceof HasCaption
+                && ((HasCaption) childComponent).getCaption() == null) {
+            ((HasCaption) childComponent).setCaption(" "); // Set an empty caption for proper positioning
+        }
     }
 
     protected void assignTypicalAttributes(Component component) {
@@ -274,34 +280,34 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
     }
 
     @Override
-    public CaptionAlignment getChildCaptionAlignment() {
+    public CaptionAlignment getCaptionAlignment() {
         return component.isUseInlineCaption()
                 ? CaptionAlignment.LEFT
                 : CaptionAlignment.TOP;
     }
 
     @Override
-    public void setChildCaptionAlignment(CaptionAlignment captionAlignment) {
+    public void setCaptionAlignment(CaptionAlignment captionAlignment) {
         component.setUseInlineCaption(CaptionAlignment.LEFT.equals(captionAlignment));
     }
 
     @Override
-    public int getChildCaptionWidth() {
+    public int getChildrenCaptionWidth() {
         return component.getFixedCaptionWidth();
     }
 
     @Override
-    public void setChildCaptionWidth(int width) {
+    public void setChildrenCaptionWidth(int width) {
         component.setFixedCaptionWidth(width);
     }
 
     @Override
-    public int getChildCaptionWidth(int column) {
+    public int getChildrenCaptionWidth(int column) {
         return component.getFieldCaptionWidth(column);
     }
 
     @Override
-    public void setChildCaptionWidth(int column, int width) {
+    public void setChildrenCaptionWidth(int column, int width) {
         component.setFieldCaptionWidth(column, width);
     }
 

@@ -35,14 +35,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @MetaClass(name = "sec$CustomCondition")
 @SystemLevel
-public class CustomCondition extends AbstractCondition {
+public class CustomCondition extends AbstractJPQLCondition {
 
     private String join;
 
     public CustomCondition() {
     }
 
-    protected CustomCondition(AbstractCondition other) {
+    protected CustomCondition(AbstractJPQLCondition other) {
         super(other);
         this.join = ((CustomCondition) other).join;
         this.operator = ((CustomCondition) other).operator;

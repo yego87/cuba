@@ -74,11 +74,8 @@ public abstract class AbstractCondition extends BaseUuidEntity {
     protected Class javaClass;
     protected Class paramClass;
     protected Param param;
-    protected String entityAlias;
     protected Boolean hidden = false;
     protected Boolean required = false;
-    protected String entityParamWhere;
-    protected String entityParamView;
     protected Boolean useUserTimeZone;
     protected Integer width = 1;
     protected Op operator;
@@ -101,11 +98,8 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         this.javaClass = other.javaClass;
         this.paramClass = other.paramClass;
         this.paramName = other.paramName;
-        this.entityAlias = other.entityAlias;
         this.hidden = other.hidden;
         this.required = other.required;
-        this.entityParamWhere = other.entityParamWhere;
-        this.entityParamView = other.entityParamView;
         this.metaClass = other.metaClass;
         this.width = other.width;
         this.param = other.param;
@@ -132,8 +126,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         hidden = Boolean.valueOf(element.attributeValue("hidden"));
         required = Boolean.valueOf(element.attributeValue("required"));
         useUserTimeZone = Boolean.valueOf(element.attributeValue("useUserTimeZone"));
-        entityParamWhere = element.attributeValue("paramWhere");
-        entityParamView = element.attributeValue("paramView");
         width = Strings.isNullOrEmpty(element.attributeValue("width")) ? 1 : Integer.parseInt(element.attributeValue("width"));
 
         resolveParam(element);
@@ -146,8 +138,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         filterComponentName = descriptor.getFilterComponentName();
         javaClass = descriptor.getJavaClass();
         unary = javaClass == null;
-        entityParamWhere = descriptor.getEntityParamWhere();
-        entityParamView = descriptor.getEntityParamView();
         metaClass = descriptor.getDatasourceMetaClass();
         messagesPack = descriptor.getMessagesPack();
         ConditionParamBuilder paramBuilder = AppBeans.get(ConditionParamBuilder.class);
@@ -279,10 +269,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         return paramClass;
     }
 
-    public String getEntityAlias() {
-        return entityAlias;
-    }
-
     public String getFilterComponentName() {
         return filterComponentName;
     }
@@ -345,10 +331,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
 
         if (param != null) {
             param.toXml(element, valueProperty);
-            if (entityParamWhere != null)
-                element.addAttribute("paramWhere", entityParamWhere);
-            if (entityParamView != null)
-                element.addAttribute("paramView", entityParamView);
         }
 
         if (width != null) {
@@ -396,24 +378,8 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         this.operator = operator;
     }
 
-    public String getEntityParamView() {
-        return entityParamView;
-    }
-
-    public void setEntityParamView(String entityParamView) {
-        this.entityParamView = entityParamView;
-    }
-
-    public String getEntityParamWhere() {
-        return entityParamWhere;
-    }
-
     public com.haulmont.chile.core.model.MetaClass getEntityMetaClass() {
         return metaClass;
-    }
-
-    public void setEntityParamWhere(String entityParamWhere) {
-        this.entityParamWhere = entityParamWhere;
     }
 
     public Integer getWidth() {

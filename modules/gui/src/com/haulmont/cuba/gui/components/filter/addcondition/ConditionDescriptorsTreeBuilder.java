@@ -104,8 +104,6 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
         Class<? extends FrameOwner> controllerClass = filter.getFrame().getFrameOwner().getClass();
         String messagesPack = controllerClass.getPackage().getName(); // todo rework
 
-        CollectionDatasource datasource = filter.getDatasource();
-
         Tree<AbstractConditionDescriptor> tree = new Tree<>();
         List<AbstractConditionDescriptor> propertyDescriptors = new ArrayList<>();
         List<AbstractConditionDescriptor> customDescriptors = new ArrayList<>();

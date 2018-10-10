@@ -121,7 +121,6 @@ public class DynamicAttributesConditionFrame extends ConditionFrame<DynamicAttri
 
         CategoryAttribute attribute = attributeLookup.getValue();
 
-        String alias = condition.getEntityAlias();
         String cavAlias = "cav" + RandomStringUtils.randomNumeric(5);
 
         String paramName;

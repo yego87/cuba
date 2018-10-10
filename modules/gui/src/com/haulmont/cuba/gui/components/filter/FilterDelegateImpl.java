@@ -1352,10 +1352,9 @@ public class FilterDelegateImpl implements FilterDelegate {
     }
 
     @Override
-    public String getEntityAlias() {
+    public String getSourceQuery() {
         checkState();
-        DataStoreSupport dataStoreSupport = null;
-        return dataStoreSupport.getEntityAlias(adapter.getMetaClass().getName(), adapter.getQuery());
+        return adapter.getQuery();
     }
 
     @Override

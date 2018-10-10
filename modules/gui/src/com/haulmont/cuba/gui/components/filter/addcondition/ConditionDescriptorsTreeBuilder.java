@@ -110,19 +110,21 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
 
         boolean propertiesExplicitlyDefined = false;
         if (filter.getXmlDescriptor() != null) {
-            for (Element element : Dom4j.elements(filter.getXmlDescriptor())) {
+            for (Element element : filter.getXmlDescriptor().elements()) {
                 AbstractConditionDescriptor conditionDescriptor;
                 if ("properties".equals(element.getName())) {
                     addMultiplePropertyDescriptors(element, propertyDescriptors, filter);
                     propertiesExplicitlyDefined = true;
                 } else if ("property".equals(element.getName())) {
+                    //noinspection IncorrectCreateEntity
                     conditionDescriptor = new PropertyConditionDescriptor(element, messagesPack, filterComponentName,
                             entityMetaClass, entityAlias);
                     propertyDescriptors.add(conditionDescriptor);
                     propertiesExplicitlyDefined = true;
                 } else if ("custom".equals(element.getName())) {
+                    //noinspection IncorrectCreateEntity
                     conditionDescriptor = new CustomConditionDescriptor(element, messagesPack, filterComponentName,
-                            entityMetaClass, entityAlias);
+                            entityMetaClass);
                     customDescriptors.add(conditionDescriptor);
                     propertiesExplicitlyDefined = true;
                 } else {
@@ -138,12 +140,14 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
         propertyDescriptors.sort(new ConditionDescriptorComparator());
         customDescriptors.sort(new ConditionDescriptorComparator());
 
+        //noinspection IncorrectCreateEntity
         HeaderConditionDescriptor propertyHeaderDescriptor = new HeaderConditionDescriptor("propertyConditions",
                 messages.getMainMessage("filter.addCondition.propertyConditions"), filterComponentName,
-                entityMetaClass, entityAlias);
+                entityMetaClass);
+        //noinspection IncorrectCreateEntity
         HeaderConditionDescriptor customHeaderDescriptor = new HeaderConditionDescriptor("customConditions",
                 messages.getMainMessage("filter.addCondition.customConditions"), filterComponentName,
-                entityMetaClass, entityAlias);
+                entityMetaClass);
 
         Node<AbstractConditionDescriptor> propertyHeaderNode = new Node<>(propertyHeaderDescriptor);
         Node<AbstractConditionDescriptor> customHeaderNode = new Node<>(customHeaderDescriptor);
@@ -184,16 +188,18 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
             rootNodes.add(customHeaderNode);
 
         if (!hideCustomConditions && security.isSpecificPermitted(CUSTOM_CONDITIONS_PERMISSION)) {
-            rootNodes.add(new Node<>(new CustomConditionCreator(filterComponentName,
-                    ((FilterImplementation) filter).getEntityMetaClass(), entityAlias)));
+            //noinspection IncorrectCreateEntity
+            rootNodes.add(new Node<>(new CustomConditionCreator(filterComponentName, entityMetaClass)));
         }
 
         if (!hideDynamicAttributes && !dynamicAttributes.getAttributesForMetaClass(entityMetaClass).isEmpty()) {
-            rootNodes.add(new Node<>(new DynamicAttributesConditionCreator(filterComponentName, entityMetaClass, "", entityAlias)));
+            //noinspection IncorrectCreateEntity
+            rootNodes.add(new Node<>(new DynamicAttributesConditionCreator(filterComponentName, entityMetaClass, "")));
         }
 
         if (FtsConfigHelper.getEnabled()) {
-            rootNodes.add(new Node<>(new FtsConditionDescriptor(filterComponentName, entityMetaClass, entityAlias)));
+            //noinspection IncorrectCreateEntity
+            rootNodes.add(new Node<>(new FtsConditionDescriptor(filterComponentName, entityMetaClass)));
         }
 
         tree.setRootNodes(rootNodes);
@@ -248,8 +254,9 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
         if (metaProperty.getRange().isClass()) {
             MetaClass childMetaClass = metaProperty.getRange().asClass();
             if (!dynamicAttributes.getAttributesForMetaClass(childMetaClass).isEmpty()) {
+                //noinspection IncorrectCreateEntity
                 DynamicAttributesConditionCreator descriptor = new DynamicAttributesConditionCreator(filterComponentName,
-                        entityMetaClass, propertyId, entityAlias);
+                        entityMetaClass, propertyId);
                 Node<AbstractConditionDescriptor> newNode = new Node<>(descriptor);
                 parentNode.addChild(newNode);
             }
@@ -297,7 +304,7 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
             if (exclPattern == null || !exclPattern.matcher(prop).matches()) {
                 Class<? extends FrameOwner> controllerClass = filter.getFrame().getFrameOwner().getClass();
                 String messagesPack = controllerClass.getPackage().getName(); // todo rework
-
+                //noinspection IncorrectCreateEntity
                 AbstractConditionDescriptor conditionDescriptor =
                         new PropertyConditionDescriptor(prop, null, messagesPack,
                                 filterComponentName, entityMetaClass, entityAlias);

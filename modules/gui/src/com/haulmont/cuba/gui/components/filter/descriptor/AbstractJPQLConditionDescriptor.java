@@ -22,11 +22,9 @@ import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 @com.haulmont.chile.core.annotations.MetaClass(name = "sec$AbstractJPQLConditionDescriptor")
 @SystemLevel
 public abstract class AbstractJPQLConditionDescriptor extends AbstractConditionDescriptor {
-    protected String entityAlias;
 
-    public AbstractJPQLConditionDescriptor(String name, String filterComponentName, MetaClass metaClass, String entityAlias) {
+    public AbstractJPQLConditionDescriptor(String name, String filterComponentName, MetaClass metaClass) {
         super(name, filterComponentName, metaClass);
-        this.entityAlias = entityAlias;
     }
 
     public abstract String getEntityParamWhere();

@@ -32,6 +32,7 @@ import com.haulmont.cuba.core.global.filter.Op;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.DynamicAttributesOperationEditor;
 import com.haulmont.cuba.gui.data.Datasource;
@@ -51,7 +52,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @MetaClass(name = "sec$DynamicAttributesCondition")
 @SystemLevel
-public class DynamicAttributesCondition extends AbstractCondition {
+public class DynamicAttributesCondition extends AbstractJPQLCondition {
 
     protected UUID categoryId;
     protected UUID categoryAttributeId;
@@ -68,9 +69,8 @@ public class DynamicAttributesCondition extends AbstractCondition {
         this.isCollection = condition.getIsCollection();
     }
 
-    public DynamicAttributesCondition(AbstractConditionDescriptor descriptor, String entityAlias, String propertyPath) {
+    public DynamicAttributesCondition(AbstractJPQLConditionDescriptor descriptor, String propertyPath) {
         super(descriptor);
-        this.entityAlias = entityAlias;
         this.name = RandomStringUtils.randomAlphabetic(10);
         Messages messages = AppBeans.get(Messages.class);
         this.locCaption = messages.getMainMessage("newDynamicAttributeCondition");
@@ -86,8 +86,6 @@ public class DynamicAttributesCondition extends AbstractCondition {
         locCaption = isBlank(caption)
                 ? element.attributeValue("locCaption")
                 : messageTools.loadString(messagesPack, caption);
-
-        entityAlias = element.attributeValue("entityAlias");
         text = element.getText();
         join = element.attributeValue("join");
         categoryId = UUID.fromString(element.attributeValue("category"));
@@ -96,8 +94,7 @@ public class DynamicAttributesCondition extends AbstractCondition {
             categoryAttributeId = UUID.fromString(categoryAttributeValue);
         } else {
             //for backward compatibility
-            List<Element> paramElements = Dom4j.elements(element, "param");
-            for (Element paramElement : paramElements) {
+            for (Element paramElement : element.elements("param")) {
                 if (BooleanUtils.toBoolean(paramElement.attributeValue("hidden", "false"), "true", "false")) {
                     categoryAttributeId = UUID.fromString(paramElement.getText());
                     String paramName = paramElement.attributeValue("name");
@@ -119,7 +116,6 @@ public class DynamicAttributesCondition extends AbstractCondition {
         }
         element.addAttribute("category", categoryId.toString());
         element.addAttribute("categoryAttribute", categoryAttributeId.toString());
-        element.addAttribute("entityAlias", entityAlias);
         if (!isBlank(propertyPath)) {
             element.addAttribute("propertyPath", propertyPath);
         }

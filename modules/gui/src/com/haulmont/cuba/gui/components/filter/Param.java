@@ -92,7 +92,7 @@ public class Param {
     protected Object value;
     protected Object defaultValue;
     protected boolean useUserTimeZone;
-    protected String entityWhere;
+    protected String entityQuery;
     protected String entityView;
     protected MetaProperty property;
     protected boolean inExpr;
@@ -116,7 +116,7 @@ public class Param {
     public static class Builder {
         private String name;
         private Class javaClass;
-        private String entityWhere;
+        private String entityQuery;
         private String entityView;
         private MetaClass metaClass;
         private MetaProperty property;
@@ -143,8 +143,8 @@ public class Param {
             return this;
         }
 
-        public Builder setEntityWhere(String entityWhere) {
-            this.entityWhere = entityWhere;
+        public Builder setEntityQuery(String entityQuery) {
+            this.entityQuery = entityQuery;
             return this;
         }
 
@@ -195,7 +195,7 @@ public class Param {
     public Param(Builder builder) {
         name = builder.name;
         setJavaClass(builder.javaClass);
-        entityWhere = builder.entityWhere;
+        entityQuery = builder.entityQuery;
         entityView = (builder.entityView != null) ? builder.entityView : View.MINIMAL;
         property = builder.property;
         inExpr = builder.inExpr;

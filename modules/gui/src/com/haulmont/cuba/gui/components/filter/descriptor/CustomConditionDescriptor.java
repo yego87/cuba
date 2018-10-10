@@ -32,29 +32,26 @@ import org.dom4j.Element;
  */
 @com.haulmont.chile.core.annotations.MetaClass(name = "sec$CustomConditionDescriptor")
 @SystemLevel
-public class CustomConditionDescriptor extends AbstractConditionDescriptor {
+public class CustomConditionDescriptor extends AbstractJPQLConditionDescriptor {
     public CustomConditionDescriptor(Element element,
                                      String messagesPack,
                                      String filterComponentName,
-                                     MetaClass metaClass,
-                                     String entityAlias) {
-        super(element.attributeValue("name"), filterComponentName, metaClass, entityAlias);
+                                     MetaClass metaClass) {
+        super(element.attributeValue("name"), filterComponentName, metaClass);
         this.element = element;
         this.messagesPack = messagesPack;
         this.caption = element.attributeValue("caption");
         if (this.caption != null) {
-            MessageTools messageTools = AppBeans.get(MessageTools.NAME);
-            this.locCaption = messageTools.loadString(messagesPack, this.caption);
+            this.locCaption = messages.getTools().loadString(messagesPack, this.caption);
         }
 
-        inExpr = Boolean.valueOf(element.attributeValue("inExpr"));
+        this.inExpr = Boolean.valueOf(element.attributeValue("inExpr"));
     }
 
     @Override
     public AbstractCondition createCondition() {
-        CustomCondition condition = new CustomCondition(this,
-                element.getText(), getJoinValue(), entityAlias, inExpr);
-        return condition;
+        //noinspection IncorrectCreateEntity
+        return new CustomCondition(this, element.getText(), getJoinValue(), inExpr);
     }
 
     protected String getJoinValue() {

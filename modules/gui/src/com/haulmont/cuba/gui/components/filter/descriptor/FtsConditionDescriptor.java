@@ -16,32 +16,27 @@
 
 package com.haulmont.cuba.gui.components.filter.descriptor;
 
-import com.haulmont.chile.core.annotations.MetaClass;
+import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
-import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 import com.haulmont.cuba.gui.components.filter.condition.FtsCondition;
-import com.haulmont.cuba.gui.data.CollectionDatasource;
 
-@MetaClass(name = "sec$FtsConditionDescriptor")
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$FtsConditionDescriptor")
 @SystemLevel
-public class FtsConditionDescriptor extends AbstractConditionDescriptor {
+public class FtsConditionDescriptor extends AbstractJPQLConditionDescriptor {
 
-    public FtsConditionDescriptor(String filterComponentName, com.haulmont.chile.core.model.MetaClass metaClass,
-                                  String entityAlias) {
-        super("fts", filterComponentName, metaClass, entityAlias);
+    public FtsConditionDescriptor(String filterComponentName, MetaClass metaClass) {
+        super("fts", filterComponentName, metaClass);
     }
 
     @Override
     public AbstractCondition createCondition() {
-        FtsCondition ftsCondition = new FtsCondition(this);
-        return ftsCondition;
+        //noinspection IncorrectCreateEntity
+        return new FtsCondition(this);
     }
 
     @Override
     public String getTreeCaption() {
-        Messages messages = AppBeans.get(Messages.NAME);
         return messages.getMainMessage("filter.addCondition.ftsCondition");
     }
 

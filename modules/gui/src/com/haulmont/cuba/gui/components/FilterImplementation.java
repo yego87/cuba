@@ -27,7 +27,7 @@ public interface FilterImplementation {
 
     MetaClass getEntityMetaClass();
 
-    String getEntityAlias();
+    String getSourceQuery();
 
     void loadFiltersAndApplyDefault();
 }

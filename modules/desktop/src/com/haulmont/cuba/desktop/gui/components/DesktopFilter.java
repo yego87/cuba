@@ -389,8 +389,8 @@ public class DesktopFilter extends DesktopAbstractComponent<JPanel> implements F
     }
 
     @Override
-    public String getEntityAlias() {
-        return delegate.getEntityAlias();
+    public String getSourceQuery() {
+        return delegate.getSourceQuery();
     }
 
     @Override

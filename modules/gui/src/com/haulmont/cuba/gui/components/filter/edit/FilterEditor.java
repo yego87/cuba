@@ -441,7 +441,7 @@ public class FilterEditor extends AbstractWindow {
 
     protected void addGroup(GroupType groupType) {
         GroupConditionDescriptor conditionDescriptor = new GroupConditionDescriptor(groupType, filter.getId(),
-                ((FilterImplementation) filter).getEntityMetaClass(), ((FilterImplementation) filter).getEntityAlias());
+                ((FilterImplementation) filter).getEntityMetaClass());
         AbstractCondition condition = conditionDescriptor.createCondition();
         AbstractCondition selectedCondition = conditionsDs.getItem();
         Node<AbstractCondition> newNode = new Node<>(condition);

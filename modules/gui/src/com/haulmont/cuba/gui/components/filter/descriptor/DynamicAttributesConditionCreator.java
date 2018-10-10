@@ -17,33 +17,31 @@
 
 package com.haulmont.cuba.gui.components.filter.descriptor;
 
-import com.haulmont.chile.core.annotations.MetaClass;
+import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
-import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.core.global.Messages;
-import com.haulmont.cuba.gui.components.filter.condition.DynamicAttributesCondition;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
-import com.haulmont.cuba.gui.data.CollectionDatasource;
+import com.haulmont.cuba.gui.components.filter.condition.DynamicAttributesCondition;
 import org.apache.commons.lang3.RandomStringUtils;
 
-@MetaClass(name = "sec$DynamicAttributesConditionCreator")
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$DynamicAttributesConditionCreator")
 @SystemLevel
-public class DynamicAttributesConditionCreator extends AbstractConditionDescriptor {
+public class DynamicAttributesConditionCreator extends AbstractJPQLConditionDescriptor {
 
     protected String propertyPath;
 
-    public DynamicAttributesConditionCreator(String filterComponentName, com.haulmont.chile.core.model.MetaClass metaClass,
-                                             String propertyPath, String entityAlias) {
-        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass, entityAlias);
+    public DynamicAttributesConditionCreator(String filterComponentName,
+                                             MetaClass metaClass,
+                                             String propertyPath) {
+        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass);
         this.propertyPath = propertyPath;
-        Messages messages = AppBeans.get(Messages.NAME);
-        locCaption = messages.getMainMessage("filter.dynamicAttributeConditionCreator");
-        showImmediately = true;
+        this.locCaption = messages.getMainMessage("filter.dynamicAttributeConditionCreator");
+        this.showImmediately = true;
     }
 
     @Override
     public AbstractCondition createCondition() {
-        return new DynamicAttributesCondition(this, entityAlias, propertyPath);
+        //noinspection IncorrectCreateEntity
+        return new DynamicAttributesCondition(this, propertyPath);
     }
 
     @Override

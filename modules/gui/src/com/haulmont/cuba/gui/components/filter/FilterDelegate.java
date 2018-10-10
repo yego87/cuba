@@ -62,7 +62,7 @@ public interface FilterDelegate {
 
     MetaClass getEntityMetaClass();
 
-    String getEntityAlias();
+    String getSourceQuery();
 
     void setDatasource(CollectionDatasource datasource);
 

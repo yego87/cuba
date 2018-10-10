@@ -21,6 +21,8 @@ import com.haulmont.chile.core.annotations.MetaProperty;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.BaseUuidEntity;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
+import com.haulmont.cuba.core.global.AppBeans;
+import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 import org.dom4j.Element;
 
@@ -44,6 +46,8 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
     protected Boolean showImmediately = false;
     protected String messagesPack;
 
+    protected Messages messages = AppBeans.get(Messages.NAME);
+
     public AbstractConditionDescriptor(String name, String filterComponentName, MetaClass metaClass) {
         this.name = name;
         this.filterComponentName = filterComponentName;
@@ -56,11 +60,6 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
 
     public String getCaption() {
         return caption;
-    }
-
-    @MetaProperty
-    public String getLocCaption() {
-        return locCaption;
     }
 
     public String getMessagesPack() {
@@ -88,19 +87,22 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
     }
 
     public String getOperatorType() {
-        if (element != null)
-            return element.attributeValue("operatorType", null);
-        else return null;
+        return element != null ? element.attributeValue("operatorType", null) : null;
     }
 
-    public abstract AbstractCondition createCondition();
-
-    public abstract Class getJavaClass();
+    @MetaProperty
+    public String getLocCaption() {
+        return locCaption;
+    }
 
     @MetaProperty
     public String getTreeCaption() {
         return getLocCaption();
     }
+
+    public abstract AbstractCondition createCondition();
+
+    public abstract Class getJavaClass();
 
     @Override
     public String toString() {

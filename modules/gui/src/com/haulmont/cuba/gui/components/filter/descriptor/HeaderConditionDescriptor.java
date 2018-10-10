@@ -17,24 +17,21 @@
 
 package com.haulmont.cuba.gui.components.filter.descriptor;
 
-import com.haulmont.chile.core.annotations.MetaClass;
+import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
-import com.haulmont.cuba.gui.data.CollectionDatasource;
 
 /**
  * Condition descriptor that doesn't describe any condition.
  * It is used as parent node for property condition descriptors and custom condition descriptors.
- *
  */
-@MetaClass(name = "sec$HeaderConditionDescriptor")
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$HeaderConditionDescriptor")
 @SystemLevel
 public class HeaderConditionDescriptor extends AbstractConditionDescriptor {
 
-
     public HeaderConditionDescriptor(String name, String locCaption, String filterComponentName,
-                                     com.haulmont.chile.core.model.MetaClass metaClass, String entityAlias) {
-        super(name, filterComponentName, metaClass, entityAlias);
+                                     MetaClass metaClass) {
+        super(name, filterComponentName, metaClass);
         this.locCaption = locCaption;
     }
 
@@ -45,16 +42,6 @@ public class HeaderConditionDescriptor extends AbstractConditionDescriptor {
 
     @Override
     public Class getJavaClass() {
-        return null;
-    }
-
-    @Override
-    public String getEntityParamWhere() {
-        return null;
-    }
-
-    @Override
-    public String getEntityParamView() {
         return null;
     }
 }

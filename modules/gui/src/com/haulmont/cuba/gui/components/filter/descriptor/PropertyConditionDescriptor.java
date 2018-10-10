@@ -41,9 +41,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @com.haulmont.chile.core.annotations.MetaClass(name = "sec$PropertyConditionDescriptor")
 @SystemLevel
-public class PropertyConditionDescriptor extends AbstractConditionDescriptor {
+public class PropertyConditionDescriptor extends AbstractJPQLConditionDescriptor {
     protected String entityParamWhere;
     protected String entityParamView;
+    protected String entityAlias;
 
     public PropertyConditionDescriptor(String name,
                                        @Nullable String caption,
@@ -51,10 +52,10 @@ public class PropertyConditionDescriptor extends AbstractConditionDescriptor {
                                        String filterComponentName,
                                        MetaClass metaClass,
                                        String entityAlias) {
-        super(name, filterComponentName, metaClass, entityAlias);
+        super(name, filterComponentName, metaClass);
         this.caption = caption;
         this.messagesPack = messagesPack;
-        Messages messages = AppBeans.get(Messages.NAME);
+        this.entityAlias = entityAlias;
 
         if (!isBlank(caption)) {
             this.locCaption = messages.getTools().loadString(messagesPack, caption);

@@ -32,8 +32,8 @@ public class GroupConditionDescriptor extends AbstractConditionDescriptor {
     protected GroupType groupType;
 
     public GroupConditionDescriptor(GroupType groupType,
-                                    String filterComponentName, MetaClass metaClass, String entityAlias) {
-        super("group", filterComponentName, metaClass, entityAlias);
+                                    String filterComponentName, MetaClass metaClass) {
+        super("group", filterComponentName, metaClass);
         this.groupType = groupType;
     }
 
@@ -43,21 +43,12 @@ public class GroupConditionDescriptor extends AbstractConditionDescriptor {
 
     @Override
     public AbstractCondition createCondition() {
+        //noinspection IncorrectCreateEntity
         return new GroupCondition(this);
     }
 
     @Override
     public Class getJavaClass() {
-        return null;
-    }
-
-    @Override
-    public String getEntityParamWhere() {
-        return null;
-    }
-
-    @Override
-    public String getEntityParamView() {
         return null;
     }
 }

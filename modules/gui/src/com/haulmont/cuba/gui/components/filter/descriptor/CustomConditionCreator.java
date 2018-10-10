@@ -16,7 +16,7 @@
  */
 package com.haulmont.cuba.gui.components.filter.descriptor;
 
-import com.haulmont.chile.core.annotations.MetaClass;
+import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.Messages;
@@ -24,28 +24,25 @@ import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 import com.haulmont.cuba.gui.components.filter.condition.CustomCondition;
-import com.haulmont.cuba.gui.data.CollectionDatasource;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * Condition descriptor is used for creating new custom condition
  */
-@MetaClass(name = "sec$CustomConditionCreator")
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$CustomConditionCreator")
 @SystemLevel
-public class CustomConditionCreator extends AbstractConditionDescriptor {
+public class CustomConditionCreator extends AbstractJPQLConditionDescriptor {
 
-    public CustomConditionCreator(String filterComponentName, com.haulmont.chile.core.model.MetaClass metaClass,
-                                  String entityAlias) {
-        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass, entityAlias);
-
-        Messages messages = AppBeans.get(Messages.NAME);
+    public CustomConditionCreator(String filterComponentName, MetaClass metaClass) {
+        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass);
         this.locCaption = messages.getMainMessage("filter.customCondition.new");
-        showImmediately = true;
+        this.showImmediately = true;
     }
 
     @Override
     public AbstractCondition createCondition() {
-        CustomCondition customCondition = new CustomCondition(this, null, null, entityAlias, false);
+        //noinspection IncorrectCreateEntity
+        CustomCondition customCondition = new CustomCondition(this, null, null, false);
 
         // default editor - text
         customCondition.setJavaClass(String.class);
@@ -57,7 +54,6 @@ public class CustomConditionCreator extends AbstractConditionDescriptor {
 
     @Override
     public String getTreeCaption() {
-        Messages messages = AppBeans.get(Messages.NAME);
         return messages.getMainMessage("filter.customConditionCreator");
     }
 

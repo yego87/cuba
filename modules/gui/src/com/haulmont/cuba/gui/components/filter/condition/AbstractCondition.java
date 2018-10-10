@@ -390,11 +390,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         this.width = width;
     }
 
-//    public String createParamName() {
-//        return "component$" + getFilterComponentName() + "." +
-//                getName().replace('.', '_') + RandomStringUtils.randomNumeric(5);
-//    }
-
     public AbstractOperationEditor createOperationEditor() {
         return null;
     }

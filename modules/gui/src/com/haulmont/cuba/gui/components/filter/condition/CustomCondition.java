@@ -25,6 +25,7 @@ import com.haulmont.cuba.core.global.filter.ConditionType;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.CustomOperationEditor;
 import com.haulmont.cuba.gui.data.Datasource;
@@ -58,8 +59,6 @@ public class CustomCondition extends AbstractJPQLCondition {
             locCaption = messageTools.loadString(messagesPack, caption);
         }
 
-        entityAlias = element.attributeValue("entityAlias");
-
         Element joinElement = element.element("join");
         if (joinElement != null) {
             this.join = joinElement.getText();
@@ -70,9 +69,8 @@ public class CustomCondition extends AbstractJPQLCondition {
 
     }
 
-    public CustomCondition(AbstractConditionDescriptor descriptor, String where, String join, String entityAlias, boolean inExpr) {
+    public CustomCondition(AbstractJPQLConditionDescriptor descriptor, String where, String join, boolean inExpr) {
         super(descriptor);
-        this.entityAlias = entityAlias;
         this.join = join;
         this.text = where;
         this.inExpr = inExpr;
@@ -91,8 +89,6 @@ public class CustomCondition extends AbstractJPQLCondition {
         if (isBlank(caption)) {
             element.addAttribute("locCaption", locCaption);
         }
-
-        element.addAttribute("entityAlias", entityAlias);
 
         if (!isBlank(join)) {
             Element joinElement = element.addElement("join");

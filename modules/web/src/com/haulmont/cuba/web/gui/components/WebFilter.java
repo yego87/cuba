@@ -351,8 +351,8 @@ public class WebFilter extends WebAbstractComponent<com.vaadin.ui.Component> imp
     }
 
     @Override
-    public String getEntityAlias() {
-        return delegate.getEntityAlias();
+    public String getSourceQuery() {
+        return delegate.getSourceQuery();
     }
 
     @Override

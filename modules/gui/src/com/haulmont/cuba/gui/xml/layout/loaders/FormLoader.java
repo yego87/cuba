@@ -99,7 +99,7 @@ public class FormLoader extends AbstractComponentLoader<Form> {
         ValueSourceProvider valueSourceProvider = resultComponent.getValueSourceProvider();
         if (element.elements("column").isEmpty()) {
             Iterable<Component> rootComponents = loadComponents(element, null);
-            Iterable<Component> dynamicAttributeComponents = loadDynamicAttributeComponents(valueSourceProvider);
+            Iterable<Component> dynamicAttributeComponents = loadDynamicAttributeComponents(valueSourceProvider, null);
             for (Component component : Iterables.concat(rootComponents, dynamicAttributeComponents)) {
                 resultComponent.add(component);
             }
@@ -122,7 +122,7 @@ public class FormLoader extends AbstractComponentLoader<Form> {
                 Iterable<Component> columnComponents = loadComponents(columnElement, columnWidth);
                 if (colIndex == 0) {
                     columnComponents = Iterables.concat(columnComponents,
-                            loadDynamicAttributeComponents(valueSourceProvider));
+                            loadDynamicAttributeComponents(valueSourceProvider, columnWidth));
                 }
                 for (Component component : columnComponents) {
                     resultComponent.add(component, colIndex);
@@ -193,7 +193,8 @@ public class FormLoader extends AbstractComponentLoader<Form> {
         return component;
     }
 
-    protected List<Component> loadDynamicAttributeComponents(ValueSourceProvider provider) {
+    protected List<Component> loadDynamicAttributeComponents(ValueSourceProvider provider,
+                                                             @Nullable String columnWidth) {
         if (provider instanceof ContainerValueSourceProvider
                 && getMetadataTools().isPersistent(
                 ((ContainerValueSourceProvider) provider).getContainer().getEntityMetaClass())) {
@@ -222,7 +223,11 @@ public class FormLoader extends AbstractComponentLoader<Form> {
                     field.setRequired(attribute.getRequired());
                     field.setRequiredMessage(getMessages()
                             .formatMainMessage("validation.required.defaultMsg", attribute.getLocaleName()));
-                    loadWidth(field, attribute.getWidth());
+
+                    String defaultWidth =
+                            Strings.isNullOrEmpty(attribute.getWidth())
+                                    ? columnWidth : attribute.getWidth();
+                    loadWidth(field, defaultWidth);
 
                     // Currently, ListEditor does not support datasource binding so we create custom field
                     if (Boolean.TRUE.equals(attribute.getIsCollection())) {

@@ -16,6 +16,7 @@
  */
 package com.haulmont.cuba.web.gui.components;
 
+import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.chile.core.datatypes.Datatype;
 import com.haulmont.chile.core.datatypes.Datatypes;
@@ -77,6 +78,8 @@ public class WebDateField<V extends Comparable<V>>
     protected boolean editable = true;
 
     protected ThemeConstants theme;
+
+    protected Subscription parentEditableChangeSubscription;
 
     public WebDateField() {
         component = createComponent();
@@ -465,6 +468,33 @@ public class WebDateField<V extends Comparable<V>>
     }
 
     @Override
+    public void setParent(Component parent) {
+        if (this.parent instanceof EditableChangeNotifier
+                && parentEditableChangeSubscription != null) {
+            parentEditableChangeSubscription.remove();
+            parentEditableChangeSubscription = null;
+        }
+
+        super.setParent(parent);
+
+        if (parent instanceof EditableChangeNotifier) {
+            parentEditableChangeSubscription =
+                    ((EditableChangeNotifier) parent).addEditableChangeListener(this::onParentEditableChange);
+
+            Editable parentEditable = (Editable) parent;
+            if (!parentEditable.isEditable()) {
+                setEditableToComponent(false);
+            }
+        }
+    }
+
+    protected void onParentEditableChange(EditableChangeNotifier.EditableChangeEvent event) {
+        boolean parentEditable = event.getSource().isEditable();
+        boolean finalEditable = parentEditable && editable;
+        setEditableToComponent(finalEditable);
+    }
+
+    @Override
     public boolean isEditable() {
         return editable;
     }
@@ -535,7 +565,7 @@ public class WebDateField<V extends Comparable<V>>
     }
 
     protected ErrorMessage getErrorMessage() {
-        return (isEditable() && isRequired() && isEmpty())
+        return (isEditableWithParent() && isRequired() && isEmpty())
                 ? new UserError(getRequiredMessage())
                 : null;
     }

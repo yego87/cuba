@@ -19,13 +19,20 @@ package com.haulmont.cuba.web.gui.components;
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.ComponentsHelper;
+import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionDescriptor;
+import com.haulmont.cuba.gui.app.security.role.edit.UiPermissionValue;
 import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.Form;
+import com.haulmont.cuba.gui.components.SecuredActionsHolder;
+import com.haulmont.cuba.gui.components.UiPermissionAware;
 import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
+import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.widgets.CubaFieldGroupLayout;
 import com.vaadin.ui.GridLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -33,8 +40,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 
-public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implements Form {
+public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implements Form, UiPermissionAware {
 
     protected List<List<Component>> columnComponentMapping = new ArrayList<>();
 
@@ -226,11 +234,6 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
 
     @Override
     public void removeAll() {
-        // FIXME: gg, the component remains its size
-        /*for (Component component : new ArrayList<>(getOwnComponents())) {
-            remove(component);
-        }*/
-
         component.removeAllComponents();
 
         List<Component> components = new ArrayList<>(getOwnComponents());
@@ -354,5 +357,47 @@ public class WebForm extends WebAbstractComponent<CubaFieldGroupLayout> implemen
         }
 
         this.valueSourceProvider = provider;
+    }
+
+    @Override
+    public void applyPermission(UiPermissionDescriptor permissionDescriptor) {
+        checkNotNullArgument(permissionDescriptor);
+
+        final Logger log = LoggerFactory.getLogger(WebForm.class);
+
+        final String subComponentId = permissionDescriptor.getSubComponentId();
+        final UiPermissionValue permissionValue = permissionDescriptor.getPermissionValue();
+        final String screenId = permissionDescriptor.getScreenId();
+
+        if (subComponentId != null) {
+            final Component component = getComponent(subComponentId);
+            if (component != null) {
+                if (permissionValue == UiPermissionValue.HIDE) {
+                    component.setVisible(false);
+                } else if (permissionValue == UiPermissionValue.READ_ONLY
+                        && this.component instanceof Editable) {
+                    ((Editable) component).setEditable(false);
+                }
+            } else {
+                log.info("Couldn't find suitable component {} in window {} for UI security rule",
+                        subComponentId, screenId);
+            }
+        } else {
+            final String actionHolderComponentId = permissionDescriptor.getActionHolderComponentId();
+            Component component = getComponent(actionHolderComponentId);
+            if (!(component instanceof SecuredActionsHolder)) {
+                log.info("Couldn't find suitable component {} in window {} for UI security rule",
+                        actionHolderComponentId, screenId);
+                return;
+            }
+
+            String actionId = permissionDescriptor.getActionId();
+            ActionsPermissions permissions = ((SecuredActionsHolder) component).getActionsPermissions();
+            if (permissionValue == UiPermissionValue.HIDE) {
+                permissions.addHiddenActionPermission(actionId);
+            } else if (permissionValue == UiPermissionValue.READ_ONLY) {
+                permissions.addDisabledActionPermission(actionId);
+            }
+        }
     }
 }

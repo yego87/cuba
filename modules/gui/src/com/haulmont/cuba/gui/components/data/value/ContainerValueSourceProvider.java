@@ -35,7 +35,6 @@ public class ContainerValueSourceProvider<E extends Entity> implements ValueSour
 
     @Override
     public ValueSource<?> getValueSource(String property) {
-        // TODO: gg, cache?
         return new ContainerValueSource<>(container, property);
     }
 }

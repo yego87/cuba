@@ -17,9 +17,13 @@
 package com.haulmont.cuba.gui.components.data;
 
 /**
- * todo JavaDoc
+ * Provides instances of {@link ValueSource}, for instance, for child components.
  */
 public interface ValueSourceProvider {
 
+    /**
+     * @param property a property to get a {@link ValueSource}
+     * @return an instance of {@link ValueSource} for a given property
+     */
     ValueSource<?> getValueSource(String property);
 }

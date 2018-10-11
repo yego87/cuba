@@ -17,7 +17,7 @@
 package com.haulmont.cuba.gui.components.data;
 
 /**
- * todo JavaDoc
+ * An object having a ValueSourceProvider.
  */
 public interface HasValueSourceProvider {
 

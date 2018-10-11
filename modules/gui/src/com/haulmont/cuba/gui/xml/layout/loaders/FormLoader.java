@@ -209,41 +209,33 @@ public class FormLoader extends AbstractComponentLoader<Form> {
             if (!attributesToShow.isEmpty()) {
                 List<Component> components = new ArrayList<>();
 
-                // TODO: gg, how to replace?
-//                instanceContainer.setLoadDynamicAttributes(true);
-
                 for (CategoryAttribute attribute : attributesToShow) {
                     String code = DynamicAttributesUtils.encodeAttributeCode(attribute.getCode());
 
                     ComponentGenerationContext context = new ComponentGenerationContext(metaClass, code);
-                    // FIXME: gg, check before cast?
-                    Field field = (Field) getUiComponentsGenerator().generate(context);
-                    field.setCaption(attribute.getLocaleName());
-                    field.setValueSource(provider.getValueSource(code));
-                    field.setRequired(attribute.getRequired());
-                    field.setRequiredMessage(getMessages()
-                            .formatMainMessage("validation.required.defaultMsg", attribute.getLocaleName()));
-
+                    Component dynamicAttrComponent = getUiComponentsGenerator().generate(context);
+                    if (dynamicAttrComponent instanceof Component.HasCaption) {
+                        ((Component.HasCaption) dynamicAttrComponent).setCaption(attribute.getLocaleName());
+                    }
+                    if (dynamicAttrComponent instanceof HasValueSource) {
+                        //noinspection unchecked
+                        ((HasValueSource) dynamicAttrComponent).setValueSource(provider.getValueSource(code));
+                    }
+                    if (dynamicAttrComponent instanceof Field) {
+                        ((Field) dynamicAttrComponent).setRequired(attribute.getRequired());
+                        ((Field) dynamicAttrComponent).setRequiredMessage(getMessages()
+                                .formatMainMessage("validation.required.defaultMsg", attribute.getLocaleName()));
+                    }
                     String defaultWidth =
                             Strings.isNullOrEmpty(attribute.getWidth())
                                     ? columnWidth : attribute.getWidth();
-                    loadWidth(field, defaultWidth);
+                    loadWidth(dynamicAttrComponent, defaultWidth);
 
-                    // Currently, ListEditor does not support datasource binding so we create custom field
                     if (Boolean.TRUE.equals(attribute.getIsCollection())) {
-                        // TODO: gg, how to replace?
-                        /*CustomFieldGenerator fieldGenerator = new DynamicAttributeCustomFieldGenerator();
-
-                        Component fieldComponent = fieldGenerator.generateField(ds, code);
-                        field.setCustom(true);
-                        field.setComponent(fieldComponent);
-                        applyPermissions(fieldComponent);*/
+                        // TODO: gg, implement
                     }
-                    components.add(field);
+                    components.add(dynamicAttrComponent);
                 }
-
-                // TODO: gg, how to replace?
-//                getDynamicAttributesGuiTools().listenDynamicAttributesChanges(ds);
                 return components;
             }
         }

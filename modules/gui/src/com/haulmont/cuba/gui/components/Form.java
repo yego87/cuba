@@ -20,69 +20,128 @@ import com.haulmont.cuba.gui.components.data.HasValueSourceProvider;
 
 import java.util.Collection;
 
+/**
+ * A multi-column form component.
+ */
 public interface Form extends Component, Component.BelongToFrame, Component.HasCaption, Component.HasIcon,
         ComponentContainer, Component.Editable, EditableChangeNotifier, HasContextHelp, ChildEditableController,
         HasValueSourceProvider {
 
     String NAME = "form";
 
+    /**
+     * Adds a component to the first column.
+     *
+     * @param childComponent a component to add
+     */
+    @Override
+    void add(Component childComponent);
+
+    /**
+     * Sequentially adds components to the first column.
+     *
+     * @param childComponents components to add
+     */
+    @Override
+    default void add(Component... childComponents) {
+        ComponentContainer.super.add(childComponents);
+    }
+
+    /**
+     * Adds a component to a columns with a given index.
+     *
+     * @param childComponent a component to add
+     * @param column         a columns index
+     */
     void add(Component childComponent, int column);
 
+    /**
+     * Adds a component to a columns with a given index to a given position.
+     *
+     * @param childComponent a component to add
+     * @param column         a columns index
+     * @param row            a row index
+     */
     void add(Component childComponent, int column, int row);
 
+    /**
+     * @param column a column index
+     * @return a collection of components directly owned by a column with a given index
+     */
     Collection<Component> getComponents(int column);
 
+    /**
+     * @param column a columns index
+     * @param row    a row index
+     * @return a component placed in a column with a given index in a given position
+     */
     Component getComponent(int column, int row);
 
+    /**
+     * @return alignment of component captions
+     */
     CaptionAlignment getCaptionAlignment();
 
+    /**
+     * Sets alignment of component captions.
+     *
+     * @param captionAlignment component captions alignment
+     */
     void setCaptionAlignment(CaptionAlignment captionAlignment);
 
     /**
-     * @return fixed field caption width
+     * @return columns fixed caption width
      */
     int getChildrenCaptionWidth();
 
     /**
-     * Set fixed captions width. Set -1 to use auto size.
+     * Sets fixed captions width for all columns. Set -1 to use auto size.
      *
-     * @param width fixed field caption width
+     * @param width fixed caption width
      */
     void setChildrenCaptionWidth(int width);
 
     /**
-     * @param column column index
-     * @return fixed field caption width for column {@code colIndex}
+     * Returns fixed caption width for column with a given index.
+     *
+     * @param column a column index
+     * @return fixed caption width for column with a given index
      */
     int getChildrenCaptionWidth(int column);
 
     /**
-     * Set fixed field captions width for column {@code colIndex}. Set -1 to use auto size.
+     * Set fixed captions width for column with a given index. Set -1 to use auto size.
      *
-     * @param column column index
-     * @param width  width
+     * @param column a column index
+     * @param width  fixed caption width for column with a given index
      */
     void setChildrenCaptionWidth(int column, int width);
 
     /**
-     * @return column count
+     * @return number of columns in the Form
      */
     int getColumns();
 
     /**
-     * Set column count.
+     * Sets the number of columns in the Form. The column count can not be
+     * reduced if there are any components that would be outside of the shrunk Form.
      *
-     * @param columns column count
+     * @param columns the new number of columns in the Form
      */
     void setColumns(int columns);
-
-    // TODO: gg, row / col span
 
     /**
      * Caption alignment.
      */
     enum CaptionAlignment {
+        /**
+         * Component captions will be placed in a separate column on the left side of the components.
+         */
         LEFT,
+
+        /**
+         * Component captions will be placed above the components.
+         */
         TOP
     }
 }

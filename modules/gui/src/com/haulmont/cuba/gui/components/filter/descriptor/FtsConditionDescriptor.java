@@ -26,7 +26,7 @@ import com.haulmont.cuba.gui.components.filter.condition.FtsCondition;
 public class FtsConditionDescriptor extends AbstractJPQLConditionDescriptor {
 
     public FtsConditionDescriptor(String filterComponentName, MetaClass metaClass) {
-        super("fts", filterComponentName, metaClass);
+        super("fts", filterComponentName, metaClass, null);
     }
 
     @Override

@@ -17,7 +17,6 @@
 
 package com.haulmont.cuba.gui.components.filter.descriptor;
 
-import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 
@@ -29,9 +28,8 @@ import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 @SystemLevel
 public class HeaderConditionDescriptor extends AbstractConditionDescriptor {
 
-    public HeaderConditionDescriptor(String name, String locCaption, String filterComponentName,
-                                     MetaClass metaClass) {
-        super(name, filterComponentName, metaClass);
+    public HeaderConditionDescriptor(String name, String locCaption) {
+        super(name, null, null, null);
         this.locCaption = locCaption;
     }
 

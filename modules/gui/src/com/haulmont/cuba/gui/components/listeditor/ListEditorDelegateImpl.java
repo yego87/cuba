@@ -64,8 +64,7 @@ public class ListEditorDelegateImpl implements ListEditorDelegate {
     protected boolean useLookupField;
     protected List<?> optionsList;
     protected Map<String, Object> optionsMap;
-    protected String entityJoinClause;
-    protected String entityWhereClause;
+    protected String entityQuery;
     protected Class<? extends Enum> enumClass;
     protected TimeZone timeZone;
 
@@ -106,8 +105,7 @@ public class ListEditorDelegateImpl implements ListEditorDelegate {
                 params.put("optionsMap", optionsMap);
                 params.put("enumClass", enumClass);
                 params.put("lookupScreen", lookupScreen);
-                params.put("entityJoinClause", entityJoinClause);
-                params.put("entityWhereClause", entityWhereClause);
+                params.put("entityQuery", entityQuery);
                 params.put("values", getValue());
                 params.put("editable", editable);
                 params.put("timeZone", timeZone);
@@ -266,23 +264,13 @@ public class ListEditorDelegateImpl implements ListEditorDelegate {
     }
 
     @Override
-    public String getEntityJoinClause() {
-        return entityJoinClause;
+    public String getEntityQuery() {
+        return entityQuery;
     }
 
     @Override
-    public void setEntityJoinClause(String entityJoinClause) {
-        this.entityJoinClause = entityJoinClause;
-    }
-
-    @Override
-    public String getEntityWhereClause() {
-        return entityWhereClause;
-    }
-
-    @Override
-    public void setEntityWhereClause(String entityWhereClause) {
-        this.entityWhereClause = entityWhereClause;
+    public void setEntityQuery(String entityQuery) {
+        this.entityQuery = entityQuery;
     }
 
     @Override

@@ -400,6 +400,10 @@ public abstract class AbstractCondition extends BaseUuidEntity {
 
     public abstract AbstractCondition createCopy();
 
+    public abstract String getEntityParamView();
+
+    public abstract String getEntityParamQuery();
+
     public boolean canBeRequired() {
         return true;
     }

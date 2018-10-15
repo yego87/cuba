@@ -300,7 +300,7 @@ public class RelatedEntitiesBean implements RelatedEntitiesAPI {
                                            Class parentPrimaryKeyClass, String paramName, MetaClass parentMetaClass) {
         Param param = Param.Builder.getInstance().setName(paramName)
                 .setJavaClass(parentPrimaryKeyClass)
-                .setEntityWhere(StringUtils.EMPTY)
+                .setEntityQuery(StringUtils.EMPTY)
                 .setEntityView(StringUtils.EMPTY)
                 .setMetaClass(datasource.getMetaClass())
                 .setProperty(parentMetaClass.getPropertyNN(parentPrimaryKey))
@@ -350,7 +350,7 @@ public class RelatedEntitiesBean implements RelatedEntitiesAPI {
 
         PropertyConditionDescriptor conditionDescriptor = new PropertyConditionDescriptor(primaryKey, primaryKey,
                 AppConfig.getMessagesPack(), filterComponentName, ((FilterImplementation) component).getEntityMetaClass(),
-                ((FilterImplementation) component).getEntityAlias());
+                ((FilterImplementation) component).getSourceQuery());
 
         PropertyCondition condition = (PropertyCondition) conditionDescriptor.createCondition();
         condition.setInExpr(true);
@@ -362,7 +362,7 @@ public class RelatedEntitiesBean implements RelatedEntitiesAPI {
 
         Param param = Param.Builder.getInstance().setName(paramBuilder.createParamName(condition))
                 .setJavaClass(idType)
-                .setEntityWhere("")
+                .setEntityQuery("")
                 .setEntityView("")
                 .setMetaClass(((FilterImplementation) component).getEntityMetaClass())
                 .setProperty(metaClass.getProperty(primaryKey))

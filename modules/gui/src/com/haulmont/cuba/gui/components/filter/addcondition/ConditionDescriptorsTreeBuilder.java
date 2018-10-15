@@ -19,19 +19,20 @@ package com.haulmont.cuba.gui.components.filter.addcondition;
 
 import com.haulmont.bali.datastruct.Node;
 import com.haulmont.bali.datastruct.Tree;
-import com.haulmont.bali.util.Dom4j;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaProperty;
 import com.haulmont.chile.core.model.MetaPropertyPath;
-import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributes;
-import com.haulmont.cuba.core.global.*;
+import com.haulmont.cuba.core.global.Messages;
+import com.haulmont.cuba.core.global.MetadataTools;
+import com.haulmont.cuba.core.global.Security;
 import com.haulmont.cuba.gui.ComponentsHelper;
 import com.haulmont.cuba.gui.components.Filter;
-import com.haulmont.cuba.gui.components.sys.ValuePathHelper;
 import com.haulmont.cuba.gui.components.FilterImplementation;
 import com.haulmont.cuba.gui.components.filter.ConditionsTree;
+import com.haulmont.cuba.gui.components.filter.FilterConditions;
+import com.haulmont.cuba.gui.components.filter.FilterConditionsProvider;
 import com.haulmont.cuba.gui.components.filter.descriptor.*;
-import com.haulmont.cuba.gui.data.CollectionDatasource;
+import com.haulmont.cuba.gui.components.sys.ValuePathHelper;
 import com.haulmont.cuba.gui.screen.FrameOwner;
 import com.haulmont.cuba.security.entity.EntityAttrAccess;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +42,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -58,19 +61,28 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
     protected static final String CUSTOM_CONDITIONS_PERMISSION = "cuba.gui.filter.customConditions";
 
     protected Filter filter;
-    protected int hierarchyDepth;
-    protected Security security;
     protected String filterComponentName;
-    protected MetadataTools metadataTools;
-    protected DynamicAttributes dynamicAttributes;
-    protected List<String> excludedProperties;
-    protected final String storeName;
+
+    protected final String sourceQuery;
     protected final MetaClass entityMetaClass;
-    protected final String entityAlias;
+    protected String storeName;
     protected final boolean hideDynamicAttributes;
     protected final boolean hideCustomConditions;
-    protected ConditionsTree conditionsTree;
     protected boolean excludePropertiesRecursively;
+    protected List<String> excludedProperties;
+    protected int hierarchyDepth;
+
+    protected ConditionsTree conditionsTree;
+    protected FilterConditions filterConditions;
+
+    @Inject
+    protected Security security;
+    @Inject
+    protected Messages messages;
+    @Inject
+    protected MetadataTools metadataTools;
+    @Inject
+    protected FilterConditionsProvider filterConditionsProvider;
 
     /**
      * @param filter                filter
@@ -87,20 +99,23 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
         this.hideDynamicAttributes = hideDynamicAttributes;
         this.hideCustomConditions = hideCustomConditions;
         this.conditionsTree = conditionsTree;
-        security = AppBeans.get(Security.class);
-        metadataTools = AppBeans.get(MetadataTools.NAME);
-        dynamicAttributes = AppBeans.get(DynamicAttributes.class);
+
         filterComponentName = getFilterComponentName();
         excludedProperties = new ArrayList<>();
-        storeName = metadataTools.getStoreName(((FilterImplementation) filter).getEntityMetaClass());
-        entityMetaClass = ((FilterImplementation) filter).getEntityMetaClass();
-        entityAlias = ((FilterImplementation) filter).getEntityAlias();
+
+        FilterImplementation filterImpl = (FilterImplementation) filter;
+        entityMetaClass = filterImpl.getEntityMetaClass();
+        sourceQuery = filterImpl.getSourceQuery();
+    }
+
+    @PostConstruct
+    protected void init() {
+        storeName = metadataTools.getStoreName(entityMetaClass);
+        filterConditionsProvider.getFilterConditions(entityMetaClass.getName());
     }
 
     @Override
     public Tree<AbstractConditionDescriptor> build() {
-        Messages messages = AppBeans.get(Messages.class);
-
         Class<? extends FrameOwner> controllerClass = filter.getFrame().getFrameOwner().getClass();
         String messagesPack = controllerClass.getPackage().getName(); // todo rework
 
@@ -116,15 +131,22 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
                     addMultiplePropertyDescriptors(element, propertyDescriptors, filter);
                     propertiesExplicitlyDefined = true;
                 } else if ("property".equals(element.getName())) {
-                    //noinspection IncorrectCreateEntity
-                    conditionDescriptor = new PropertyConditionDescriptor(element, messagesPack, filterComponentName,
-                            entityMetaClass, entityAlias);
+                    conditionDescriptor =
+                            filterConditions.createExistingPropertyDescriptor(element,
+                                    filterComponentName,
+                                    entityMetaClass,
+                                    messagesPack,
+                                    sourceQuery);
                     propertyDescriptors.add(conditionDescriptor);
                     propertiesExplicitlyDefined = true;
                 } else if ("custom".equals(element.getName())) {
                     //noinspection IncorrectCreateEntity
-                    conditionDescriptor = new CustomConditionDescriptor(element, messagesPack, filterComponentName,
-                            entityMetaClass);
+                    conditionDescriptor =
+                            filterConditions.createExistingCustomDescriptor(element,
+                                    filterComponentName,
+                                    entityMetaClass,
+                                    messagesPack,
+                                    sourceQuery);
                     customDescriptors.add(conditionDescriptor);
                     propertiesExplicitlyDefined = true;
                 } else {
@@ -142,12 +164,10 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
 
         //noinspection IncorrectCreateEntity
         HeaderConditionDescriptor propertyHeaderDescriptor = new HeaderConditionDescriptor("propertyConditions",
-                messages.getMainMessage("filter.addCondition.propertyConditions"), filterComponentName,
-                entityMetaClass);
+                messages.getMainMessage("filter.addCondition.propertyConditions"));
         //noinspection IncorrectCreateEntity
         HeaderConditionDescriptor customHeaderDescriptor = new HeaderConditionDescriptor("customConditions",
-                messages.getMainMessage("filter.addCondition.customConditions"), filterComponentName,
-                entityMetaClass);
+                messages.getMainMessage("filter.addCondition.customConditions"));
 
         Node<AbstractConditionDescriptor> propertyHeaderNode = new Node<>(propertyHeaderDescriptor);
         Node<AbstractConditionDescriptor> customHeaderNode = new Node<>(customHeaderDescriptor);
@@ -188,16 +208,15 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
             rootNodes.add(customHeaderNode);
 
         if (!hideCustomConditions && security.isSpecificPermitted(CUSTOM_CONDITIONS_PERMISSION)) {
-            //noinspection IncorrectCreateEntity
-            rootNodes.add(new Node<>(new CustomConditionCreator(filterComponentName, entityMetaClass)));
+            rootNodes.add(new Node<>(filterConditions.createNewCustomDescriptor(filterComponentName, entityMetaClass, sourceQuery)));
         }
 
-        if (!hideDynamicAttributes && !dynamicAttributes.getAttributesForMetaClass(entityMetaClass).isEmpty()) {
+        if (!hideDynamicAttributes && filterConditions.supportsDynamicAttributes(entityMetaClass)) {
             //noinspection IncorrectCreateEntity
             rootNodes.add(new Node<>(new DynamicAttributesConditionCreator(filterComponentName, entityMetaClass, "")));
         }
 
-        if (FtsConfigHelper.getEnabled()) {
+        if (filterConditions.supportsFts(entityMetaClass)) {
             //noinspection IncorrectCreateEntity
             rootNodes.add(new Node<>(new FtsConditionDescriptor(filterComponentName, entityMetaClass)));
         }
@@ -233,9 +252,12 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
                     Class<? extends FrameOwner> controllerClass = filter.getFrame().getFrameOwner().getClass();
                     String messagesPack = controllerClass.getPackage().getName(); // todo rework
 
-                    PropertyConditionDescriptor childPropertyConditionDescriptor =
-                            new PropertyConditionDescriptor(propertyPath, null, messagesPack,
-                                    filterComponentName, entityMetaClass, entityAlias);
+                    AbstractConditionDescriptor childPropertyConditionDescriptor =
+                            filterConditions.createNewPropertyDescriptor(propertyPath,
+                                    filterComponentName,
+                                    entityMetaClass,
+                                    messagesPack,
+                                    sourceQuery);
                     descriptors.add(childPropertyConditionDescriptor);
                 }
             }
@@ -253,7 +275,7 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
 
         if (metaProperty.getRange().isClass()) {
             MetaClass childMetaClass = metaProperty.getRange().asClass();
-            if (!dynamicAttributes.getAttributesForMetaClass(childMetaClass).isEmpty()) {
+            if (!hideDynamicAttributes && filterConditions.supportsDynamicAttributes(childMetaClass)) {
                 //noinspection IncorrectCreateEntity
                 DynamicAttributesConditionCreator descriptor = new DynamicAttributesConditionCreator(filterComponentName,
                         entityMetaClass, propertyId);
@@ -300,14 +322,15 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
             exclPattern = Pattern.compile(excludeRe.replace(" ", ""));
         }
 
-        for (String prop : includedProps) {
-            if (exclPattern == null || !exclPattern.matcher(prop).matches()) {
+        for (String propertyName : includedProps) {
+            if (exclPattern == null || !exclPattern.matcher(propertyName).matches()) {
                 Class<? extends FrameOwner> controllerClass = filter.getFrame().getFrameOwner().getClass();
                 String messagesPack = controllerClass.getPackage().getName(); // todo rework
-                //noinspection IncorrectCreateEntity
-                AbstractConditionDescriptor conditionDescriptor =
-                        new PropertyConditionDescriptor(prop, null, messagesPack,
-                                filterComponentName, entityMetaClass, entityAlias);
+                AbstractConditionDescriptor conditionDescriptor = filterConditions.createNewPropertyDescriptor(propertyName,
+                        filterComponentName,
+                        entityMetaClass,
+                        messagesPack,
+                        sourceQuery);
                 descriptors.add(conditionDescriptor);
             }
         }

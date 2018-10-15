@@ -33,7 +33,7 @@ public class GroupConditionDescriptor extends AbstractConditionDescriptor {
 
     public GroupConditionDescriptor(GroupType groupType,
                                     String filterComponentName, MetaClass metaClass) {
-        super("group", filterComponentName, metaClass);
+        super("group", filterComponentName, metaClass, null);
         this.groupType = groupType;
     }
 

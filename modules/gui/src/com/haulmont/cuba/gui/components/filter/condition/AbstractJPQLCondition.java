@@ -16,15 +16,20 @@
 
 package com.haulmont.cuba.gui.components.filter.condition;
 
-import com.haulmont.chile.core.annotations.MetaClass;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.core.global.AppBeans;
+import com.haulmont.cuba.core.global.Metadata;
+import com.haulmont.cuba.core.global.QueryTransformer;
+import com.haulmont.cuba.core.global.QueryTransformerFactory;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import org.dom4j.Element;
 
-@MetaClass(name = "sec$AbstractJPQLCondition")
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$AbstractJPQLCondition")
 @SystemLevel
 public abstract class AbstractJPQLCondition extends AbstractCondition {
     protected String entityAlias;
@@ -41,8 +46,7 @@ public abstract class AbstractJPQLCondition extends AbstractCondition {
         this.entityParamView = other.entityParamView;
     }
 
-    protected AbstractJPQLCondition(Element element, String messagesPack, String filterComponentName,
-                                    com.haulmont.chile.core.model.MetaClass metaClass) {
+    protected AbstractJPQLCondition(Element element, String messagesPack, String filterComponentName, MetaClass metaClass) {
         super(element, messagesPack, filterComponentName, metaClass);
         entityParamWhere = element.attributeValue("paramWhere");
         entityParamView = element.attributeValue("paramView");
@@ -66,10 +70,6 @@ public abstract class AbstractJPQLCondition extends AbstractCondition {
         }
     }
 
-    public String getEntityAlias() {
-        return entityAlias;
-    }
-
     public String getEntityParamView() {
         return entityParamView;
     }
@@ -84,5 +84,18 @@ public abstract class AbstractJPQLCondition extends AbstractCondition {
 
     public void setEntityParamWhere(String entityParamWhere) {
         this.entityParamWhere = entityParamWhere;
+    }
+
+    public String getEntityParamQuery() {
+        Metadata metadata = AppBeans.get(Metadata.class);
+        MetaClass paramMetaClass = metadata.getClassNN(paramClass == null ? javaClass : paramClass);
+        String query = String.format("select e from %s e", paramMetaClass.getName());
+        if (!Strings.isNullOrEmpty(entityParamWhere)) {
+            QueryTransformerFactory queryTransformerFactory = AppBeans.get(QueryTransformerFactory.NAME);
+            QueryTransformer queryTransformer = queryTransformerFactory.transformer(query);
+            queryTransformer.addWhere(entityParamWhere);
+            query = queryTransformer.getResult();
+        }
+        return query;
     }
 }

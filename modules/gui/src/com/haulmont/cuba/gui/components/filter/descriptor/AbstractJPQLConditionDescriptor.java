@@ -23,8 +23,8 @@ import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 @SystemLevel
 public abstract class AbstractJPQLConditionDescriptor extends AbstractConditionDescriptor {
 
-    public AbstractJPQLConditionDescriptor(String name, String filterComponentName, MetaClass metaClass) {
-        super(name, filterComponentName, metaClass);
+    public AbstractJPQLConditionDescriptor(String name, String filterComponentName, MetaClass metaClass, String messagesPack) {
+        super(name, filterComponentName, metaClass, messagesPack);
     }
 
     public abstract String getEntityParamWhere();

@@ -85,4 +85,14 @@ public class GroupCondition extends AbstractCondition {
     public boolean canHasDefaultValue() {
         return false;
     }
+
+    @Override
+    public String getEntityParamView() {
+        return null;
+    }
+
+    @Override
+    public String getEntityParamQuery() {
+        return null;
+    }
 }

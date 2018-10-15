@@ -394,7 +394,7 @@ public class CustomConditionFrame extends ConditionFrame<CustomCondition> {
         Param param = Param.Builder.getInstance()
                 .setName(paramName)
                 .setJavaClass(javaClass)
-                .setEntityWhere(entityParamWhere)
+                .setEntityQuery(condition.getEntityParamQuery())
                 .setEntityView(entityParamView)
                 .setMetaClass(condition.getEntityMetaClass())
                 .setInExpr(condition.getInExpr())

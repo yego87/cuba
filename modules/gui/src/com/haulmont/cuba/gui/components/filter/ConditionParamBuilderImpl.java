@@ -80,7 +80,7 @@ public class ConditionParamBuilderImpl implements ConditionParamBuilder{
             if (!condition.getUnary()) {
                 builder.setJavaClass(condition.getParamClass() == null ?
                         condition.getJavaClass() : condition.getParamClass());
-                builder.setEntityWhere(condition.getEntityParamWhere());
+                builder.setEntityQuery(condition.getEntityParamQuery());
                 builder.setEntityView(condition.getEntityParamView());
                 builder.setMetaClass(condition.getEntityMetaClass());
                 builder.setInExpr(condition.getInExpr());
@@ -124,7 +124,7 @@ public class ConditionParamBuilderImpl implements ConditionParamBuilder{
                 builder = Param.Builder.getInstance()
                         .setJavaClass(paramJavaClass)
                         .setName(condition.getParamName())
-                        .setEntityWhere(null)
+                        .setEntityQuery(null)
                         .setEntityView(null)
                         .setProperty(metaPropertyPath != null ? metaPropertyPath.getMetaProperty() : null)
                         .setInExpr(_condition.getInExpr())

@@ -22,10 +22,7 @@ import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaProperty;
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
-import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.core.global.MessageTools;
-import com.haulmont.cuba.core.global.Messages;
-import com.haulmont.cuba.core.global.MetadataTools;
+import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.core.global.filter.Op;
 import com.haulmont.cuba.core.global.filter.OpManager;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
@@ -47,34 +44,41 @@ public class PropertyConditionDescriptor extends AbstractJPQLConditionDescriptor
     protected String entityAlias;
 
     public PropertyConditionDescriptor(String name,
-                                       @Nullable String caption,
-                                       String messagesPack,
                                        String filterComponentName,
                                        MetaClass metaClass,
-                                       String entityAlias) {
-        super(name, filterComponentName, metaClass);
-        this.caption = caption;
-        this.messagesPack = messagesPack;
-        this.entityAlias = entityAlias;
-
-        if (!isBlank(caption)) {
-            this.locCaption = messages.getTools().loadString(messagesPack, caption);
-        } else {
-            this.locCaption = FilterConditionUtils.getPropertyLocCaption(datasourceMetaClass, name);
-        }
+                                       String messagesPack,
+                                       String sourceQuery) {
+        super(name, filterComponentName, metaClass, messagesPack);
+        this.entityAlias = constructEntityAlias(sourceQuery);
+        this.locCaption = constructLocCaption();
     }
 
-    public PropertyConditionDescriptor(Element element, String messagesPack, String filterComponentName,
-                                       MetaClass metaClass, String entityAlias) {
-        this(element.attributeValue("name"),
-                element.attributeValue("caption"),
-                messagesPack,
-                filterComponentName,
-                metaClass,
-                entityAlias);
-        inExpr = Boolean.valueOf(element.attributeValue("inExpr"));
-        entityParamWhere = element.attributeValue("paramWhere");
-        entityParamView = element.attributeValue("paramView");
+    public PropertyConditionDescriptor(Element element,
+                                       String filterComponentName,
+                                       MetaClass metaClass,
+                                       String messagesPack,
+                                       String sourceQuery) {
+        super(element.attributeValue("name"), filterComponentName, metaClass, messagesPack);
+        this.caption = element.attributeValue("caption");
+        this.inExpr = Boolean.valueOf(element.attributeValue("inExpr"));
+        this.entityParamWhere = element.attributeValue("paramWhere");
+        this.entityParamView = element.attributeValue("paramView");
+        this.locCaption = constructLocCaption();
+        this.entityAlias = constructEntityAlias(sourceQuery);
+    }
+
+    protected String constructEntityAlias(String sourceQuery) {
+        QueryTransformerFactory queryTransformerFactory = AppBeans.get(QueryTransformerFactory.class);
+        QueryParser parser = queryTransformerFactory.parser(sourceQuery);
+        return parser.getEntityAlias(datasourceMetaClass.getName());
+    }
+
+    protected String constructLocCaption() {
+        if (!isBlank(caption)) {
+            return messages.getTools().loadString(messagesPack, caption);
+        } else {
+            return FilterConditionUtils.getPropertyLocCaption(datasourceMetaClass, name);
+        }
     }
 
     @Override
@@ -101,6 +105,7 @@ public class PropertyConditionDescriptor extends AbstractJPQLConditionDescriptor
         OpManager opManager = AppBeans.get(OpManager.class);
         MetadataTools metadataTools = AppBeans.get(MetadataTools.class);
 
+        //noinspection IncorrectCreateEntity
         PropertyCondition propertyCondition = new PropertyCondition(this, entityAlias);
         MetaPropertyPath propertyPath = datasourceMetaClass.getPropertyPath(name);
         if (propertyPath == null) {

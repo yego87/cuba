@@ -35,6 +35,12 @@ import java.util.Set;
 public interface DataStore {
 
     /**
+     * Unique code for data store, e.g jpql, mongo, sql
+     * @return store type
+     */
+    String getStoreType();
+
+    /**
      * Loads a single entity instance.
      * @return the loaded object, or null if not found
      */

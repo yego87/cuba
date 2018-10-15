@@ -112,23 +112,13 @@ public class WebListEditor<V> extends WebAbstractField<WebListEditor.CubaListEdi
     }
 
     @Override
-    public String getEntityJoinClause() {
-        return delegate.getEntityJoinClause();
+    public String getEntityQuery() {
+        return delegate.getEntityQuery();
     }
 
     @Override
-    public void setEntityJoinClause(String entityJoinClause) {
-        delegate.setEntityJoinClause(entityJoinClause);
-    }
-
-    @Override
-    public String getEntityWhereClause() {
-        return delegate.getEntityWhereClause();
-    }
-
-    @Override
-    public void setEntityWhereClause(String entityWhereClause) {
-        delegate.setEntityWhereClause(entityWhereClause);
+    public void setEntityQuery(String entityQuery) {
+        delegate.setEntityQuery(entityQuery);
     }
 
     @Override

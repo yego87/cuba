@@ -32,7 +32,7 @@ public class DynamicAttributesConditionCreator extends AbstractJPQLConditionDesc
     public DynamicAttributesConditionCreator(String filterComponentName,
                                              MetaClass metaClass,
                                              String propertyPath) {
-        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass);
+        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass, null);
         this.propertyPath = propertyPath;
         this.locCaption = messages.getMainMessage("filter.dynamicAttributeConditionCreator");
         this.showImmediately = true;

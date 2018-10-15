@@ -34,12 +34,11 @@ import org.dom4j.Element;
 @SystemLevel
 public class CustomConditionDescriptor extends AbstractJPQLConditionDescriptor {
     public CustomConditionDescriptor(Element element,
-                                     String messagesPack,
                                      String filterComponentName,
-                                     MetaClass metaClass) {
-        super(element.attributeValue("name"), filterComponentName, metaClass);
+                                     MetaClass metaClass,
+                                     String messagesPack) {
+        super(element.attributeValue("name"), filterComponentName, metaClass, messagesPack);
         this.element = element;
-        this.messagesPack = messagesPack;
         this.caption = element.attributeValue("caption");
         if (this.caption != null) {
             this.locCaption = messages.getTools().loadString(messagesPack, this.caption);

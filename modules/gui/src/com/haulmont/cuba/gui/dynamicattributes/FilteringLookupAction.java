@@ -128,11 +128,12 @@ public class FilteringLookupAction extends PickerField.LookupAction {
         condition.setJoin(joinClause);
 
         ConditionParamBuilder paramBuilder = AppBeans.get(ConditionParamBuilder.class);
+        MetaClass entityMetaClass = ((FilterImplementation) filterComponent).getEntityMetaClass();
         Param param = Param.Builder.getInstance().setName(paramBuilder.createParamName(condition))
                 .setJavaClass(Boolean.class)
-                .setEntityWhere("")
+                .setEntityQuery(String.format("select e from %s e", entityMetaClass.getName()))
                 .setEntityView("")
-                .setMetaClass(((FilterImplementation) filterComponent).getEntityMetaClass())
+                .setMetaClass(entityMetaClass)
                 .setInExpr(true)
                 .setRequired(true)
                 .build();

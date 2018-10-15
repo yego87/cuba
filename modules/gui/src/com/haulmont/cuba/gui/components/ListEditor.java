@@ -65,13 +65,9 @@ public interface ListEditor<V> extends Field<List<V>>, Component.Focusable {
 
     void setOptionsMap(Map<String, Object> optionsMap);
 
-    String getEntityJoinClause();
+    void setEntityQuery(String query);
 
-    void setEntityJoinClause(String entityJoinClause);
-
-    String getEntityWhereClause();
-
-    void setEntityWhereClause(String entityWhereClause);
+    String getEntityQuery();
 
     Class<? extends Enum> getEnumClass();
 

@@ -65,11 +65,8 @@ public interface ListEditorDelegate {
 
     void setDisplayDescription(boolean displayDescription);
 
-    String getEntityJoinClause();
-    void setEntityJoinClause(String entityJoinClause);
-
-    String getEntityWhereClause();
-    void setEntityWhereClause(String entityWhereClause);
+    String getEntityQuery();
+    void setEntityQuery(String entityJoinClause);
 
     boolean isEditable();
     void setEditable(boolean editable);

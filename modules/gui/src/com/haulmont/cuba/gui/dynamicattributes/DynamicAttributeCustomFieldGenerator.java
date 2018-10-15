@@ -22,9 +22,7 @@ import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils;
 import com.haulmont.cuba.core.app.dynamicattributes.PropertyType;
 import com.haulmont.cuba.core.entity.CategoryAttribute;
-import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.core.global.Metadata;
-import com.haulmont.cuba.core.global.Scripting;
+import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.FieldGroup;
 import com.haulmont.cuba.gui.components.ListEditor;
@@ -60,9 +58,6 @@ public class DynamicAttributeCustomFieldGenerator implements FieldGroup.CustomFi
             return null;
         }
 
-        listEditor.setEntityJoinClause(categoryAttribute.getJoinClause());
-        listEditor.setEntityWhereClause(categoryAttribute.getWhereClause());
-
         ListEditor.ItemType itemType = listEditorItemTypeFromDynamicAttrType(categoryAttribute.getDataType());
         listEditor.setItemType(itemType);
 
@@ -79,6 +74,19 @@ public class DynamicAttributeCustomFieldGenerator implements FieldGroup.CustomFi
             MetaClass metaClass = metadata.getClassNN(clazz);
             listEditor.setEntityName(metaClass.getName());
             listEditor.setUseLookupField(BooleanUtils.isTrue(categoryAttribute.getLookup()));
+
+            if (!Strings.isNullOrEmpty(categoryAttribute.getWhereClause())) {
+                String query = String.format("select e from %s e", metaClass.getName());
+                QueryTransformerFactory queryTransformerFactory = AppBeans.get(QueryTransformerFactory.class);
+                QueryTransformer queryTransformer = queryTransformerFactory.transformer(query);
+                if (!Strings.isNullOrEmpty(categoryAttribute.getJoinClause())) {
+                    queryTransformer.addJoinAndWhere(categoryAttribute.getJoinClause(), categoryAttribute.getWhereClause());
+                } else {
+                    queryTransformer.addWhere(categoryAttribute.getWhereClause());
+                }
+                query = queryTransformer.getResult();
+                listEditor.setEntityQuery(query);
+            }
         }
 
         //noinspection unchecked

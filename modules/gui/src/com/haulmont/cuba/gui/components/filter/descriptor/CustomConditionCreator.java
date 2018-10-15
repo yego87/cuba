@@ -19,7 +19,6 @@ package com.haulmont.cuba.gui.components.filter.descriptor;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
@@ -34,7 +33,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 public class CustomConditionCreator extends AbstractJPQLConditionDescriptor {
 
     public CustomConditionCreator(String filterComponentName, MetaClass metaClass) {
-        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass);
+        super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass, null);
         this.locCaption = messages.getMainMessage("filter.customCondition.new");
         this.showImmediately = true;
     }

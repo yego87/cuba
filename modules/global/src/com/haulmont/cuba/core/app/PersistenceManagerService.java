@@ -32,6 +32,8 @@ public interface PersistenceManagerService {
 
     int getMaxFetchUI(String entityName);
 
+    String getStoreType(String entityName);
+
     /**
      * @return current DBMS type set by {@code cuba.dbmsType} app property on Middleware
      */

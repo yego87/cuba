@@ -111,4 +111,14 @@ public class FtsCondition extends AbstractCondition {
     protected String generateSessionIdParamName() {
         return "__sessionId" + RandomStringUtils.randomAlphanumeric(6);
     }
+
+    @Override
+    public String getEntityParamView() {
+        return null;
+    }
+
+    @Override
+    public String getEntityParamQuery() {
+        return null;
+    }
 }

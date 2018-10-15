@@ -48,10 +48,11 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
 
     protected Messages messages = AppBeans.get(Messages.NAME);
 
-    public AbstractConditionDescriptor(String name, String filterComponentName, MetaClass metaClass) {
+    public AbstractConditionDescriptor(String name, String filterComponentName, MetaClass metaClass, String messagesPack) {
         this.name = name;
         this.filterComponentName = filterComponentName;
         this.datasourceMetaClass = metaClass;
+        this.messagesPack = messagesPack;
     }
 
     public String getName() {

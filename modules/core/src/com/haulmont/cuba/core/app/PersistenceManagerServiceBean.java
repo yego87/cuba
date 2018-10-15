@@ -49,6 +49,11 @@ public class PersistenceManagerServiceBean implements PersistenceManagerService 
     }
 
     @Override
+    public String getStoreType(String entityName) {
+        return pm.getStoreType(entityName);
+    }
+
+    @Override
     public String getDbmsType() {
         return DbmsType.getType();
     }

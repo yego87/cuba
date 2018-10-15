@@ -348,9 +348,9 @@ public class RelatedEntitiesBean implements RelatedEntitiesAPI {
     protected PropertyCondition getNonOptimizedCondition(MetaClass metaClass, List<Object> ids, Filter component,
                                                          String filterComponentName, String primaryKey) {
 
-        PropertyConditionDescriptor conditionDescriptor = new PropertyConditionDescriptor(primaryKey, primaryKey,
-                AppConfig.getMessagesPack(), filterComponentName, ((FilterImplementation) component).getEntityMetaClass(),
-                ((FilterImplementation) component).getSourceQuery());
+        PropertyConditionDescriptor conditionDescriptor = new PropertyConditionDescriptor(primaryKey,
+                filterComponentName, ((FilterImplementation) component).getEntityMetaClass(),
+                AppConfig.getMessagesPack(), ((FilterImplementation) component).getSourceQuery());
 
         PropertyCondition condition = (PropertyCondition) conditionDescriptor.createCondition();
         condition.setInExpr(true);

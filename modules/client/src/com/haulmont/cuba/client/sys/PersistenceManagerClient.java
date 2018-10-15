@@ -41,6 +41,7 @@ public class PersistenceManagerClient implements PersistenceManagerService {
         Boolean useLookupScreen;
         Integer fetchUI;
         Integer maxFetchUI;
+        String storeType;
     }
 
     protected static class DbmsCacheEntry {
@@ -101,6 +102,15 @@ public class PersistenceManagerClient implements PersistenceManagerService {
             cacheEntry.maxFetchUI = service.getMaxFetchUI(entityName);
         }
         return cacheEntry.maxFetchUI;
+    }
+
+    @Override
+    public String getStoreType(String entityName) {
+        CacheEntry cacheEntry = getCacheEntry(entityName);
+        if (cacheEntry.storeType == null) {
+            cacheEntry.storeType = service.getStoreType(entityName);
+        }
+        return cacheEntry.storeType;
     }
 
     @Override

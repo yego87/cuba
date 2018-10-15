@@ -107,6 +107,11 @@ public class RdbmsStore implements DataStore {
         this.storeName = storeName;
     }
 
+    @Override
+    public String getStoreType() {
+        return "jpql";
+    }
+
     @Nullable
     @Override
     public <E extends Entity> E load(LoadContext<E> context) {

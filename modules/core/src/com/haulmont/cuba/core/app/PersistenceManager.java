@@ -58,6 +58,9 @@ public class PersistenceManager implements PersistenceManagerAPI {
     @Inject
     protected PersistenceSecurity security;
 
+    @Inject
+    protected StoreFactory storeFactory;
+
     protected PersistenceConfig config;
 
     @Inject
@@ -221,6 +224,14 @@ public class PersistenceManager implements PersistenceManagerAPI {
         } finally {
             tx.end();
         }
+    }
+
+    @Override
+    public String getStoreType(String entityName) {
+        MetaClass metaClass = metadata.getExtendedEntities().getOriginalOrThisMetaClass(metadata.getClassNN(entityName));
+        String storeName = metadata.getTools().getStoreName(metaClass);
+        DataStore dataStore = storeFactory.get(storeName);
+        return dataStore.getStoreType();
     }
 
     protected EntityStatistics getEntityStatisticsInstance(String name, EntityManager em) {

@@ -45,6 +45,11 @@ public class NullStore implements DataStore {
     public NullStore(String storeName) {
     }
 
+    @Override
+    public String getStoreType() {
+        return "NULL";
+    }
+
     @Nullable
     @Override
     public <E extends Entity> E load(LoadContext<E> context) {

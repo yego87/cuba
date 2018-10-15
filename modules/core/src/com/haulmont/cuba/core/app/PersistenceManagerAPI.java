@@ -31,29 +31,33 @@ public interface PersistenceManagerAPI {
 
     /**
      * Whether to use a lazy collection datasource for this entity, based on current statistics.
-     * @param entityName    entity name
-     * @return              true if lazy collection datasource should be used for this entity
+     *
+     * @param entityName entity name
+     * @return true if lazy collection datasource should be used for this entity
      */
     boolean useLazyCollection(String entityName);
 
     /**
      * Whether to use a lookup screen or a dropdown for this entity, based on current statistics.
-     * @param entityName    entity name
-     * @return              true if lookup screen should be used
+     *
+     * @param entityName entity name
+     * @return true if lookup screen should be used
      */
     boolean useLookupScreen(String entityName);
 
     /**
      * Return a limit of rows fetched for UI components in 'normal' conditions
-     * @param entityName    entity name
-     * @return              maximum number of rows
+     *
+     * @param entityName entity name
+     * @return maximum number of rows
      */
     int getFetchUI(String entityName);
 
     /**
      * Return the absolute maximum number of rows that can be fetched for UI components
-     * @param entityName    entity name
-     * @return              maximum number of rows
+     *
+     * @param entityName entity name
+     * @return maximum number of rows
      */
     int getMaxFetchUI(String entityName);
 
@@ -64,7 +68,9 @@ public interface PersistenceManagerAPI {
     void deleteStatistics(String name);
 
     EntityStatistics enterStatistics(String name, Long instanceCount, Integer fetchUI, Integer maxFetchUI,
-                         Integer lazyCollectionThreshold, Integer lookupScreenThreshold);
+                                     Integer lazyCollectionThreshold, Integer lookupScreenThreshold);
 
     SortedMap<String, EntityStatistics> getEntityStatistics();
+
+    String getStoreType(String entityName);
 }

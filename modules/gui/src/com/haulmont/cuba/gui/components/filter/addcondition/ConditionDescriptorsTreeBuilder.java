@@ -111,7 +111,7 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
     @PostConstruct
     protected void init() {
         storeName = metadataTools.getStoreName(entityMetaClass);
-        filterConditionsProvider.getFilterConditions(entityMetaClass.getName());
+        filterConditions = filterConditionsProvider.getFilterConditions(entityMetaClass.getName());
     }
 
     @Override

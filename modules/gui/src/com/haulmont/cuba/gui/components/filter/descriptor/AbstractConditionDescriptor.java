@@ -43,7 +43,6 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
     protected String filterComponentName;
     protected MetaClass datasourceMetaClass;
     protected Boolean inExpr = false;
-    protected Boolean showImmediately = false;
     protected String messagesPack;
 
     protected Messages messages = AppBeans.get(Messages.NAME);
@@ -73,18 +72,6 @@ public abstract class AbstractConditionDescriptor extends BaseUuidEntity {
 
     public MetaClass getDatasourceMetaClass() {
         return datasourceMetaClass;
-    }
-
-    public Boolean isInExpr() {
-        return inExpr;
-    }
-
-    public void setInExpr(Boolean inExpr) {
-        this.inExpr = inExpr;
-    }
-
-    public Boolean isShowImmediately() {
-        return showImmediately;
     }
 
     public String getOperatorType() {

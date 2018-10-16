@@ -36,9 +36,9 @@
         <class>com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor</class>
         <class>com.haulmont.cuba.gui.components.filter.descriptor.PropertyConditionDescriptor</class>
         <class>com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionDescriptor</class>
-        <class>com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionCreator</class>
+        <class>com.haulmont.cuba.gui.components.filter.descriptor.NewCustomConditionDescriptor</class>
         <class>com.haulmont.cuba.gui.components.filter.descriptor.FtsConditionDescriptor</class>
-        <class>com.haulmont.cuba.gui.components.filter.descriptor.DynamicAttributesConditionCreator</class>
+        <class>com.haulmont.cuba.gui.components.filter.descriptor.NewDynamicAttributeConditionDescriptor</class>
         <class>com.haulmont.cuba.gui.components.filter.descriptor.HeaderConditionDescriptor</class>
         <class>com.haulmont.cuba.gui.app.core.categories.ScreenAndComponent</class>
 

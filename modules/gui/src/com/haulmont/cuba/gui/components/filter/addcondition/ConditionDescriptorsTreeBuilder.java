@@ -213,7 +213,7 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
 
         if (!hideDynamicAttributes && filterConditions.supportsDynamicAttributes(entityMetaClass)) {
             //noinspection IncorrectCreateEntity
-            rootNodes.add(new Node<>(new DynamicAttributesConditionCreator(filterComponentName, entityMetaClass, "")));
+            rootNodes.add(new Node<>(new NewDynamicAttributeConditionDescriptor(filterComponentName, entityMetaClass, "")));
         }
 
         if (filterConditions.supportsFts(entityMetaClass)) {
@@ -277,7 +277,7 @@ public class ConditionDescriptorsTreeBuilder implements ConditionDescriptorsTree
             MetaClass childMetaClass = metaProperty.getRange().asClass();
             if (!hideDynamicAttributes && filterConditions.supportsDynamicAttributes(childMetaClass)) {
                 //noinspection IncorrectCreateEntity
-                DynamicAttributesConditionCreator descriptor = new DynamicAttributesConditionCreator(filterComponentName,
+                NewDynamicAttributeConditionDescriptor descriptor = new NewDynamicAttributeConditionDescriptor(filterComponentName,
                         entityMetaClass, propertyId);
                 Node<AbstractConditionDescriptor> newNode = new Node<>(descriptor);
                 parentNode.addChild(newNode);

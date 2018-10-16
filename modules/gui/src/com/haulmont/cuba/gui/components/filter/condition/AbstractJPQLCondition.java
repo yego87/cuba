@@ -62,6 +62,7 @@ public abstract class AbstractJPQLCondition extends AbstractCondition {
     }
 
     public void toXml(Element element, Param.ValueProperty valueProperty) {
+        super.toXml(element, valueProperty);
         if (param != null) {
             if (entityParamWhere != null)
                 element.addAttribute("paramWhere", entityParamWhere);

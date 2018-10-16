@@ -20,7 +20,7 @@ import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributes;
 import com.haulmont.cuba.core.global.FtsConfigHelper;
 import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionCreator;
+import com.haulmont.cuba.gui.components.filter.descriptor.NewCustomConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.descriptor.PropertyConditionDescriptor;
 import org.dom4j.Element;
@@ -83,7 +83,7 @@ public class JPQLFilterConditions implements FilterConditions {
                                                                  MetaClass metaClass,
                                                                  String sourceQuery) {
         //noinspection IncorrectCreateEntity
-        return new CustomConditionCreator(filterComponentName, metaClass);
+        return new NewCustomConditionDescriptor(filterComponentName, metaClass);
     }
 
     @Override

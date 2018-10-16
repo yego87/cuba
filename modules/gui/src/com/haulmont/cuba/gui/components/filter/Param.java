@@ -815,6 +815,8 @@ public class Param {
         dataLoader.setView(entityView);
         dataLoader.setQuery(entityQuery);
 
+        dataLoader.load();
+
         return container;
     }
 

@@ -14,34 +14,45 @@
  * limitations under the License.
  *
  */
-
 package com.haulmont.cuba.gui.components.filter.descriptor;
 
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
+import com.haulmont.cuba.core.global.AppBeans;
+import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
+import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
-import com.haulmont.cuba.gui.components.filter.condition.DynamicAttributesCondition;
+import com.haulmont.cuba.gui.components.filter.condition.CustomCondition;
 import org.apache.commons.lang3.RandomStringUtils;
 
-@com.haulmont.chile.core.annotations.MetaClass(name = "sec$DynamicAttributesConditionCreator")
+/**
+ * Condition descriptor is used for creating new custom condition
+ */
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$NewCustomConditionDescriptor")
 @SystemLevel
-public class DynamicAttributesConditionCreator extends AbstractJPQLConditionDescriptor {
+public class NewCustomConditionDescriptor extends AbstractJPQLConditionDescriptor {
 
-    protected String propertyPath;
-
-    public DynamicAttributesConditionCreator(String filterComponentName,
-                                             MetaClass metaClass,
-                                             String propertyPath) {
+    public NewCustomConditionDescriptor(String filterComponentName, MetaClass metaClass) {
         super(RandomStringUtils.randomAlphabetic(10), filterComponentName, metaClass, null);
-        this.propertyPath = propertyPath;
-        this.locCaption = messages.getMainMessage("filter.dynamicAttributeConditionCreator");
-        this.showImmediately = true;
+        this.locCaption = messages.getMainMessage("filter.customCondition.new");
     }
 
     @Override
     public AbstractCondition createCondition() {
         //noinspection IncorrectCreateEntity
-        return new DynamicAttributesCondition(this, propertyPath);
+        CustomCondition customCondition = new CustomCondition(this, null, null, false);
+
+        // default editor - text
+        customCondition.setJavaClass(String.class);
+        Param param = AppBeans.get(ConditionParamBuilder.class).createParam(customCondition);
+        customCondition.setParam(param);
+
+        return customCondition;
+    }
+
+    @Override
+    public String getTreeCaption() {
+        return messages.getMainMessage("filter.customConditionCreator");
     }
 
     @Override

@@ -19,8 +19,8 @@ package com.haulmont.cuba.gui.components.filter.condition;
 
 import com.google.common.base.Strings;
 import com.haulmont.bali.util.Dom4j;
-import com.haulmont.chile.core.annotations.MetaClass;
 import com.haulmont.chile.core.annotations.MetaProperty;
+import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.BaseUuidEntity;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.core.global.AppBeans;
@@ -31,7 +31,6 @@ import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
-import com.haulmont.cuba.gui.data.Datasource;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -46,7 +45,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 /**
  * Class that encapsulates common filter condition behaviour.
  */
-@MetaClass(name = "sec$AbstractCondition")
+@com.haulmont.chile.core.annotations.MetaClass(name = "sec$AbstractCondition")
 @SystemLevel
 public abstract class AbstractCondition extends BaseUuidEntity {
 
@@ -63,11 +62,9 @@ public abstract class AbstractCondition extends BaseUuidEntity {
     protected String paramName;
     protected String caption;
     protected String messagesPack;
-    @MetaProperty
-    protected String locCaption;
     protected String filterComponentName;
     protected String text;
-    protected com.haulmont.chile.core.model.MetaClass metaClass;
+    protected MetaClass metaClass;
     protected Boolean group = false;
     protected Boolean unary = false;
     protected Boolean inExpr = false;
@@ -79,6 +76,9 @@ public abstract class AbstractCondition extends BaseUuidEntity {
     protected Boolean useUserTimeZone;
     protected Integer width = 1;
     protected Op operator;
+
+    @MetaProperty
+    protected String locCaption;
 
 
     protected List<Listener> listeners = new ArrayList<>();

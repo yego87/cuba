@@ -16,9 +16,9 @@
 
 package com.haulmont.cuba.gui.components.filter.condition;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.haulmont.chile.core.model.MetaClass;
+import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.Metadata;
@@ -87,14 +87,20 @@ public abstract class AbstractJPQLCondition extends AbstractCondition {
     }
 
     public String getEntityParamQuery() {
+        String query = null;
         Metadata metadata = AppBeans.get(Metadata.class);
-        MetaClass paramMetaClass = metadata.getClassNN(paramClass == null ? javaClass : paramClass);
-        String query = String.format("select e from %s e", paramMetaClass.getName());
-        if (!Strings.isNullOrEmpty(entityParamWhere)) {
-            QueryTransformerFactory queryTransformerFactory = AppBeans.get(QueryTransformerFactory.NAME);
-            QueryTransformer queryTransformer = queryTransformerFactory.transformer(query);
-            queryTransformer.addWhere(entityParamWhere);
-            query = queryTransformer.getResult();
+        Class clazz = paramClass == null ? javaClass : paramClass;
+        if (clazz != null && Entity.class.isAssignableFrom(clazz)) {
+            MetaClass paramMetaClass = metadata.getClass(clazz);
+            if (paramMetaClass != null) {
+                query = String.format("select e from %s e", paramMetaClass.getName());
+                if (!Strings.isNullOrEmpty(entityParamWhere)) {
+                    QueryTransformerFactory queryTransformerFactory = AppBeans.get(QueryTransformerFactory.NAME);
+                    QueryTransformer queryTransformer = queryTransformerFactory.transformer(query);
+                    queryTransformer.addWhere(entityParamWhere);
+                    query = queryTransformer.getResult();
+                }
+            }
         }
         return query;
     }

@@ -24,12 +24,14 @@ import com.haulmont.cuba.gui.components.mainwindow.FoldersPane;
 import com.haulmont.cuba.gui.components.mainwindow.FtsField;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.components.WebComponentsHelper;
+import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.web.widgets.CubaHorizontalSplitPanel;
 import com.vaadin.server.Sizeable.Unit;
 
 import javax.inject.Inject;
 import java.util.Map;
 
+@Page(path = "main")
 public class AppMainWindow extends AbstractMainWindow {
 
     @Inject

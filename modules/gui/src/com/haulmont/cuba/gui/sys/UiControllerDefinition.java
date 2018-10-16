@@ -17,12 +17,21 @@
 package com.haulmont.cuba.gui.sys;
 
 public final class UiControllerDefinition {
+
+    private static final String UI_CONTROLLER_DEF = "UiControllerDefinition{id='%s', controllerClass='%s'%s}";
+
     private final String id;
     private final String controllerClass;
+    private final PageDefinition pageDefinition;
 
     public UiControllerDefinition(String id, String controllerClass) {
+        this(id, controllerClass, null, false);
+    }
+
+    public UiControllerDefinition(String id, String controllerClass, String path, boolean publicPage) {
         this.id = id;
         this.controllerClass = controllerClass;
+        this.pageDefinition = new PageDefinition(path, publicPage);
     }
 
     public String getId() {
@@ -33,11 +42,41 @@ public final class UiControllerDefinition {
         return controllerClass;
     }
 
+    public PageDefinition getPageDefinition() {
+        return pageDefinition;
+    }
+
     @Override
     public String toString() {
-        return "UiControllerDefinition{" +
-                "id='" + id + '\'' +
-                ", controllerClass='" + controllerClass + '\'' +
-                '}';
+        String pageDef = pageDefinition == null ? ""
+                : ", " + pageDefinition.toString();
+
+        return String.format(UI_CONTROLLER_DEF, id, controllerClass, pageDef);
+    }
+
+    public static class PageDefinition {
+
+        private static final String PAGE_DEF = "PageDefinition{route='%s', publicPage='%s'}";
+
+        private final String route;
+        private final boolean publicPage;
+
+        public PageDefinition(String route, boolean publicPage) {
+            this.route = route;
+            this.publicPage = publicPage;
+        }
+
+        public String getRoute() {
+            return route;
+        }
+
+        public boolean isPublicPage() {
+            return publicPage;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(PAGE_DEF, route, publicPage);
+        }
     }
 }

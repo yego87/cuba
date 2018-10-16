@@ -165,13 +165,6 @@ public interface WebConfig extends Config {
     int getMainTabCaptionLength();
 
     /**
-     * @return Whether to handle back button click in browser on server-side.
-     */
-    @Property("cuba.web.allowHandleBrowserHistoryBack")
-    @DefaultBoolean(true)
-    boolean getAllowHandleBrowserHistoryBack();
-
-    /**
      * @return Theme
      */
     @Default("halo")

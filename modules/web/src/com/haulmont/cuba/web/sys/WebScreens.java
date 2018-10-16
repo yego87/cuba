@@ -43,6 +43,8 @@ import com.haulmont.cuba.gui.data.impl.DatasourceImplementation;
 import com.haulmont.cuba.gui.data.impl.DsContextImplementation;
 import com.haulmont.cuba.gui.data.impl.GenericDataSupplier;
 import com.haulmont.cuba.gui.logging.UIPerformanceLogger.LifeCycle;
+import com.haulmont.cuba.gui.model.ScreenData;
+import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.model.impl.ScreenDataImpl;
 import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.screen.Screen.*;
@@ -115,6 +117,8 @@ public class WebScreens implements Screens, WindowManager {
     protected WindowCreationHelper windowCreationHelper;
     @Inject
     protected AttributeAccessSupport attributeAccessSupport;
+    @Inject
+    private Navigation navigation;
 
     @Inject
     protected ScreenViewsLoader screenViewsLoader;
@@ -420,6 +424,8 @@ public class WebScreens implements Screens, WindowManager {
         afterShowWindow(screen);
 
         fireEvent(screen, AfterShowEvent.class, new AfterShowEvent(screen));
+
+        navigation.pushState(screen);
     }
 
     protected void checkNotYetOpened(Screen screen) {
@@ -1117,9 +1123,9 @@ public class WebScreens implements Screens, WindowManager {
         if (parent instanceof ComponentContainer) {
             ComponentContainer container = (ComponentContainer) parent;
             for (com.haulmont.cuba.gui.components.Component c : container.getComponents()) {
-                if (c instanceof com.haulmont.cuba.gui.components.Component.Disposable) {
-                    com.haulmont.cuba.gui.components.Component.Disposable disposable =
-                            (com.haulmont.cuba.gui.components.Component.Disposable) c;
+                if (c instanceof Disposable) {
+                    Disposable disposable =
+                            (Disposable) c;
                     if (!disposable.isDisposed()) {
                         disposable.dispose();
                     }
@@ -1467,7 +1473,7 @@ public class WebScreens implements Screens, WindowManager {
         WindowBreadCrumbs breadCrumbs = windowContainer.getBreadCrumbs();
         Window currentWindow = breadCrumbs.getCurrentWindow();
 
-        windowContainer.removeComponent(currentWindow.unwrapComposition(com.vaadin.ui.Layout.class));
+        windowContainer.removeComponent(currentWindow.unwrapComposition(Layout.class));
 
         Window newWindow = screen.getWindow();
         com.vaadin.ui.Component newWindowComposition = newWindow.unwrapComposition(com.vaadin.ui.Component.class);

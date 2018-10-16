@@ -19,6 +19,7 @@ package com.haulmont.cuba.web.app.loginwindow;
 import com.haulmont.bali.util.URLEncodeUtils;
 import com.haulmont.cuba.core.global.GlobalConfig;
 import com.haulmont.cuba.gui.components.*;
+import com.haulmont.cuba.gui.screen.UiController;
 import com.haulmont.cuba.security.app.UserManagementService;
 import com.haulmont.cuba.security.auth.AbstractClientCredentials;
 import com.haulmont.cuba.security.auth.Credentials;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @Page(path = "login")
+@UiController
 public class AppLoginWindow extends AbstractWindow implements Window.TopLevelWindow {
 
     private static final Logger log = LoggerFactory.getLogger(AppLoginWindow.class);

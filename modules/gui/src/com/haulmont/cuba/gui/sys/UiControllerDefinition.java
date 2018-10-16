@@ -25,7 +25,9 @@ public final class UiControllerDefinition {
     private final PageDefinition pageDefinition;
 
     public UiControllerDefinition(String id, String controllerClass) {
-        this(id, controllerClass, null, false);
+        this.id = id;
+        this.controllerClass = controllerClass;
+        this.pageDefinition = null;
     }
 
     public UiControllerDefinition(String id, String controllerClass, String path, boolean publicPage) {

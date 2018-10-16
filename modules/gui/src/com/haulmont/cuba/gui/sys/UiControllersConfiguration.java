@@ -112,7 +112,7 @@ public class UiControllersConfiguration extends AbstractScanConfiguration {
         String className = metadataReader.getClassMetadata().getClassName();
         String controllerId = UiDescriptorUtils.getInferredScreenId(idAttr, valueAttr, className);
 
-        return pageAnnotation != null
+        return pageAnnotation == null
                 ? new UiControllerDefinition(controllerId, className)
                 : new UiControllerDefinition(controllerId, className, pathAttr, publicPageAttr);
     }

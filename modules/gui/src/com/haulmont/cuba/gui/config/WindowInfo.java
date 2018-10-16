@@ -19,6 +19,7 @@ package com.haulmont.cuba.gui.config;
 import com.haulmont.cuba.gui.screen.FrameOwner;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.screen.ScreenFragment;
+import com.haulmont.cuba.gui.sys.UiControllerDefinition;
 import org.dom4j.Element;
 
 import javax.annotation.Nonnull;
@@ -40,6 +41,8 @@ public class WindowInfo {
     private final Element descriptor;
     private final String screenClassName;
 
+    private final UiControllerDefinition.PageDefinition pageDefinition;
+
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor) {
         checkNotNullArgument(id);
         checkNotNullArgument(descriptor);
@@ -48,10 +51,11 @@ public class WindowInfo {
         this.windowAttributesProvider = windowAttributesProvider;
         this.descriptor = descriptor;
         this.screenClassName = null;
+        this.pageDefinition = null;
     }
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider,
-                      String screenClassName) {
+                      String screenClassName, UiControllerDefinition.PageDefinition pageDefinition) {
         checkNotNullArgument(id);
         checkNotNullArgument(screenClassName);
 
@@ -59,6 +63,7 @@ public class WindowInfo {
         this.windowAttributesProvider = windowAttributesProvider;
         this.screenClassName = screenClassName;
         this.descriptor = null;
+        this.pageDefinition = pageDefinition;
     }
 
     /**
@@ -133,6 +138,13 @@ public class WindowInfo {
      */
     public boolean getMultipleOpen() {
         return windowAttributesProvider.isMultiOpen(this);
+    }
+
+    /**
+     * JavaDoc
+     */
+    public UiControllerDefinition.PageDefinition getPageDefinition() {
+        return pageDefinition;
     }
 
     @Override

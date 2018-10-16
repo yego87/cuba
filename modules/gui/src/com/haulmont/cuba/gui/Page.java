@@ -45,9 +45,7 @@ public @interface Page {
     String PATH_ATTRIBUTE = "path";
     String PUBLIC_PAGE_ATTRIBUTE = "publicPage";
 
-    @AliasFor(PATH_ATTRIBUTE)
     String path();
 
-    @AliasFor(PUBLIC_PAGE_ATTRIBUTE)
     boolean publicPage() default false;
 }

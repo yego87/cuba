@@ -24,6 +24,7 @@ import com.haulmont.cuba.core.global.Metadata;
 import com.haulmont.cuba.core.global.Resources;
 import com.haulmont.cuba.core.global.Scripting;
 import com.haulmont.cuba.core.sys.AppContext;
+import com.haulmont.cuba.gui.NoSuchRouteException;
 import com.haulmont.cuba.gui.NoSuchScreenException;
 import com.haulmont.cuba.gui.components.AbstractFrame;
 import com.haulmont.cuba.gui.components.Window;
@@ -73,6 +74,7 @@ public class WindowConfig {
     private final Logger log = LoggerFactory.getLogger(WindowConfig.class);
 
     protected Map<String, WindowInfo> screens = new HashMap<>();
+    protected Map<String, String> routes = new HashMap<>();
 
     protected Map<Class, WindowInfo> primaryEditors = new HashMap<>();
     protected Map<Class, WindowInfo> primaryLookups = new HashMap<>();
@@ -260,7 +262,7 @@ public class WindowConfig {
 
             for (UiControllerDefinition definition : uiControllers) {
                 WindowInfo windowInfo = new WindowInfo(definition.getId(), windowAttributesProvider,
-                        definition.getControllerClass());
+                        definition.getControllerClass(), definition.getPageDefinition());
                 registerScreen(definition.getId(), windowInfo);
             }
         }
@@ -318,6 +320,10 @@ public class WindowConfig {
         }
 
         screens.put(id, windowInfo);
+        UiControllerDefinition.PageDefinition pageDefinition = windowInfo.getPageDefinition();
+        if (pageDefinition != null) {
+            routes.put(pageDefinition.getRoute(), id);
+        }
     }
 
     protected void registerPrimaryEditor(WindowInfo windowInfo, AnnotationMetadata annotationMetadata) {
@@ -409,6 +415,33 @@ public class WindowConfig {
         WindowInfo windowInfo = findWindowInfo(id);
         if (windowInfo == null) {
             throw new NoSuchScreenException(id);
+        }
+        return windowInfo;
+    }
+
+    /**
+     * Get screen information by route.
+     *
+     * @param route     route
+     * @return screen's registration information or null if not found
+     */
+    @Nullable
+    public WindowInfo findWindowInfoByRoute(String route) {
+        String screenId = routes.get(route);
+        return findWindowInfo(screenId);
+    }
+
+    /**
+     * Get screen information by route.
+     *
+     * @param route     route
+     * @return screen's registration information
+     * @throws NoSuchScreenException if the screen with specified ID is not registered
+     */
+    public WindowInfo getWindowInfoByRoute(String route) {
+        WindowInfo windowInfo = findWindowInfoByRoute(route);
+        if (windowInfo == null) {
+            throw new NoSuchRouteException(route);
         }
         return windowInfo;
     }

@@ -22,6 +22,7 @@ import com.haulmont.cuba.gui.components.mainwindow.AppMenu;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.components.mainwindow.FoldersPane;
 import com.haulmont.cuba.gui.components.mainwindow.FtsField;
+import com.haulmont.cuba.gui.screen.UiController;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.components.WebComponentsHelper;
 import com.haulmont.cuba.gui.Page;
@@ -32,6 +33,7 @@ import javax.inject.Inject;
 import java.util.Map;
 
 @Page(path = "main")
+@UiController
 public class AppMainWindow extends AbstractMainWindow {
 
     @Inject

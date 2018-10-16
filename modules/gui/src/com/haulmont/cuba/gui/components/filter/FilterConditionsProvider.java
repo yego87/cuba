@@ -24,14 +24,13 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.Objects;
 
-@Component
+@Component(FilterConditionsProvider.NAME)
 public class FilterConditionsProvider {
 
-    public static final String NAME = "cuba_DataStoreProvider";
-
-    protected PersistenceManagerService persistenceManager;
+    public static final String NAME = "cuba_FilterConditionsProvider";
 
     public FilterConditions getFilterConditions(String entityName) {
+        PersistenceManagerService persistenceManager = AppBeans.get(PersistenceManagerService.NAME);
         String storeType = persistenceManager.getStoreType(entityName);
         Collection<FilterConditions> allFilterConditions = AppBeans.getAll(FilterConditions.class).values();
         return allFilterConditions.stream()
@@ -41,7 +40,7 @@ public class FilterConditionsProvider {
     }
 
     protected FilterConditions defaultFilterConditions() {
-        return null;
+        return AppBeans.get(JPQLFilterConditions.NAME);
     }
 
 }

@@ -24,10 +24,14 @@ import com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionCreator
 import com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.descriptor.PropertyConditionDescriptor;
 import org.dom4j.Element;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-
+@Component(JPQLFilterConditions.NAME)
 public class JPQLFilterConditions implements FilterConditions {
+
+    public static final String NAME = "cuba_JPQLFilterConditions";
+
     @Inject
     protected DynamicAttributes dynamicAttributes;
 

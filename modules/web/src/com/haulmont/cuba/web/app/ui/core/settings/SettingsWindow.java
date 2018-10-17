@@ -53,8 +53,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Page(path = "settings")
-@UiController
+@Page("settings")
 public class SettingsWindow extends AbstractWindow {
 
     protected boolean changeThemeEnabled = true;

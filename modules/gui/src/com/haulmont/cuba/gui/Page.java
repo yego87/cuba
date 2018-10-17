@@ -42,10 +42,15 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface Page {
 
+    String VALUE_ATTRIBUTE = "value";
     String PATH_ATTRIBUTE = "path";
     String PUBLIC_PAGE_ATTRIBUTE = "publicPage";
 
-    String path();
+    @AliasFor(PATH_ATTRIBUTE)
+    String value() default "";
+
+    @AliasFor(VALUE_ATTRIBUTE)
+    String path() default "";
 
     boolean publicPage() default false;
 }

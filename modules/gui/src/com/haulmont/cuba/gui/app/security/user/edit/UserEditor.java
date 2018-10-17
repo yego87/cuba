@@ -21,6 +21,7 @@ import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.client.ClientConfig;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
+import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.gui.UiComponents;
 import com.haulmont.cuba.gui.WindowManager.OpenType;
 import com.haulmont.cuba.gui.WindowParam;
@@ -51,6 +52,7 @@ import java.util.*;
 
 import static com.haulmont.cuba.gui.components.PickerField.LookupAction;
 
+@Page("users/edit")
 public class UserEditor extends AbstractEditor<User> {
 
     @Inject

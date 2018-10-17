@@ -44,6 +44,11 @@ public class WindowInfo {
     private final UiControllerDefinition.PageDefinition pageDefinition;
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor) {
+        this(id, windowAttributesProvider, descriptor, null);
+    }
+
+    public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor,
+                      UiControllerDefinition.PageDefinition pageDefinition) {
         checkNotNullArgument(id);
         checkNotNullArgument(descriptor);
 
@@ -51,7 +56,7 @@ public class WindowInfo {
         this.windowAttributesProvider = windowAttributesProvider;
         this.descriptor = descriptor;
         this.screenClassName = null;
-        this.pageDefinition = null;
+        this.pageDefinition = pageDefinition;
     }
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider,

@@ -44,8 +44,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Page(path = "login")
-@UiController
+@Page("login")
 public class AppLoginWindow extends AbstractWindow implements Window.TopLevelWindow {
 
     private static final Logger log = LoggerFactory.getLogger(AppLoginWindow.class);

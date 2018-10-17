@@ -16,6 +16,7 @@
  */
 package com.haulmont.cuba.gui.app.security.group.lookup;
 
+import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.gui.WindowParam;
 import com.haulmont.cuba.gui.components.AbstractLookup;
 import com.haulmont.cuba.gui.components.Tree;
@@ -27,6 +28,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
+@Page("groups")
 public class GroupLookup extends AbstractLookup {
 
     @Inject

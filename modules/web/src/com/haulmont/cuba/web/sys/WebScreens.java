@@ -516,6 +516,23 @@ public class WebScreens implements Screens, WindowManager {
     }
 
     protected void afterRemoveWindow(Screen screen) {
+        WebAppWorkArea workArea = getConfiguredWorkArea();
+
+        if (workArea.getMode() == Mode.SINGLE) {
+            // TODO: implement
+            return;
+        }
+
+        TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+        TabWindowContainer windowContainer = (TabWindowContainer) tabSheet.getSelectedTab();
+
+        if (windowContainer == null) {
+            Screen rootScreen = ui.getTopLevelWindow().getFrameOwner();
+            navigation.replaceState(rootScreen);
+        } else {
+            Screen currentScreen = windowContainer.getBreadCrumbs().getCurrentWindow().getFrameOwner();
+            navigation.replaceState(currentScreen);
+        }
     }
 
     protected void removeThisTabWindow(Screen screen) {

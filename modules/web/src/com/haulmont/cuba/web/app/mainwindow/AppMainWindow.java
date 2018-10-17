@@ -32,8 +32,7 @@ import com.vaadin.server.Sizeable.Unit;
 import javax.inject.Inject;
 import java.util.Map;
 
-@Page(path = "main")
-@UiController
+@Page("main")
 public class AppMainWindow extends AbstractMainWindow {
 
     @Inject

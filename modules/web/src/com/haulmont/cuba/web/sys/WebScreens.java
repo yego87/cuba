@@ -511,6 +511,11 @@ public class WebScreens implements Screens, WindowManager {
         }
 
         fireEvent(screen, AfterDetachEvent.class, new AfterDetachEvent(screen));
+
+        afterRemoveWindow(screen);
+    }
+
+    protected void afterRemoveWindow(Screen screen) {
     }
 
     protected void removeThisTabWindow(Screen screen) {

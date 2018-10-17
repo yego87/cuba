@@ -18,6 +18,7 @@ package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.config.WindowConfig;
+import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
@@ -26,6 +27,7 @@ import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
 import com.haulmont.cuba.web.sys.WindowBreadCrumbs;
 import com.vaadin.server.Page;
+import com.vaadin.ui.HasComponents;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -55,12 +57,11 @@ public class WebNavigation implements Navigation {
     }
 
     protected String buildNavState(Screen screen, Map<String, String> urlParams) {
-        PageDefinition pageDefinition = getPageDef(screen);
-
         StringBuilder state = new StringBuilder();
 
         if (screen.getWindow() instanceof RootWindow) {
-            state.append(pageDefinition.getRoute())
+            PageDefinition page = getPageDef(screen);
+            state.append(page.getRoute())
                     .append(buildParamsString(urlParams));
         } else {
             RootWindow topLevelWindow = AppUI.getCurrent().getTopLevelWindow();
@@ -79,35 +80,36 @@ public class WebNavigation implements Navigation {
     }
 
     protected PageDefinition getPageDef(Screen screen) {
-        PageDefinition pageDefinition = screen.getScreenContext().getWindowInfo().getPageDefinition();
+        PageDefinition page = screen.getScreenContext().getWindowInfo().getPageDefinition();
 
-        if (pageDefinition == null) {
+        if (page == null) {
             String screenId = UiDescriptorUtils.getInferredScreenId(null, null, screen.getClass().getName());
-            pageDefinition = windowConfig.getWindowInfo(screenId).getPageDefinition();
+            WindowInfo windowInfo = windowConfig.findWindowInfo(screenId);
+            if (windowInfo != null) {
+                page = windowInfo.getPageDefinition();
+            }
         }
 
-        return pageDefinition;
+        if (page == null) {
+            throw new RuntimeException("Unable to find PageDefinition");
+        }
+
+        return page;
     }
 
     protected String buildCompositeState(Screen screen) {
         com.vaadin.ui.Component screenComposition = screen.getWindow().unwrapComposition(com.vaadin.ui.Component.class);
-        WindowBreadCrumbs breadCrumbs = ((TabWindowContainer) screenComposition.getParent()).getBreadCrumbs();
+        HasComponents parent = screenComposition.getParent();
 
-        /*StringBuilder sb = new StringBuilder();
+        if (parent instanceof TabWindowContainer) {
+            WindowBreadCrumbs breadCrumbs = ((TabWindowContainer) parent).getBreadCrumbs();
 
-        for (Window window : breadCrumbs.getWindows()) {
-            String _route = window.getFrameOwner()
-                    .getScreenContext()
-                    .getWindowInfo()
-                    .getPageDefinition()
-                    .getRoute();
+            return breadCrumbs.getWindows().stream()
+                    .map(w -> getPageDef(w.getFrameOwner()).getRoute())
+                    .collect(Collectors.joining("/"));
+        }
 
-            sb.append(_route);
-        }*/
-
-        return breadCrumbs.getWindows().stream()
-                .map(w -> getPageDef(w.getFrameOwner()).getRoute())
-                .collect(Collectors.joining("/"));
+        return "";
     }
 
     protected String buildParamsString(Map<String, String> params) {

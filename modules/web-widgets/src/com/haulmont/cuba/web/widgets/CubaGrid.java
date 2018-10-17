@@ -17,8 +17,14 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.grid.CubaGridState;
+import com.haulmont.cuba.web.widgets.grid.CubaEditorField;
+import com.haulmont.cuba.web.widgets.grid.CubaEditorImpl;
+import com.vaadin.data.ValueProvider;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.components.grid.Editor;
 import com.vaadin.ui.components.grid.GridSelectionModel;
+import com.vaadin.ui.renderers.AbstractRenderer;
+import com.vaadin.ui.renderers.Renderer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,31 +36,7 @@ import java.util.Map;
 
 public class CubaGrid<T> extends Grid<T> implements CubaEnhancedGrid<T> {
 
-//    protected CubaGridEditorFieldFactory editorFieldFactory;
-//
-//    protected Collection<Field<?>> editorFields = new ArrayList<>();
-//
-//    public CubaGrid(CubaGridEditorFieldFactory editorFieldFactory) {
-//        this(null, null, editorFieldFactory);
-//    }
-//
-//    public CubaGrid(String caption, Container.Indexed dataSource, CubaGridEditorFieldFactory editorFieldFactory) {
-//        super(caption, dataSource);
-//
-//        this.editorFieldFactory = editorFieldFactory;
-//        setEditorErrorHandler(new CubaDefaultEditorErrorHandler());
-//
-//        // FIXME: gg, workaround for https://github.com/vaadin/framework/issues/9040
-//        addEditorCloseListener(event -> focus());
-//    }
-//
-//    public CubaGridEditorFieldFactory getCubaEditorFieldFactory() {
-//        return editorFieldFactory;
-//    }
-//
-//    public void setCubaEditorFieldFactory(CubaGridEditorFieldFactory editorFieldFactory) {
-//        this.editorFieldFactory = editorFieldFactory;
-//    }
+    protected CubaGridEditorFieldFactory<T> editorFieldFactory;
 
     @Override
     public void setGridSelectionModel(GridSelectionModel<T> model) {
@@ -103,128 +85,50 @@ public class CubaGrid<T> extends Grid<T> implements CubaEnhancedGrid<T> {
         getDataCommunicator().reset();
     }
 
-    //    @Override
-//    protected void doEditItem() {
-//        clearFields(editorFields);
-//
-//        Map<Column, Field> columnFieldMap = new HashMap<>();
-//        for (Column column : getColumns()) {
-//            Field<?> field = editorFieldFactory.createField(editedItemId, column.getPropertyId());
-//            column.getState().editorConnector = field;
-//            if (field != null) {
-//                configureField(field);
-//                editorFields.add(field);
-//                columnFieldMap.put(column, field);
-//            }
-//        }
-//
-//        editorActive = true;
-//        // Must ensure that all fields, recursively, are sent to the client
-//        // This is needed because the fields are hidden using isRendered
-//        for (Field<?> f : getEditorFields()) {
-//            f.markAsDirtyRecursive();
-//        }
-//
-//        fireEditorOpenEvent(columnFieldMap);
-//    }
-//
-//    protected void clearFields(Collection<Field<?>> fields) {
-//        for (Field<?> field : fields) {
-//            field.setParent(null);
-//        }
-//        fields.clear();
-//    }
-//
-//    protected void configureField(Field<?> field) {
-//        field.setParent(this);
-//        field.setBuffered(isEditorBuffered());
-//        field.setEnabled(isEnabled());
-//    }
-//
-//    @Override
-//    protected Collection<Field<?>> getEditorFields() {
-//        Collection<Field<?>> fields = editorFields != null ? editorFields : Collections.emptyList();
-//        assert allAttached(fields);
-//        return fields;
-//    }
-//
-//    protected boolean allAttached(Collection<? extends Component> components) {
-//        for (Component component : components) {
-//            if (component.getParent() != this) {
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-//
-//    @Override
-//    protected void doCancelEditor() {
-//        Object itemId = editedItemId;
-//        editedItemId = null;
-//        editorActive = false;
-//        fireEditorCloseEvent(itemId);
-//
-//        // to prevent one more detach in case of changing datasource
-//        clearFields(editorFields);
-//
-//        // Mark Grid as dirty so the client side gets to know that the editors
-//        // are no longer attached
-//        markAsDirty();
-//    }
-//
-//    @Override
-//    public void saveEditor() throws FieldGroup.CommitException {
-//        try {
-//            editorSaving = true;
-//            commitEditor();
-//        } finally {
-//            editorSaving = false;
-//        }
-//    }
-//
-//    protected void commitEditor() throws FieldGroup.CommitException {
-//        if (!isEditorBuffered()) {
-//            // Not using buffered mode, nothing to do
-//            return;
-//        }
-//        try {
-//            fireEditorPreCommitEvent();
-//
-//            Map<Field<?>, Validator.InvalidValueException> invalidValueExceptions = commitFields();
-//            if (invalidValueExceptions.isEmpty()) {
-//                fireEditorPostCommitEvent();
-//            } else {
-//                throw new FieldGroup.FieldGroupInvalidValueException(invalidValueExceptions);
-//            }
-//        } catch (Exception e) {
-//            throw new FieldGroup.CommitException("Commit failed", null, e);
-//        }
-//    }
-//
-//    protected Map<Field<?>, Validator.InvalidValueException> commitFields() {
-//        Map<Field<?>, Validator.InvalidValueException> invalidValueExceptions = new HashMap<>();
-//
-//        editorFields.forEach(field -> {
-//            try {
-//                field.commit();
-//            } catch (Validator.InvalidValueException e) {
-//                invalidValueExceptions.put(field, e);
-//            }
-//        });
-//
-//        return invalidValueExceptions;
-//    }
-//
-//    @Override
-//    protected boolean isEditorFieldsValid() {
-//        try {
-//            editorFields.forEach(Validatable::validate);
-//            return true;
-//        } catch (Validator.InvalidValueException e) {
-//            return false;
-//        }
-//    }
-//
+    @Override
+    protected <V, P> Column<T, V> createColumn(ValueProvider<T, V> valueProvider,
+                                               ValueProvider<V, P> presentationProvider,
+                                               AbstractRenderer<? super T, ? super P> renderer) {
+        return new CubaColumn<>(valueProvider, presentationProvider, renderer);
+    }
+
+    @Override
+    public CubaGridEditorFieldFactory<T> getCubaEditorFieldFactory() {
+        return editorFieldFactory;
+    }
+
+    @Override
+    public void setCubaEditorFieldFactory(CubaGridEditorFieldFactory<T> editorFieldFactory) {
+        this.editorFieldFactory = editorFieldFactory;
+    }
+
+    @Override
+    protected Editor<T> createEditor() {
+        return new CubaEditorImpl<>(getPropertySet());
+    }
+
+    @Override
+    public CubaEditorField<?> getColumnEditorField(T bean, Column<T, ?> column) {
+        return editorFieldFactory.createField(bean, column);
+    }
+
+    public static class CubaColumn<T, V> extends Column<T, V> {
+
+        protected <P> CubaColumn(ValueProvider<T, V> valueProvider,
+                                 ValueProvider<V, P> presentationProvider,
+                                 Renderer<? super P> renderer) {
+            super(valueProvider, presentationProvider, renderer);
+        }
+
+        @Override
+        public Column<T, V> setEditable(boolean editable) {
+            // Removed check that editorBinding is not null,
+            // because we don't use Vaadin binding.
+            getState().editable = editable;
+            return this;
+        }
+    }
+
 //    protected void fireEditorPreCommitEvent() {
 //        fireEvent(new EditorPreCommitEvent(this, editedItemId));
 //    }

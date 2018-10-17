@@ -56,16 +56,15 @@ import com.haulmont.cuba.web.gui.components.valueproviders.*;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaCssActionsLayout;
 import com.haulmont.cuba.web.widgets.CubaEnhancedGrid;
+import com.haulmont.cuba.web.widgets.CubaGridEditorFieldFactory;
 import com.haulmont.cuba.web.widgets.CubaUI;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.Menu;
 import com.haulmont.cuba.web.widgets.addons.contextmenu.MenuItem;
 import com.haulmont.cuba.web.widgets.data.SortableDataProvider;
-import com.haulmont.cuba.web.widgets.grid.CubaGridContextMenu;
-import com.haulmont.cuba.web.widgets.grid.CubaMultiCheckSelectionModel;
-import com.haulmont.cuba.web.widgets.grid.CubaMultiSelectionModel;
-import com.haulmont.cuba.web.widgets.grid.CubaSingleSelectionModel;
+import com.haulmont.cuba.web.widgets.grid.*;
 import com.vaadin.data.HasValue;
 import com.vaadin.data.SelectionModel;
+import com.vaadin.data.ValidationResult;
 import com.vaadin.data.ValueProvider;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.GridSortOrder;
@@ -288,6 +287,14 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         component.setHeightMode(HeightMode.UNDEFINED);
 
         component.setStyleGenerator(this::getGeneratedRowStyle);
+
+        //noinspection unchecked
+        ((CubaEnhancedGrid<E>) component).setCubaEditorFieldFactory(createEditorFieldFactory());
+    }
+
+    protected CubaGridEditorFieldFactory<E> createEditorFieldFactory() {
+        DataGridEditorFieldFactory fieldFactory = beanLocator.get(DataGridEditorFieldFactory.NAME);
+        return new WebDataGridEditorFieldFactory<>(this, fieldFactory);
     }
 
     protected void initComponentComposition(GridComposition componentComposition) {
@@ -549,7 +556,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
 
     @Override
     public void setLookupSelectHandler(Consumer<Collection<E>> selectHandler) {
-        Consumer<Action.ActionPerformedEvent> actionHandler = event ->  {
+        Consumer<Action.ActionPerformedEvent> actionHandler = event -> {
             Set<E> selected = getSelected();
             selectHandler.accept(selected);
         };
@@ -683,9 +690,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         gridColumn.setHidable(column.isCollapsible() && column.getOwner().isColumnsCollapsingAllowed());
         gridColumn.setResizable(column.isResizable());
         gridColumn.setSortable(column.isSortable() && column.getOwner().isSortable());
-        if (gridColumn.getEditorBinding() != null) {
-            gridColumn.setEditable(column.isEditable() && column.getOwner().isEditorEnabled());
-        }
+        gridColumn.setEditable(column.isEditable() && column.getOwner().isEditorEnabled());
 
         AppUI current = AppUI.getCurrent();
         if (current != null && current.isTestMode()) {
@@ -1238,71 +1243,68 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
 //        }
 //    }
 
-    // VAADIN8: gg, implement
-    /*protected static class WebDataGridEditorFieldFactory implements CubaGridEditorFieldFactory {
+    protected static class WebDataGridEditorFieldFactory<E extends Entity> implements CubaGridEditorFieldFactory<E> {
 
-        protected WebDataGrid<?> dataGrid;
-        protected DataGridEditorFieldFactory fieldFactory = AppBeans.get(DataGridEditorFieldFactory.NAME);
+        protected WebAbstractDataGrid<?, E> dataGrid;
+        protected DataGridEditorFieldFactory fieldFactory;
 
-        public WebDataGridEditorFieldFactory(WebDataGrid dataGrid) {
+        public WebDataGridEditorFieldFactory(WebAbstractDataGrid<?, E> dataGrid,
+                                             DataGridEditorFieldFactory fieldFactory) {
             this.dataGrid = dataGrid;
+            this.fieldFactory = fieldFactory;
         }
 
         @Nullable
         @Override
-        public com.vaadin.v7.ui.Field<?> createField(Object itemId, Object propertyId) {
-            Column column = dataGrid.getColumnByPropertyId(propertyId);
-            if (column != null && !column.isEditable()) {
+        public CubaEditorField<?> createField(E bean, Grid.Column<E, ?> gridColumn) {
+            ColumnImpl<E> column = dataGrid.getColumnByGridColumn(gridColumn);
+            if (column == null || !column.isShouldBeEditable()) {
                 return null;
             }
 
-            //noinspection unchecked
-            Entity entity = dataGrid.getDatasource().getItem(itemId);
-            Datasource fieldDatasource = dataGrid.createItemDatasource(entity);
-            String fieldPropertyId = String.valueOf(propertyId);
-
-            Field columnComponent = column != null && column.getEditorFieldGenerator() != null
+            Datasource fieldDatasource = dataGrid.createItemDatasource(bean);
+            // TEST: gg, check NotNull? if a column is generated then fieldPropertyId is different
+            String fieldPropertyId = String.valueOf(column.getPropertyPath());
+            Field columnComponent = column.getEditorFieldGenerator() != null
                     ? column.getEditorFieldGenerator().createField(fieldDatasource, fieldPropertyId)
                     : fieldFactory.createField(fieldDatasource, fieldPropertyId);
             columnComponent.setParent(dataGrid);
             columnComponent.setFrame(dataGrid.getFrame());
 
-//            return createCustomField(columnComponent);
-            return null;
+            return createCustomField(columnComponent);
         }
 
-        protected CustomField createCustomField(final Field columnComponent) {
+        protected CubaEditorField createCustomField(final Field columnComponent) {
             if (!(columnComponent instanceof Buffered)) {
                 throw new IllegalArgumentException("Editor field must implement " +
-                        "com.haulmont.cuba.gui.components.Component.Buffered");
+                        "com.haulmont.cuba.gui.components.Buffered");
             }
 
-            AbstractField<?> content = (AbstractField<?>) WebComponentsHelper.getComposition(columnComponent);
+            Component content = WebComponentsHelper.getComposition(columnComponent);
 
-//            CustomField wrapper = new DataGridEditorCustomField(columnComponent) {
-//                @Override
-//                protected Component initContent() {
-//                    return content;
-//                }
-//            };
-//
-            //noinspection unchecked
+            CubaEditorField wrapper = new DataGridEditorCustomField(columnComponent) {
+                @Override
+                protected Component initContent() {
+                    return content;
+                }
+            };
+
 //            wrapper.setConverter(new ObjectToObjectConverter());
-//            wrapper.setFocusDelegate(content);
-//
-//            wrapper.setReadOnly(content.isReadOnly());
-//            wrapper.setRequired(content.isRequired());
-//            wrapper.setRequiredError(content.getRequiredError());
+            if (content instanceof Component.Focusable) {
+                wrapper.setFocusDelegate((Component.Focusable) content);
+            }
 
-//            columnComponent.addValueChangeListener(event -> wrapper.markAsDirty());
-//
-//            return wrapper;
-            return null;
+            wrapper.setReadOnly(((HasValue<?>) content).isReadOnly());
+            wrapper.setRequiredIndicatorVisible(((HasValue) content).isRequiredIndicatorVisible());
+
+            //noinspection unchecked
+            columnComponent.addValueChangeListener(event -> wrapper.markAsDirty());
+
+            return wrapper;
         }
-    }*/
+    }
 
-    // VAADIN8: gg, implement
-    /*protected static abstract class DataGridEditorCustomField extends CustomField {
+    protected static abstract class DataGridEditorCustomField extends CubaEditorField {
 
         protected Field columnComponent;
 
@@ -1310,74 +1312,56 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             this.columnComponent = columnComponent;
         }
 
-        @Override
-        protected AbstractField<?> getContent() {
-            return (AbstractField<?>) super.getContent();
-        }
-
         protected Field getField() {
             return columnComponent;
         }
 
-        //        @Override
-//        public Class getType() {
-//            return Object.class;
-//        }
-//
-//        @Override
-//        protected void setInternalValue(Object newValue) {
-//            columnComponent.setValue(newValue);
-//        }
-//
-//        @Override
-//        protected Object getInternalValue() {
-//            return columnComponent.getValue();
-//        }
-//
         @Override
-        public ErrorMessage getErrorMessage() {
-//            try {
-//                validate();
-//            } catch (Validator.InvalidValueException ignore) {
-//            }
-            return getContent().getErrorMessage();
+        protected void doSetValue(Object value) {
+            //noinspection unchecked
+            columnComponent.setValue(value);
         }
 
-//        @Override
-//        public boolean isBuffered() {
-//            return ((Buffered) columnComponent).isBuffered();
-//        }
-//
-//        @Override
-//        public void setBuffered(boolean buffered) {
-//            ((Buffered) columnComponent).setBuffered(buffered);
-//        }
-//
-//        @Override
-//        public void commit() throws com.vaadin.v7.data.Buffered.SourceException, Validator.InvalidValueException {
-//            validate();
-//            ((Buffered) columnComponent).commit();
-//        }
-//
-//        @Override
-//        public void validate() throws Validator.InvalidValueException {
-//            try {
-//                columnComponent.validate();
-//            } catch (ValidationException e) {
-//                throw new Validator.InvalidValueException(e.getDetailsMessage());
-//            }
-//        }
+        @Override
+        public Object getValue() {
+            return columnComponent.getValue();
+        }
 
-        //        @Override
-//        public void discard() throws com.vaadin.v7.data.Buffered.SourceException {
-//            ((Buffered) columnComponent).discard();
-//        }
-//
-//        @Override
-//        public boolean isModified() {
-//            return ((Buffered) columnComponent).isModified();
-//        }
-//
+        @Override
+        public boolean isBuffered() {
+            return ((Buffered) columnComponent).isBuffered();
+        }
+
+        @Override
+        public void setBuffered(boolean buffered) {
+            ((Buffered) columnComponent).setBuffered(buffered);
+        }
+
+        @Override
+        public void commit() {
+            ((Buffered) columnComponent).commit();
+        }
+
+        @Override
+        public ValidationResult validate() {
+            try {
+                columnComponent.validate();
+                return ValidationResult.ok();
+            } catch (ValidationException e) {
+                return ValidationResult.error(e.getDetailsMessage());
+            }
+        }
+
+        @Override
+        public void discard() {
+            ((Buffered) columnComponent).discard();
+        }
+
+        @Override
+        public boolean isModified() {
+            return ((Buffered) columnComponent).isModified();
+        }
+
         @Override
         public void setWidth(float width, Unit unit) {
             super.setWidth(width, unit);
@@ -1403,7 +1387,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
                 }
             }
         }
-    }*/
+    }
 
     @Override
     public boolean isHeaderVisible() {
@@ -2175,10 +2159,11 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     }
 
     @Nullable
-    protected Column<E> getColumnByGridColumn(Grid.Column<E, ?> gridColumn) {
+    protected ColumnImpl<E> getColumnByGridColumn(Grid.Column<E, ?> gridColumn) {
         for (Column<E> column : getColumns()) {
-            if (((ColumnImpl<E>) column).getGridColumn() == gridColumn) {
-                return column;
+            ColumnImpl<E> columnImpl = (ColumnImpl<E>) column;
+            if (columnImpl.getGridColumn() == gridColumn) {
+                return columnImpl;
             }
         }
         return null;
@@ -3308,10 +3293,12 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             if (gridColumn != null) {
                 return gridColumn.isEditable();
             }
-            return isColumnShouldBeEditable();
+            return isShouldBeEditable();
         }
 
-        protected boolean isColumnShouldBeEditable() {
+        // TEST: gg,
+        public boolean isShouldBeEditable() {
+            // TODO: gg, merge two checks
             return editable
                     && (!generated || fieldGenerator != null)
                     && (!isRepresentsCollection() || fieldGenerator != null)
@@ -3343,7 +3330,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
 
         protected void updateEditable() {
             if (gridColumn != null) {
-                gridColumn.setEditable(isColumnShouldBeEditable());
+                gridColumn.setEditable(isShouldBeEditable());
             }
         }
 

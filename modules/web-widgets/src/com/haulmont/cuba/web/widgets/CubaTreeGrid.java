@@ -1,6 +1,7 @@
 package com.haulmont.cuba.web.widgets;
 
 import com.haulmont.cuba.web.widgets.client.treegrid.CubaTreeGridState;
+import com.vaadin.data.HasValue;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
 
@@ -54,5 +55,22 @@ public class CubaTreeGrid<T> extends TreeGrid<T> implements CubaEnhancedGrid<T> 
     public void repaint() {
         markAsDirtyRecursive();
         getDataCommunicator().reset();
+    }
+
+    @Override
+    public HasValue<?> getColumnEditorField(T bean, Column<T, ?> column) {
+        // TODO: gg, implement
+        return null;
+    }
+
+    @Override
+    public CubaGridEditorFieldFactory<T> getCubaEditorFieldFactory() {
+        // TODO: gg, implement
+        return null;
+    }
+
+    @Override
+    public void setCubaEditorFieldFactory(CubaGridEditorFieldFactory<T> editorFieldFactory) {
+        // TODO: gg, implement
     }
 }

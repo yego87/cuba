@@ -1290,12 +1290,13 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             };
 
 //            wrapper.setConverter(new ObjectToObjectConverter());
+            // FIXME: gg, DateField?
             if (content instanceof Component.Focusable) {
                 wrapper.setFocusDelegate((Component.Focusable) content);
             }
 
-            wrapper.setReadOnly(((HasValue<?>) content).isReadOnly());
-            wrapper.setRequiredIndicatorVisible(((HasValue) content).isRequiredIndicatorVisible());
+            wrapper.setReadOnly(!columnComponent.isEditable());
+            wrapper.setRequiredIndicatorVisible(columnComponent.isRequired());
 
             //noinspection unchecked
             columnComponent.addValueChangeListener(event -> wrapper.markAsDirty());

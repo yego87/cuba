@@ -20,11 +20,12 @@ import com.google.common.base.Strings;
 import com.haulmont.cuba.web.widgets.CubaGrid;
 import com.vaadin.data.PropertySet;
 import com.vaadin.data.ValidationResult;
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.components.grid.EditorImpl;
-import com.vaadin.ui.components.grid.EditorOpenEvent;
 import com.vaadin.ui.components.grid.EditorSaveEvent;
+import com.vaadin.util.ReflectTools;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,7 +64,7 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
                     getState().columnFields.put(getInternalIdForColumn(c), editorField.getConnectorId());
                 });
 
-        eventRouter.fireEvent(new EditorOpenEvent<>(this, edited));
+        eventRouter.fireEvent(new CubaEditorOpenEvent<>(this, edited, Collections.unmodifiableMap(columnFields)));
     }
 
     protected void configureField(CubaEditorField<?> field) {
@@ -74,6 +75,7 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
     @Override
     public boolean save() {
         if (isOpen() && isBuffered()) {
+            eventRouter.fireEvent(new CubaEditorBeforeSaveEvent<>(this, edited));
             Map<Component, ValidationResult> errors = getValidationErrors();
             if (errors.isEmpty()) {
                 commitFields();
@@ -147,5 +149,10 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
         columnFields.values().forEach(field -> {
             ((CubaEditorField<?>) field).commit();
         });
+    }
+
+    public Registration addBeforeSaveListener(CubaEditorBeforeSaveListener<T> listener) {
+        return eventRouter.addListener(CubaEditorBeforeSaveEvent.class, listener,
+                ReflectTools.getMethod(CubaEditorBeforeSaveListener.class));
     }
 }

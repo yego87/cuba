@@ -75,10 +75,9 @@ import com.vaadin.event.selection.MultiSelectionEvent;
 import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.grid.HeightMode;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.DescriptionGenerator;
 import com.vaadin.ui.*;
-import com.vaadin.ui.components.grid.Footer;
-import com.vaadin.ui.components.grid.Header;
-import com.vaadin.ui.components.grid.StaticSection;
+import com.vaadin.ui.components.grid.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Document;
@@ -158,10 +157,10 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
 
     protected Document defaultSettings;
 
-//    protected CubaGrid.EditorCloseListener editorCloseListener;
-//    protected CubaGrid.BeforeEditorOpenListener beforeEditorOpenListener;
-//    protected CubaGrid.EditorPreCommitListener editorPreCommitListener;
-//    protected CubaGrid.EditorPostCommitListener editorPostCommitListener;
+    protected Registration editorCancelListener;
+    protected Registration editorOpenListener;
+    protected Registration editorBeforeSaveListener;
+    protected Registration editorSaveListener;
 
     protected final List<HeaderRow> headerRows = new ArrayList<>();
     protected final List<FooterRow> footerRows = new ArrayList<>();
@@ -398,7 +397,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             dataGridItems.setSelectedItem(newItem);
         }
 
-        LookupSelectionChangeEvent selectionChangeEvent = new LookupSelectionChangeEvent(this);
+        LookupSelectionChangeEvent<E> selectionChangeEvent = new LookupSelectionChangeEvent<>(this);
         publish(LookupSelectionChangeEvent.class, selectionChangeEvent);
 
         fireSelectionEvent(e);
@@ -1142,106 +1141,114 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         component.getEditor().editRow(rowIndex);
     }
 
-//    @Override
-//    public void addEditorOpenListener(EditorOpenListener listener) {
-//        getEventRouter().addListener(EditorOpenListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (beforeEditorOpenListener == null) {
-//            beforeEditorOpenListener = event -> {
-//                //noinspection ConstantConditions
-//                Map<String, Field> fields = event.getColumnFieldMap().entrySet().stream()
-//                        .filter(entry ->
-//                                getColumnByGridColumn(entry.getKey()) != null)
-//                        .collect(Collectors.toMap(
-//                                entry -> getColumnByGridColumn(entry.getKey()).getId(),
-//                                entry -> ((DataGridEditorCustomField) entry.getValue()).getField())
-//                        );
-//
-//                EditorOpenEvent e = new EditorOpenEvent(WebDataGrid.this, event.getItem(), fields);
-//                getEventRouter().fireEvent(EditorOpenListener.class, EditorOpenListener::beforeEditorOpened, e);
-//            };
-//            component.addEditorOpenListener(beforeEditorOpenListener);
-//        }
-//    }
+    @Override
+    public Subscription addEditorOpenListener(Consumer<EditorOpenEvent> listener) {
+        if (editorOpenListener == null) {
+            editorOpenListener = component.getEditor().addOpenListener(this::onEditorOpen);
+        }
 
-//    @Override
-//    public void removeEditorOpenListener(EditorOpenListener listener) {
-//        getEventRouter().removeListener(EditorOpenListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (!getEventRouter().hasListeners(EditorOpenListener.class)) {
-//            component.removeEditorOpenListener(beforeEditorOpenListener);
-//            beforeEditorOpenListener = null;
-//        }
-//    }
+        return getEventHub().subscribe(EditorOpenEvent.class, listener);
+    }
 
-//    @Override
-//    public void addEditorCloseListener(EditorCloseListener listener) {
-//        getEventRouter().addListener(EditorCloseListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (editorCloseListener == null) {
-//            editorCloseListener = event -> {
-//                EditorCloseEvent e = new EditorCloseEvent(WebDataGrid.this, event.getItem());
-//                getEventRouter().fireEvent(EditorCloseListener.class, EditorCloseListener::editorClosed, e);
-//            };
-//            component.addEditorCloseListener(editorCloseListener);
-//        }
-//    }
+    protected void onEditorOpen(com.vaadin.ui.components.grid.EditorOpenEvent<E> editorOpenEvent) {
+        //noinspection unchecked
+        CubaEditorOpenEvent<E> event = ((CubaEditorOpenEvent) editorOpenEvent);
+        //noinspection ConstantConditions
+        Map<String, Field> fields = event.getColumnFieldMap().entrySet().stream()
+                .filter(entry ->
+                        getColumnByGridColumn(entry.getKey()) != null)
+                .collect(Collectors.toMap(
+                        entry -> getColumnByGridColumn(entry.getKey()).getId(),
+                        entry -> ((DataGridEditorCustomField) entry.getValue()).getField())
+                );
 
-//    @Override
-//    public void removeEditorCloseListener(EditorCloseListener listener) {
-//        getEventRouter().removeListener(EditorCloseListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (!getEventRouter().hasListeners(EditorCloseListener.class)) {
-//            component.removeEditorCloseListener(editorCloseListener);
-//            editorCloseListener = null;
-//        }
-//    }
+        EditorOpenEvent e = new EditorOpenEvent(this, event.getBean(), fields);
+        publish(EditorOpenEvent.class, e);
+    }
 
-//    @Override
-//    public void addEditorPreCommitListener(EditorPreCommitListener listener) {
-//        getEventRouter().addListener(EditorPreCommitListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (editorPreCommitListener == null) {
-//            editorPreCommitListener = event -> {
-//                EditorPreCommitEvent e = new EditorPreCommitEvent(WebDataGrid.this, event.getItem());
-//                getEventRouter().fireEvent(EditorPreCommitListener.class, EditorPreCommitListener::preCommit, e);
-//            };
-//            component.addEditorPreCommitListener(editorPreCommitListener);
-//        }
-//    }
+    @Override
+    public void removeEditorOpenListener(Consumer<EditorOpenEvent> listener) {
+        unsubscribe(EditorOpenEvent.class, listener);
 
-//    @Override
-//    public void removeEditorPreCommitListener(EditorPreCommitListener listener) {
-//        getEventRouter().removeListener(EditorPreCommitListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (!getEventRouter().hasListeners(EditorPreCommitListener.class)) {
-//            component.removeEditorPreCommitListener(editorPreCommitListener);
-//            editorPreCommitListener = null;
-//        }
-//    }
+        if (!hasSubscriptions(EditorOpenEvent.class)) {
+            editorOpenListener.remove();
+            editorOpenListener = null;
+        }
+    }
 
-//    @Override
-//    public void addEditorPostCommitListener(EditorPostCommitListener listener) {
-//        getEventRouter().addListener(EditorPostCommitListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (editorPostCommitListener == null) {
-//            editorPostCommitListener = event -> {
-//                EditorPostCommitEvent e = new EditorPostCommitEvent(WebDataGrid.this, event.getItem());
-//                getEventRouter().fireEvent(EditorPostCommitListener.class, EditorPostCommitListener::postCommit, e);
-//            };
-//            component.addEditorPostCommitListener(editorPostCommitListener);
-//        }
-//    }
+    @Override
+    public Subscription addEditorCloseListener(Consumer<EditorCloseEvent> listener) {
+        if (editorCancelListener == null) {
+            editorCancelListener = component.getEditor().addCancelListener(this::onEditorCancel);
+        }
 
-//    @Override
-//    public void removeEditorPostCommitListener(EditorPostCommitListener listener) {
-//        getEventRouter().removeListener(EditorPostCommitListener.class, listener);
-    // VAADIN8: gg, implement
-//        if (!getEventRouter().hasListeners(EditorPostCommitListener.class)) {
-//            component.removeEditorPostCommitListener(editorPostCommitListener);
-//            editorPostCommitListener = null;
-//        }
-//    }
+        return getEventHub().subscribe(EditorCloseEvent.class, listener);
+    }
+
+    protected void onEditorCancel(EditorCancelEvent<E> event) {
+        EditorCloseEvent e = new EditorCloseEvent(this, event.getBean());
+        publish(EditorCloseEvent.class, e);
+    }
+
+    @Override
+    public void removeEditorCloseListener(Consumer<EditorCloseEvent> listener) {
+        unsubscribe(EditorCloseEvent.class, listener);
+
+        if (!hasSubscriptions(EditorCloseEvent.class)) {
+            editorCancelListener.remove();
+            editorCancelListener = null;
+        }
+    }
+
+    @Override
+    public Subscription addEditorPreCommitListener(Consumer<EditorPreCommitEvent> listener) {
+        if (editorBeforeSaveListener == null) {
+            //noinspection unchecked
+            CubaEditorImpl<E> editor = (CubaEditorImpl) component.getEditor();
+            editorBeforeSaveListener = editor.addBeforeSaveListener(this::onEditorBeforeSave);
+        }
+
+        return getEventHub().subscribe(EditorPreCommitEvent.class, listener);
+    }
+
+    protected void onEditorBeforeSave(CubaEditorBeforeSaveEvent<E> event) {
+        EditorPreCommitEvent e = new EditorPreCommitEvent(this, event.getBean());
+        publish(EditorPreCommitEvent.class, e);
+    }
+
+    @Override
+    public void removeEditorPreCommitListener(Consumer<EditorPreCommitEvent> listener) {
+        unsubscribe(EditorPreCommitEvent.class, listener);
+
+        if (!hasSubscriptions(EditorPreCommitEvent.class)) {
+            editorBeforeSaveListener.remove();
+            editorBeforeSaveListener = null;
+        }
+    }
+
+    @Override
+    public Subscription addEditorPostCommitListener(Consumer<EditorPostCommitEvent> listener) {
+        if (editorSaveListener == null) {
+            editorSaveListener = component.getEditor().addSaveListener(this::onEditorSave);
+        }
+
+        return getEventHub().subscribe(EditorPostCommitEvent.class, listener);
+    }
+
+    protected void onEditorSave(EditorSaveEvent<E> event) {
+        EditorPostCommitEvent e = new EditorPostCommitEvent(this, event.getBean());
+        publish(EditorPostCommitEvent.class, e);
+    }
+
+    @Override
+    public void removeEditorPostCommitListener(Consumer<EditorPostCommitEvent> listener) {
+        unsubscribe(EditorPostCommitEvent.class, listener);
+
+        if (!hasSubscriptions(EditorPostCommitEvent.class)) {
+            editorSaveListener.remove();
+            editorSaveListener = null;
+        }
+    }
 
     protected static class WebDataGridEditorFieldFactory<E extends Entity> implements CubaGridEditorFieldFactory<E> {
 
@@ -2426,46 +2433,6 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     @Override
     public void removeSortListener(Consumer<SortEvent> listener) {
         unsubscribe(SortEvent.class, listener);
-    }
-
-    @Override
-    public Subscription addEditorPreCommitListener(Consumer<EditorPreCommitEvent> listener) {
-        return getEventHub().subscribe(EditorPreCommitEvent.class, listener);
-    }
-
-    @Override
-    public void removeEditorPreCommitListener(Consumer<EditorPreCommitEvent> listener) {
-        unsubscribe(EditorPreCommitEvent.class, listener);
-    }
-
-    @Override
-    public Subscription addEditorPostCommitListener(Consumer<EditorPostCommitEvent> listener) {
-        return getEventHub().subscribe(EditorPostCommitEvent.class, listener);
-    }
-
-    @Override
-    public void removeEditorPostCommitListener(Consumer<EditorPostCommitEvent> listener) {
-        unsubscribe(EditorPostCommitEvent.class, listener);
-    }
-
-    @Override
-    public Subscription addEditorCloseListener(Consumer<EditorCloseEvent> listener) {
-        return getEventHub().subscribe(EditorCloseEvent.class, listener);
-    }
-
-    @Override
-    public void removeEditorCloseListener(Consumer<EditorCloseEvent> listener) {
-        unsubscribe(EditorCloseEvent.class, listener);
-    }
-
-    @Override
-    public Subscription addEditorOpenListener(Consumer<EditorOpenEvent> listener) {
-        return getEventHub().subscribe(EditorOpenEvent.class, listener);
-    }
-
-    @Override
-    public void removeEditorOpenListener(Consumer<EditorOpenEvent> listener) {
-        unsubscribe(EditorOpenEvent.class, listener);
     }
 
     @Override

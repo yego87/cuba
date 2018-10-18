@@ -29,11 +29,6 @@ import com.vaadin.ui.renderers.Renderer;
 import java.util.HashMap;
 import java.util.Map;
 
-//import static com.haulmont.cuba.web.widgets.CubaGrid.BeforeEditorOpenListener.EDITOR_OPEN_METHOD;
-//import static com.haulmont.cuba.web.widgets.CubaGrid.EditorCloseListener.EDITOR_CLOSE_METHOD;
-//import static com.haulmont.cuba.web.widgets.CubaGrid.EditorPostCommitListener.EDITOR_POST_COMMIT_METHOD;
-//import static com.haulmont.cuba.web.widgets.CubaGrid.EditorPreCommitListener.EDITOR_PRE_COMMIT_METHOD;
-
 public class CubaGrid<T> extends Grid<T> implements CubaEnhancedGrid<T> {
 
     protected CubaGridEditorFieldFactory<T> editorFieldFactory;
@@ -228,46 +223,5 @@ public class CubaGrid<T> extends Grid<T> implements CubaEnhancedGrid<T> {
 //
 //    public void removeEditorPostCommitListener(EditorPostCommitListener listener) {
 //        removeListener(EditorPostCommitEvent.class, listener, EDITOR_POST_COMMIT_METHOD);
-//    }
-//
-//    public class CubaDefaultEditorErrorHandler implements EditorErrorHandler {
-//        @Override
-//        public void commitError(CommitErrorEvent event) {
-//            Map<Field<?>, Validator.InvalidValueException> invalidFields = event
-//                    .getCause().getInvalidFields();
-//
-//            if (!invalidFields.isEmpty()) {
-//                Object firstErrorPropertyId = null;
-//                Field<?> firstErrorField = null;
-//
-//                for (Column column : getColumns()) {
-//                    Object propertyId = column.getPropertyId();
-//                    Field<?> field = (Field<?>) column.getState().editorConnector;
-//
-//                    if (invalidFields.keySet().contains(field)) {
-//                        event.addErrorColumn(column);
-//
-//                        if (firstErrorPropertyId == null) {
-//                            firstErrorPropertyId = propertyId;
-//                            firstErrorField = field;
-//                        }
-//                    }
-//                }
-//
-//
-//                 * Validation error, show first failure as
-//                 * "<Column header>: <message>"
-//
-//                String caption = getColumn(firstErrorPropertyId)
-//                        .getHeaderCaption();
-//                String message = invalidFields.get(firstErrorField)
-//                        .getLocalizedMessage();
-//
-//                event.setUserErrorMessage(caption + ": " + message);
-//            } else {
-//                com.vaadin.server.ErrorEvent.findErrorHandler(CubaGrid.this)
-//                        .error(new ConnectorErrorEvent(CubaGrid.this, event.getCause()));
-//            }
-//        }
 //    }
 }

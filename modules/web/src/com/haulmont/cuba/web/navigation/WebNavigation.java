@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -66,6 +67,60 @@ public class WebNavigation implements Navigation {
         }
 
         Page.getCurrent().replaceState(SHEBANG + navState);
+    }
+
+    @Override
+    public UriState getState() {
+        String uriFragment = Page.getCurrent().getUriFragment();
+        if (uriFragment == null || uriFragment.isEmpty() || "!".equals(uriFragment)) {
+            return null;
+        }
+        uriFragment = uriFragment.substring(1);
+
+        int slashIdx = uriFragment.indexOf('/');
+        if (slashIdx < 0) {
+            int paramsIdx = uriFragment.indexOf('?');
+            if (paramsIdx < 0) {
+                return new UriState(uriFragment, null, null);
+            } else {
+                String root = uriFragment.substring(0, paramsIdx);
+                Map<String, String> params = extractParams(uriFragment.substring(paramsIdx + 1));
+
+                return new UriState(root, null, params);
+            }
+        }
+
+        String root = uriFragment.substring(0, slashIdx);
+        if (uriFragment.length() <= slashIdx + 1) {
+            return new UriState(root, null, null);
+        }
+        String screenAndParams = uriFragment.substring(slashIdx + 1);
+
+        int paramsIdx = screenAndParams.indexOf('?');
+        if (paramsIdx < 0) {
+            return new UriState(root, screenAndParams, null);
+        }
+        String screen = screenAndParams.substring(0, paramsIdx);
+
+        if (screenAndParams.length() <= paramsIdx + 1) {
+            return new UriState(root, screen, null);
+        }
+        String paramString = screenAndParams.substring(paramsIdx + 1);
+        Map<String, String> params = extractParams(paramString);
+
+        return new UriState(root, screen, params);
+    }
+
+    protected Map<String, String> extractParams(String paramsString) {
+        String[] splittedParams = paramsString.split("&");
+        Map<String, String> paramsMap = new HashMap<>(splittedParams.length);
+
+        for (String splittedParam : splittedParams) {
+            String[] param = splittedParam.split("=");
+            paramsMap.put(param[0], param[1]);
+        }
+
+        return paramsMap;
     }
 
     protected String buildNavState(Screen screen, Map<String, String> urlParams) {
@@ -130,31 +185,36 @@ public class WebNavigation implements Navigation {
 
     protected String squashEditorRoute(String state, String route) {
         int slashIdx = route.indexOf('/');
-        if (slashIdx > 0) {
-            String commonPart = route.substring(0, slashIdx + 1);
-            if (state.endsWith(commonPart)) {
-                return route.substring(slashIdx + 1);
-            }
+        if (slashIdx <= 0) {
+            return route;
         }
-        return route;
+
+        String commonPart = route.substring(0, slashIdx + 1);
+        return state.endsWith(commonPart) ? route.substring(slashIdx + 1) : route;
     }
 
     protected String buildParamsString(Screen screen, Map<String, String> params) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = null;
 
         if (screen instanceof EditorScreen) {
             EditorScreen editor = (EditorScreen) screen;
-            Object id = editor.getEditedEntity().getId();
+            String base64Id = IdToBase64Converter.serialize(editor.getEditedEntity().getId());
 
-            int bp = 42;
+            sb = new StringBuilder("?")
+                    .append("id=")
+                    .append(base64Id);
         }
 
         if (params == null || params.isEmpty()) {
-            return sb.toString();
+            return sb == null ? "" : sb.toString();
         }
 
-        sb.append('?');
         boolean paramAdded = false;
+        if (sb == null) {
+            sb = new StringBuilder("?");
+        } else {
+            paramAdded = true;
+        }
 
         for (Map.Entry<String, String> paramEntry : params.entrySet()) {
             if (!paramAdded) {

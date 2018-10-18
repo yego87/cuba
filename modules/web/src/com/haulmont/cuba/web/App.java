@@ -28,6 +28,7 @@ import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.executors.IllegalConcurrentAccessException;
+import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
 import com.haulmont.cuba.gui.screen.OpenMode;
@@ -112,6 +113,8 @@ public abstract class App {
     protected MessageTools messageTools;
     @Inject
     protected SettingsClient settingsClient;
+    @Inject
+    protected Navigation navigation;
 
     @Inject
     protected Events events;
@@ -288,12 +291,60 @@ public abstract class App {
      * Called on each browser tab initialization.
      */
     public void createTopLevelWindow(AppUI ui) {
+        Navigation.UriState state = navigation.getState();
+
         String topLevelWindowId = routeTopLevelWindowId();
 
         Screens screens = ui.getScreens();
 
         Screen screen = screens.create(topLevelWindowId, OpenMode.ROOT);
         screens.show(screen);
+
+        handleRedirect(state);
+    }
+
+    protected void handleRedirect(Navigation.UriState uriState) {
+        if (uriState == null) {
+            return;
+        }
+
+        final String REDIRECT_TO = "redirectTo";
+
+        if (!connection.isAuthenticated()) {
+            String screen = uriState.getNestedRoute();
+            if (screen == null || screen.isEmpty()) {
+                return;
+            }
+
+            Map<String, String> params = new HashMap<>();
+
+            params.put(REDIRECT_TO, screen);
+            if (uriState.getParams() != null) {
+                params.putAll(uriState.getParams());
+            }
+
+            navigation.replaceState(getTopLevelWindow().getFrameOwner(), params);
+        } else {
+            Map<String, String> params = uriState.getParams();
+            if (params == null || params.isEmpty()) {
+                return;
+            }
+
+            String redirectTo = params.get(REDIRECT_TO);
+            if (redirectTo == null || redirectTo.isEmpty()) {
+                navigation.replaceState(getTopLevelWindow().getFrameOwner());
+                return;
+            }
+
+            WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(redirectTo);
+            if (windowInfo == null) {
+                return;
+            }
+
+            Screens screens = AppUI.getCurrent().getScreens();
+            Screen screen = screens.create(windowInfo, OpenMode.NEW_TAB);
+            screens.show(screen);
+        }
     }
 
     protected abstract String routeTopLevelWindowId();

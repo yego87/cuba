@@ -16,7 +16,6 @@
 
 package com.haulmont.cuba.gui.navigation;
 
-
 import com.haulmont.cuba.gui.screen.Screen;
 
 import java.util.Map;
@@ -36,4 +35,54 @@ public interface Navigation {
     }
 
     void replaceState(Screen screen, Map<String, String> urlParams);
+
+    UriState getState();
+
+    class UriState {
+
+        protected final String root;
+        protected final String nestedRoute;
+        protected final Map<String, String> params;
+
+        public UriState(String root, String nestedRoute, Map<String, String> params) {
+            this.root = root;
+            this.nestedRoute = nestedRoute;
+            this.params = params;
+        }
+
+        public String getRoot() {
+            return root;
+        }
+
+        public String getNestedRoute() {
+            return nestedRoute;
+        }
+
+        public Map<String, String> getParams() {
+            return params;
+        }
+
+        public String getParamsString() {
+            if (params == null || params.isEmpty()) {
+                return "";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            boolean paramAdded = false;
+
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                if (!paramAdded) {
+                    paramAdded = true;
+                } else {
+                    sb.append('&');
+                }
+
+                sb.append(entry.getKey())
+                        .append("=")
+                        .append(entry.getValue());
+            }
+
+            return sb.toString();
+        }
+    }
 }

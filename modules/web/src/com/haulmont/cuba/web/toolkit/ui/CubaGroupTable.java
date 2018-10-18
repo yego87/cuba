@@ -39,6 +39,8 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
     protected KeyMapper groupIdMap = new KeyMapper();
 
+    protected Map<Object, List<String>> aggregationValues;
+
     protected List<Object> groupDisallowedProperties;
 
     protected GroupPropertyValueFormatter groupPropertyValueFormatter;
@@ -103,6 +105,107 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
             }
             target.addVariable(this, "groupColumns", groupColumns);
         }
+    }
+
+    @Override
+    protected void paintAdditionalData(PaintTarget target) throws PaintException {
+        super.paintAdditionalData(target);
+
+        // first call, we shouldn't update aggregation group rows
+        if (aggregationValues == null) {
+            aggregationValues = new HashMap<>();
+            // fill with initial values
+            for (Object itemId : getVisibleItemIds()) {
+                if (isGroup(itemId)) {
+                    aggregationValues.put(itemId, getAggregationValuesForGroup(itemId));
+                }
+            }
+            return;
+        }
+
+        boolean hasAggregation = items instanceof AggregationContainer && isAggregatable()
+                && !((AggregationContainer) items).getAggregationPropertyIds().isEmpty();
+
+        if (hasGroups() && hasAggregation) {
+            target.startTag("groupRowAggr");
+            for (Object itemId : getVisibleItemIds()) {
+                if (isExpanded(itemId) && isAggregationValuesChanged(itemId)) {
+                    target.startTag("tr");
+
+                    target.addAttribute("groupKey", groupIdMap.key(itemId));
+                    paintUpdatesForAggregationGroupRow(target, itemId);
+
+                    target.endTag("tr");
+                }
+            }
+            target.endTag("groupRowAggr");
+        }
+    }
+
+    protected void paintUpdatesForAggregationGroupRow(PaintTarget target, Object groupId) throws PaintException {
+        target.startTag("update");
+        List<String> values = getAggregationValuesForGroup(groupId);
+        for (String value : values) {
+            target.addText(value);
+        }
+        target.endTag("update");
+
+        aggregationValues.put(groupId, values);
+    }
+
+    protected boolean isAggregationValuesChanged(Object itemId) {
+        if (itemId == null) {
+            return false;
+        }
+
+        List<String> values = aggregationValues.get(itemId);
+        if (values == null) {
+            return true;
+        }
+
+        List<String> aggregatedValues = getAggregationValuesForGroup(itemId);
+        if (values.size() != aggregatedValues.size()) {
+            return true;
+        }
+
+        //todo check compare code!!! it doesn't work correctly
+
+        return !values.containsAll((aggregatedValues));
+    }
+
+    protected List<String> getAggregationValuesForGroup(Object itemId) {
+        List<String> values = aggregationValues.get(itemId);
+        if (values == null) {
+            values = new ArrayList<>();
+        } else {
+            values.clear();
+        }
+
+        Map<Object, Object> aggregations = ((AggregationContainer) items).aggregate(
+                new GroupAggregationContext(this, itemId));
+
+        boolean paintGroupProperty = false;
+        final Collection groupProperties = getGroupProperties();
+        final Object groupProperty = getGroupProperty(itemId);
+        for (final Object columnId : visibleColumns) {
+            if (columnId == null || isColumnCollapsed(columnId)) {
+                continue;
+            }
+            if (groupProperties.contains(columnId) && !paintGroupProperty) {
+                if (columnId.equals(groupProperty)) {
+                    paintGroupProperty = true;
+                }
+                continue;
+            }
+
+            String value = (String) aggregations.get(columnId);
+            if (value != null) {
+                values.add(value);
+            } else {
+                values.add("");
+            }
+        }
+        return values;
     }
 
     @Override

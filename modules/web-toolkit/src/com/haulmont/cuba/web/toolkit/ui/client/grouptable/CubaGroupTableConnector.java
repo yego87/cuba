@@ -82,4 +82,14 @@ public class CubaGroupTableConnector extends CubaScrollTableConnector {
 
         return super.getTooltipInfo(element);
     }
+
+    @Override
+    protected void updateAdditionalRowData(UIDL uidl) {
+        super.updateAdditionalRowData(uidl);
+
+        UIDL groupRowAggr = uidl.getChildByTagName("groupRowAggr");
+        if (groupRowAggr != null) {
+            getWidget().updateGroupAggregatedRow(groupRowAggr);
+        }
+    }
 }

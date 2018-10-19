@@ -19,6 +19,7 @@ package com.haulmont.cuba.web.widgets;
 import com.haulmont.cuba.web.widgets.client.grid.CubaGridState;
 import com.haulmont.cuba.web.widgets.grid.CubaEditorField;
 import com.haulmont.cuba.web.widgets.grid.CubaEditorImpl;
+import com.haulmont.cuba.web.widgets.grid.CubaGridColumn;
 import com.vaadin.data.ValueProvider;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.components.grid.Editor;
@@ -84,7 +85,7 @@ public class CubaGrid<T> extends Grid<T> implements CubaEnhancedGrid<T> {
     protected <V, P> Column<T, V> createColumn(ValueProvider<T, V> valueProvider,
                                                ValueProvider<V, P> presentationProvider,
                                                AbstractRenderer<? super T, ? super P> renderer) {
-        return new CubaColumn<>(valueProvider, presentationProvider, renderer);
+        return new CubaGridColumn<>(valueProvider, presentationProvider, renderer);
     }
 
     @Override
@@ -105,22 +106,5 @@ public class CubaGrid<T> extends Grid<T> implements CubaEnhancedGrid<T> {
     @Override
     public CubaEditorField<?> getColumnEditorField(T bean, Column<T, ?> column) {
         return editorFieldFactory.createField(bean, column);
-    }
-
-    public static class CubaColumn<T, V> extends Column<T, V> {
-
-        protected <P> CubaColumn(ValueProvider<T, V> valueProvider,
-                                 ValueProvider<V, P> presentationProvider,
-                                 Renderer<? super P> renderer) {
-            super(valueProvider, presentationProvider, renderer);
-        }
-
-        @Override
-        public Column<T, V> setEditable(boolean editable) {
-            // Removed check that editorBinding is not null,
-            // because we don't use Vaadin binding.
-            getState().editable = editable;
-            return this;
-        }
     }
 }

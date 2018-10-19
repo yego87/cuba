@@ -1270,8 +1270,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             }
 
             Datasource fieldDatasource = dataGrid.createItemDatasource(bean);
-            // TEST: gg, check NotNull? if a column is generated then fieldPropertyId is different
-            String fieldPropertyId = String.valueOf(column.getPropertyPath());
+            String fieldPropertyId = String.valueOf(column.getPropertyId());
             Field columnComponent = column.getEditorFieldGenerator() != null
                     ? column.getEditorFieldGenerator().createField(fieldDatasource, fieldPropertyId)
                     : fieldFactory.createField(fieldDatasource, fieldPropertyId);
@@ -1297,7 +1296,6 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
                 }
             };
 
-            // FIXME: gg, DateField?
             if (content instanceof Component.Focusable) {
                 wrapper.setFocusDelegate((Component.Focusable) content);
             }
@@ -2925,6 +2923,10 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         @Override
         public MetaPropertyPath getPropertyPath() {
             return propertyPath;
+        }
+
+        public Object getPropertyId() {
+            return propertyPath != null ? propertyPath : id;
         }
 
         @Override

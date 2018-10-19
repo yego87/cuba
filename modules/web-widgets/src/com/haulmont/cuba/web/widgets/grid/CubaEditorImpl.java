@@ -17,7 +17,7 @@
 package com.haulmont.cuba.web.widgets.grid;
 
 import com.google.common.base.Strings;
-import com.haulmont.cuba.web.widgets.CubaGrid;
+import com.haulmont.cuba.web.widgets.CubaEnhancedGrid;
 import com.vaadin.data.HasValue;
 import com.vaadin.data.PropertySet;
 import com.vaadin.data.ValidationResult;
@@ -41,9 +41,9 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
         super(propertySet);
     }
 
-    @Override
-    public CubaGrid<T> getParent() {
-        return (CubaGrid<T>) super.getParent();
+    protected CubaEnhancedGrid<T> getEnhancedGrid() {
+        //noinspection unchecked
+        return (CubaEnhancedGrid<T>) super.getParent();
     }
 
     @Override
@@ -58,7 +58,7 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
 
         getParent().getColumns().stream().filter(Grid.Column::isEditable)
                 .forEach(c -> {
-                    CubaEditorField<?> editorField = getParent().getColumnEditorField(bean, c);
+                    CubaEditorField<?> editorField = getEnhancedGrid().getColumnEditorField(bean, c);
                     configureField(editorField);
                     addComponentToGrid(editorField);
                     columnFields.put(c, editorField);

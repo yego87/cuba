@@ -1,5 +1,6 @@
 package com.haulmont.cuba.web.widgets;
 
+import com.haulmont.cuba.web.widgets.grid.CubaEditorField;
 import com.vaadin.data.HasValue;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.components.grid.GridSelectionModel;
@@ -24,5 +25,5 @@ public interface CubaEnhancedGrid<T> {
 
     void setCubaEditorFieldFactory(CubaGridEditorFieldFactory<T> editorFieldFactory);
 
-    HasValue<?> getColumnEditorField(T bean, Grid.Column<T, ?> column);
+    CubaEditorField<?> getColumnEditorField(T bean, Grid.Column<T, ?> column);
 }

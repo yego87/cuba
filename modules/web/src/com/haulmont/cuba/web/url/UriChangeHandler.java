@@ -18,10 +18,7 @@ package com.haulmont.cuba.web.url;
 
 import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.chile.core.model.MetaClass;
-import com.haulmont.cuba.core.global.DataManager;
-import com.haulmont.cuba.core.global.LoadContext;
-import com.haulmont.cuba.core.global.Metadata;
-import com.haulmont.cuba.core.global.Scripting;
+import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.WindowParams;
 import com.haulmont.cuba.gui.components.RootWindow;
@@ -31,6 +28,7 @@ import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.navigation.Navigation.UriState;
+import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.MapScreenOptions;
 import com.haulmont.cuba.gui.screen.OpenMode;
@@ -48,6 +46,8 @@ import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.stereotype.Component;
 
@@ -270,5 +270,11 @@ public class UriChangeHandler {
 
     protected void handleParamsChange(UriState state) {
         // TODO: invoke urlParamsChanged screen hook
+    }
+
+    @Order(Events.LOWEST_PLATFORM_PRECEDENCE)
+    @EventListener
+    protected void handleUriStateChanged(UriStateChangedEvent event) {
+        // TODO: handle?
     }
 }

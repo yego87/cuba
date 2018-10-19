@@ -16,10 +16,12 @@
 
 package com.haulmont.cuba.web.navigation;
 
+import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.navigation.Navigation;
+import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
@@ -47,30 +49,46 @@ public class WebNavigation implements Navigation {
     @Inject
     protected WindowConfig windowConfig;
 
+    @Inject
+    protected Events events;
+
     @Override
-    public void pushState(Screen screen, Map<String, String> urlParams) {
-        String navState = buildNavState(screen, urlParams);
+    public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
+        UriState oldState = fireStateChanged ? getState() : null;
+
+        String navState = buildNavState(screen, uriParams);
         if (navState == null) {
-            log.info("Unable to build new nav state. Do not push state");
-            return;
+            throw new RuntimeException("New nav state is null");
         }
 
         Page.getCurrent().setUriFragment("!" + navState, false);
+
+        if (fireStateChanged) {
+            UriState state = getState();
+            events.publish(new UriStateChangedEvent(oldState, state));
+        }
     }
 
     @Override
-    public void replaceState(Screen screen, Map<String, String> urlParams) {
-        String navState = buildNavState(screen, urlParams);
+    public void replaceState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
+        UriState oldState = fireStateChanged ? getState() : null;
+
+        String navState = buildNavState(screen, uriParams);
         if (navState == null) {
-            log.info("Unable to build new nav state. Do not replace state");
-            return;
+            throw new RuntimeException("New nav state is null");
         }
 
         Page.getCurrent().replaceState(SHEBANG + navState);
+
+        if (fireStateChanged) {
+            UriState state = getState();
+            events.publish(new UriStateChangedEvent(oldState, state));
+        }
     }
 
     @Override
     public UriState getState() {
+        // TODO: omfg, check, refactor, etc
         String uriFragment = Page.getCurrent().getUriFragment();
         if (uriFragment == null || uriFragment.isEmpty() || "!".equals(uriFragment)) {
             return null;
@@ -229,10 +247,7 @@ public class WebNavigation implements Navigation {
     }
 
     protected String getRoute(PageDefinition pageDefinition) {
-        if (pageDefinition == null) {
-            return "";
-        }
-        return pageDefinition.getRoute();
+        return pageDefinition == null ? "" : pageDefinition.getRoute();
     }
 
     protected PageDefinition getPage(Screen screen) {

@@ -303,6 +303,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         componentComposition.setWidthUndefined();
 
         componentComposition.addShortcutListener(createEnterShortcutListener());
+//        componentComposition.addShortcutListener(createEscapeShortcutListener());
     }
 
     protected void onItemClick(Grid.ItemClick<E> e) {
@@ -421,7 +422,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         return new ShortcutListenerDelegate("dataGridEnter", KeyCode.ENTER, null)
                 .withHandler((sender, target) -> {
                     if (sender == componentComposition) {
-                        if (WebAbstractDataGrid.this.isEditorEnabled()) {
+                        if (isEditorEnabled()) {
                             // Prevent custom actions on Enter if DataGrid editor is enabled
                             // since it's the default shortcut to open editor
                             return;
@@ -438,6 +439,20 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
                             enterPressAction.actionPerform(this);
                         } else {
                             handleDoubleClickAction();
+                        }
+                    }
+                });
+    }
+
+    protected ShortcutListener createEscapeShortcutListener() {
+        return new ShortcutListenerDelegate("dataGridEscape", KeyCode.ESCAPE, null)
+                .withHandler((sender, target) -> {
+                    if (sender == componentComposition) {
+                        if (isEditorEnabled()
+                                && component.getEditor().isOpen()) {
+                            // Prevent custom actions on Escape if DataGrid editor is enabled
+                            // since it's the default shortcut to close editor
+                            return;
                         }
                     }
                 });

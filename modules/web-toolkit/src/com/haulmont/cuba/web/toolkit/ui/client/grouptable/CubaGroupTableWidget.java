@@ -330,7 +330,7 @@ public class CubaGroupTableWidget extends CubaScrollTableWidget {
         return visibleColOrder.length > 2; // +1 for divider column
     }
 
-    public void updateGroupAggregatedRow(UIDL uidl) {
+    public void updateGroupRowsWithAggregation(UIDL uidl) {
         for (int i = 0; i < uidl.getChildCount(); i++) {
             UIDL child = uidl.getChildUIDL(i); // walk on rows
             if (child != null) {

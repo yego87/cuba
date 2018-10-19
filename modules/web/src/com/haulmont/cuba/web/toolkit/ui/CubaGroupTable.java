@@ -39,7 +39,7 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
     protected KeyMapper groupIdMap = new KeyMapper();
 
-    protected Map<Object, List<String>> aggregationValues;
+    protected Map<Object, List<String>> cachedAggregatedValues;
 
     protected List<Object> groupDisallowedProperties;
 
@@ -112,12 +112,12 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
         super.paintAdditionalData(target);
 
         // first call, we shouldn't update aggregation group rows
-        if (aggregationValues == null) {
-            aggregationValues = new HashMap<>();
+        if (cachedAggregatedValues == null) {
+            cachedAggregatedValues = new HashMap<>();
             // fill with initial values
             for (Object itemId : getVisibleItemIds()) {
                 if (isGroup(itemId)) {
-                    aggregationValues.put(itemId, getAggregationValuesForGroup(itemId));
+                    cachedAggregatedValues.put(itemId, getAggregatedValuesForGroup(itemId));
                 }
             }
             return;
@@ -127,59 +127,58 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
                 && !((AggregationContainer) items).getAggregationPropertyIds().isEmpty();
 
         if (hasGroups() && hasAggregation) {
-            target.startTag("groupRowAggr");
+            target.startTag("groupRow");
             for (Object itemId : getVisibleItemIds()) {
-                if (isExpanded(itemId) && isAggregationValuesChanged(itemId)) {
+                if (isExpanded(itemId) && isAggregatedValuesChanged(itemId)) {
                     target.startTag("tr");
 
                     target.addAttribute("groupKey", groupIdMap.key(itemId));
-                    paintUpdatesForAggregationGroupRow(target, itemId);
+                    paintUpdatesForGroupRowWithAggregation(target, itemId);
 
                     target.endTag("tr");
                 }
             }
-            target.endTag("groupRowAggr");
+            target.endTag("groupRow");
         }
     }
 
-    protected void paintUpdatesForAggregationGroupRow(PaintTarget target, Object groupId) throws PaintException {
+    protected void paintUpdatesForGroupRowWithAggregation(PaintTarget target, Object groupId) throws PaintException {
         target.startTag("update");
-        List<String> values = getAggregationValuesForGroup(groupId);
+        List<String> values = getAggregatedValuesForGroup(groupId);
         for (String value : values) {
             target.addText(value);
         }
         target.endTag("update");
 
-        aggregationValues.put(groupId, values);
+        cachedAggregatedValues.put(groupId, values);
     }
 
-    protected boolean isAggregationValuesChanged(Object itemId) {
+    protected boolean isAggregatedValuesChanged(Object itemId) {
         if (itemId == null) {
             return false;
         }
 
-        List<String> values = aggregationValues.get(itemId);
-        if (values == null) {
+        List<String> cachedValues = cachedAggregatedValues.get(itemId);
+        if (cachedValues == null) {
             return true;
         }
 
-        List<String> aggregatedValues = getAggregationValuesForGroup(itemId);
-        if (values.size() != aggregatedValues.size()) {
+        List<String> aggregatedValues = getAggregatedValuesForGroup(itemId);
+        if (cachedValues.size() != aggregatedValues.size()) {
             return true;
         }
 
-        //todo check compare code!!! it doesn't work correctly
+        for (int i = 0; i < cachedValues.size(); i++) {
+            if (!Objects.equals(cachedValues.get(i), aggregatedValues.get(i))) {
+                return true;
+            }
+        }
 
-        return !values.containsAll((aggregatedValues));
+        return false;
     }
 
-    protected List<String> getAggregationValuesForGroup(Object itemId) {
-        List<String> values = aggregationValues.get(itemId);
-        if (values == null) {
-            values = new ArrayList<>();
-        } else {
-            values.clear();
-        }
+    protected List<String> getAggregatedValuesForGroup(Object itemId) {
+        List<String> values = new ArrayList<>();
 
         Map<Object, Object> aggregations = ((AggregationContainer) items).aggregate(
                 new GroupAggregationContext(this, itemId));

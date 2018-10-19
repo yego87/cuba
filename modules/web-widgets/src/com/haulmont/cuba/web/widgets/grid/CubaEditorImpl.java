@@ -18,6 +18,7 @@ package com.haulmont.cuba.web.widgets.grid;
 
 import com.google.common.base.Strings;
 import com.haulmont.cuba.web.widgets.CubaGrid;
+import com.vaadin.data.HasValue;
 import com.vaadin.data.PropertySet;
 import com.vaadin.data.ValidationResult;
 import com.vaadin.shared.Registration;
@@ -70,22 +71,31 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
     protected void configureField(CubaEditorField<?> field) {
         field.setBuffered(isBuffered());
         field.setEnabled(isEnabled());
+        field.addValueChangeListener(this::onFieldValueChange);
+    }
+
+    protected void onFieldValueChange(HasValue.ValueChangeEvent<?> ignored) {
+        isEditorFieldsValid();
     }
 
     @Override
     public boolean save() {
         if (isOpen() && isBuffered()) {
             eventRouter.fireEvent(new CubaEditorBeforeSaveEvent<>(this, edited));
-            Map<Component, ValidationResult> errors = getValidationErrors();
-            if (errors.isEmpty()) {
+            if (isEditorFieldsValid()) {
                 commitFields();
                 refresh(edited);
                 eventRouter.fireEvent(new EditorSaveEvent<>(this, edited));
+                return true;
             }
-            handleValidation(errors);
-            return errors.isEmpty();
         }
         return false;
+    }
+
+    protected boolean isEditorFieldsValid() {
+        Map<Component, ValidationResult> errors = getValidationErrors();
+        handleValidation(errors);
+        return errors.isEmpty();
     }
 
     protected void handleValidation(Map<Component, ValidationResult> errors) {

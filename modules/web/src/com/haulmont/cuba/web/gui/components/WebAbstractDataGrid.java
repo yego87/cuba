@@ -1289,6 +1289,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
 
             Component content = WebComponentsHelper.getComposition(columnComponent);
 
+            //noinspection unchecked
             CubaEditorField wrapper = new DataGridEditorCustomField(columnComponent) {
                 @Override
                 protected Component initContent() {
@@ -1296,7 +1297,6 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
                 }
             };
 
-//            wrapper.setConverter(new ObjectToObjectConverter());
             // FIXME: gg, DateField?
             if (content instanceof Component.Focusable) {
                 wrapper.setFocusDelegate((Component.Focusable) content);
@@ -1312,12 +1312,18 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         }
     }
 
-    protected static abstract class DataGridEditorCustomField extends CubaEditorField {
+    protected static abstract class DataGridEditorCustomField<T> extends CubaEditorField<T> {
 
-        protected Field columnComponent;
+        protected Field<T> columnComponent;
 
-        public DataGridEditorCustomField(Field columnComponent) {
+        public DataGridEditorCustomField(Field<T> columnComponent) {
             this.columnComponent = columnComponent;
+            initComponent(this.columnComponent);
+        }
+
+        protected void initComponent(Field<T> columnComponent) {
+            columnComponent.addValueChangeListener(event ->
+                    fireEvent(createValueChange(event.getPrevValue(), event.isUserOriginated())));
         }
 
         protected Field getField() {
@@ -1325,13 +1331,13 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         }
 
         @Override
-        protected void doSetValue(Object value) {
+        protected void doSetValue(T value) {
             //noinspection unchecked
             columnComponent.setValue(value);
         }
 
         @Override
-        public Object getValue() {
+        public T getValue() {
             return columnComponent.getValue();
         }
 

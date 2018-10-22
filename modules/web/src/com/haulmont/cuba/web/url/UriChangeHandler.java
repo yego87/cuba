@@ -17,7 +17,7 @@
 package com.haulmont.cuba.web.url;
 
 import com.haulmont.bali.util.ParamsMap;
-import com.haulmont.chile.core.model.MetaClass;
+import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.WindowParams;
@@ -33,7 +33,6 @@ import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.MapScreenOptions;
 import com.haulmont.cuba.gui.screen.OpenMode;
 import com.haulmont.cuba.gui.screen.Screen;
-import com.haulmont.cuba.gui.sys.AnnotationScanMetadataReaderFactory;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition;
 import com.haulmont.cuba.gui.xml.layout.ScreenXmlLoader;
 import com.haulmont.cuba.web.AppUI;
@@ -48,12 +47,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import javax.persistence.Entity;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Map;
@@ -67,39 +63,26 @@ public class UriChangeHandler {
     private static final Logger log = LoggerFactory.getLogger(UriChangeHandler.class);
 
     @Inject
-    private Navigation navigation;
+    protected Navigation navigation;
 
     @Inject
-    private WindowConfig windowConfig;
+    protected WindowConfig windowConfig;
 
     @Inject
-    private Screens screens;
+    protected Screens screens;
 
     @Inject
     protected ScreenXmlLoader screenXmlLoader;
     @Inject
-    protected AnnotationScanMetadataReaderFactory metadataReaderFactory;
+    protected Scripting scripting;
     @Inject
-    private Scripting scripting;
+    protected Metadata metadata;
     @Inject
-    private Metadata metadata;
-    @Inject
-    private DataManager dataManager;
+    protected DataManager dataManager;
 
+    @SuppressWarnings("unused")
     public void handleUriChange(String uri) {
         UriState state = navigation.getState();
-
-        String paramsPart = state.getParamsString().isEmpty()
-                ? ""
-                : "?" + state.getParamsString();
-
-        String stateUri = "#!" + String.format("%s/%s%s",
-                state.getRoot(),
-                state.getNestedRoute(),
-                paramsPart);
-        if (!uri.endsWith(stateUri)) {
-            throw new RuntimeException("URLs don't match!");
-        }
 
         if (historyNavigation(state)) {
             handleHistoryNavigation(state);
@@ -109,6 +92,7 @@ public class UriChangeHandler {
     }
 
     protected boolean historyNavigation(UriState state) {
+        // TODO: implement
         return false;
     }
 
@@ -140,8 +124,7 @@ public class UriChangeHandler {
                 .getPageDefinition();
 
         if (page == null) {
-            log.debug("Unable to determine route for current root window");
-            return false;
+            throw new RuntimeException("Unable to determine route for current root window");
         }
 
         return !page.getRoute().equals(state.getRoot());
@@ -153,20 +136,26 @@ public class UriChangeHandler {
 
     protected boolean screenChanged(UriState state) {
         WebAppWorkArea workArea = getConfiguredWorkArea();
+        TabWindowContainer windowContainer;
 
-        TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
-        TabWindowContainer windowContainer = (TabWindowContainer) tabSheet.getSelectedTab();
+        if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
+            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+            windowContainer = (TabWindowContainer) tabSheet.getSelectedTab();
+        } else {
+            windowContainer = (TabWindowContainer) workArea.getSingleWindowContainer().getComponent(0);
+        }
+
         if (windowContainer == null) {
             return true;
         }
+
         Screen currentScreen = windowContainer.getBreadCrumbs().getCurrentWindow().getFrameOwner();
         UiControllerDefinition.PageDefinition page = currentScreen.getScreenContext()
                 .getWindowInfo()
                 .getPageDefinition();
 
         if (page == null) {
-            log.debug("Unable to determine route for current screen");
-            return true;
+            throw new RuntimeException("Unable to determine route for current screen");
         }
 
         // TODO: handle complex cases
@@ -174,6 +163,7 @@ public class UriChangeHandler {
         return !page.getRoute().equals(state.getNestedRoute());
     }
 
+    // Copied from WebScreens
     protected WebAppWorkArea getConfiguredWorkArea() {
         RootWindow topLevelWindow = AppUI.getCurrent().getTopLevelWindow();
 
@@ -220,38 +210,25 @@ public class UriChangeHandler {
         Element dsElement = screenTemplate.element("dsContext")
                 .element("datasource");
 
-        String entityClass = dsElement.attributeValue("class");
-        String viewName = dsElement.attributeValue("view");
+        /*
+         * TODO: rewrite with reflection (see UiControllerReflectionInspector.getAddListenerMethodsNotCached)
+         * for legacy screens and with "setEntityToEdit" for new screens
+         */
 
-        Class<?> clazz = scripting.loadClassNN(entityClass);
+        String entityClassFqn = dsElement.attributeValue("class");
+        Class<?> entityClass = scripting.loadClassNN(entityClassFqn);
+        Object id = IdToBase64Converter.deserialize(findIdType(entityClass), state.getParams().get("id"));
 
-        try {
-            MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(entityClass);
+        LoadContext<?> ctx = new LoadContext(metadata.getClassNN(entityClass));
+        ctx.setId(id);
+        ctx.setView(dsElement.attributeValue("view"));
 
-            Class<?> idClass = findIdType(scripting.loadClassNN(entityClass));
-
-            Object id = IdToBase64Converter.deserialize(idClass, state.getParams().get("id"));
-
-            Map<String, Object> entityAnnotation = metadataReader.getAnnotationMetadata()
-                    .getAnnotationAttributes(Entity.class.getName());
-
-            //noinspection ConstantConditions
-            String entityAlias = (String) entityAnnotation.get("name");
-
-            MetaClass metaClass = metadata.getClass(clazz);
-            LoadContext ctx = new LoadContext(metaClass);
-            ctx.setView(viewName);
-            ctx.setId(id);
-
-            com.haulmont.cuba.core.entity.Entity entity = dataManager.load(ctx);
-            if (entity == null) {
-                throw new RuntimeException("Failed to load entity!");
-            }
-
-            return ParamsMap.of(WindowParams.ITEM.name(), entity);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create MetadataReader for class: " + entityClass);
+        Entity entity = dataManager.load(ctx);
+        if (entity == null) {
+            throw new RuntimeException("Failed to load entity!");
         }
+
+        return ParamsMap.of(WindowParams.ITEM.name(), entity);
     }
 
     protected Class findIdType(Class entityClass) {

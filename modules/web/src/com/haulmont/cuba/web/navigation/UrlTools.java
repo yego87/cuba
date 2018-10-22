@@ -16,82 +16,114 @@
 
 package com.haulmont.cuba.web.navigation;
 
-import com.haulmont.bali.util.Preconditions;
-import com.haulmont.cuba.gui.navigation.Navigation;
+import com.haulmont.cuba.gui.navigation.Navigation.UriState;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UrlTools {
 
-    /*
-    protected static final String ROOT_ROUTE = "^\\!(\\w+)$";
-    protected static final Pattern ROOT_ROUTE_REGEX = Pattern.compile(ROOT_ROUTE);
-
-    protected static final String NESTED_ROUTE = "^\\!(\\w+)\\/(\\d+)\\/(\\w+(?:|\\/\\w+)*)$";
-    protected static final Pattern NESTED_ROUTE_REGEX = Pattern.compile(NESTED_ROUTE);
-
-    protected static final String PARAMS_ROUTE = "^\\!(\\w+)(?:\\/(\\d+)\\/(\\w+(?:|\\/\\w+)*)){0,1}\\?(.+)$";
-    protected static final Pattern PARAMS_ROUTE_REGEX = Pattern.compile(PARAMS_ROUTE);
-    */
-
     protected static final String ROOT_ROUTE = "^!(\\w+)$";
-    protected static final Pattern ROOT_ROUTE_REGEX = Pattern.compile(ROOT_ROUTE);
+    protected static final Pattern ROOT_ROUTE_PATTERN = Pattern.compile(ROOT_ROUTE);
 
-    // TODO: optional state mark
-    protected static final String NESTED_ROUTE = "^!(\\w+)/(\\d+)/(\\w+(?:|/\\w+)*)$";
-    protected static final Pattern NESTED_ROUTE_REGEX = Pattern.compile(NESTED_ROUTE);
+    protected static final String NESTED_ROUTE = "^!(\\w+)(?:/(\\d+))?/(\\w+(?:|/\\w+)*)$";
+    protected static final Pattern NESTED_ROUTE_PATTERN = Pattern.compile(NESTED_ROUTE);
 
-    protected static final String PARAMS_ROUTE = "^!(\\w+)(?:/(\\d+)/(\\w+(?:|/\\w+)*))?\\?(.+)$";
-    protected static final Pattern PARAMS_ROUTE_REGEX = Pattern.compile(PARAMS_ROUTE);
+    protected static final String PARAMS_ROUTE = "^!(\\w+)(?:(?:/(\\d+))?/(\\w+(?:|/\\w+)*))?\\?(.+)$";
+    protected static final Pattern PARAMS_ROUTE_PATTERN = Pattern.compile(PARAMS_ROUTE);
 
-    public static Navigation.UriState parseState(String uriFragment) {
-        Preconditions.checkNotEmptyString(uriFragment);
+    protected static final String PARAMS_REGEX = "^(?:(?:\\w+=[a-zA-Z0-9_/]+)?|\\w+=[a-zA-Z0-9_/]+(?:&\\w+=[a-zA-Z0-9_/]+)+)$";
+    protected static final Pattern PARAMS_PATTERN = Pattern.compile(PARAMS_REGEX);
 
-        if (ROOT_ROUTE_REGEX.matcher(uriFragment).matches()) {
+    public static UriState parseState(String uriFragment) {
+        if (uriFragment == null || uriFragment.isEmpty() || "!".equals(uriFragment)) {
+            return null;
+        }
+
+        if (ROOT_ROUTE_PATTERN.matcher(uriFragment).matches()) {
             return parseRootRoute(uriFragment);
         }
 
-        if (NESTED_ROUTE_REGEX.matcher(uriFragment).matches()) {
+        if (NESTED_ROUTE_PATTERN.matcher(uriFragment).matches()) {
             return parseNestedRoute(uriFragment);
         }
 
-        if (PARAMS_ROUTE_REGEX.matcher(uriFragment).matches()) {
+        if (PARAMS_ROUTE_PATTERN.matcher(uriFragment).matches()) {
             return parseParamsRoute(uriFragment);
         }
 
         throw new RuntimeException("Failed to match URL");
     }
 
-    protected static Navigation.UriState parseRootRoute(String uriFragment) {
-        Matcher matcher = ROOT_ROUTE_REGEX.matcher(uriFragment);
+    protected static UriState parseRootRoute(String uriFragment) {
+        Matcher matcher = ROOT_ROUTE_PATTERN.matcher(uriFragment);
         if (matcher.matches()) {
             String root = matcher.group(1);
-            return new Navigation.UriState(root, "", "", Collections.emptyMap());
+            return new UriState(root, "", "", Collections.emptyMap());
         }
 
         throw new RuntimeException("Unable to parse root route");
     }
 
-    protected static Navigation.UriState parseNestedRoute(String uriFragment) {
-        Matcher matcher = NESTED_ROUTE_REGEX.matcher(uriFragment);
+    protected static UriState parseNestedRoute(String uriFragment) {
+        Matcher matcher = NESTED_ROUTE_PATTERN.matcher(uriFragment);
         if (matcher.matches()) {
             String root = matcher.group(1);
-            String stateMark = matcher.group(2);
-            String nestedRoute = matcher.group(3);
-            return new Navigation.UriState(root, stateMark, nestedRoute, Collections.emptyMap());
+
+            String stateMark;
+            String nestedRoute;
+            if (matcher.groupCount() == 2) {
+                stateMark = "";
+                nestedRoute = matcher.group(2);
+            } else {
+                stateMark = matcher.group(2);
+                nestedRoute = matcher.group(3);
+            }
+
+            return new UriState(root, stateMark, nestedRoute, Collections.emptyMap());
         }
 
         throw new RuntimeException("Unable to parse nested route");
     }
 
-    protected static Navigation.UriState parseParamsRoute(String uriFragment) {
-        Matcher matcher = PARAMS_ROUTE_REGEX.matcher(uriFragment);
+    protected static UriState parseParamsRoute(String uriFragment) {
+        Matcher matcher = PARAMS_ROUTE_PATTERN.matcher(uriFragment);
         if (matcher.matches()) {
-            // TODO: implement
+            String root = matcher.group(1);
+            String params = matcher.group(matcher.groupCount());
+
+            String stateMark;
+            String nestedRoute;
+            if (matcher.groupCount() == 3) {
+                stateMark = "";
+                nestedRoute = matcher.group(2);
+            } else {
+                stateMark = matcher.group(2);
+                nestedRoute = matcher.group(3);
+            }
+
+            return new UriState(root, stateMark, nestedRoute, extractParams(params));
         }
 
         throw new RuntimeException("Unable to parse params route");
+    }
+
+    protected static Map<String, String> extractParams(String paramsString) {
+        if (!PARAMS_PATTERN.matcher(paramsString).matches()) {
+            throw new RuntimeException("Params string is broken");
+        }
+
+        String[] paramPairs = paramsString.split("&");
+        Map<String, String> paramsMap = new HashMap<>(paramPairs.length);
+
+        for (String paramPair : paramPairs) {
+            String[] param = paramPair.split("=");
+            paramsMap.put(param[0], param[1]);
+        }
+
+        return paramsMap;
     }
 }

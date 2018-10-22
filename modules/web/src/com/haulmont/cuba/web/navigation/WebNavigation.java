@@ -87,18 +87,6 @@ public class WebNavigation implements Navigation {
         return UrlTools.parseState(Page.getCurrent().getUriFragment());
     }
 
-    protected Map<String, String> extractParams(String paramsString) {
-        String[] splittedParams = paramsString.split("&");
-        Map<String, String> paramsMap = new HashMap<>(splittedParams.length);
-
-        for (String splittedParam : splittedParams) {
-            String[] param = splittedParam.split("=");
-            paramsMap.put(param[0], param[1]);
-        }
-
-        return paramsMap;
-    }
-
     protected String buildNavState(Screen screen, Map<String, String> urlParams) {
         StringBuilder state = new StringBuilder();
 

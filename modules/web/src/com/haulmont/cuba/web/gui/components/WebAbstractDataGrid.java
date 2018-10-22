@@ -3301,10 +3301,10 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         }
 
         public boolean isShouldBeEditable() {
-            // TODO: gg, merge two checks
             return editable
-                    && (!generated || fieldGenerator != null || generator != null)
-                    && (!isRepresentsCollection() || fieldGenerator != null || generator != null)
+                    && (!generated && !isRepresentsCollection()
+                    || fieldGenerator != null
+                    || generator != null)
                     && isEditingPermitted();
         }
 

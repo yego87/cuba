@@ -130,7 +130,7 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
 
     protected String generateErrorMessage(Map<Component, Grid.Column<T, ?>> fieldToColumn,
                                           Map<Component, ValidationResult> errors) {
-        String message = errors.entrySet().stream()
+        return errors.entrySet().stream()
                 .filter(entry ->
                         !Strings.isNullOrEmpty(entry.getValue().getErrorMessage())
                                 && fieldToColumn.containsKey(entry.getKey()))
@@ -138,10 +138,6 @@ public class CubaEditorImpl<T> extends EditorImpl<T> {
                         fieldToColumn.get(entry.getKey()).getCaption() + ": " +
                                 entry.getValue().getErrorMessage())
                 .collect(Collectors.joining("; "));
-
-        // TODO: gg, bean message?
-
-        return message;
     }
 
     protected Map<Component, ValidationResult> getValidationErrors() {

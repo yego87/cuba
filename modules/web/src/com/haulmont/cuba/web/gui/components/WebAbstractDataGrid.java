@@ -31,9 +31,11 @@ import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.DataGridItems;
+import com.haulmont.cuba.gui.components.data.ValueSourceProvider;
 import com.haulmont.cuba.gui.components.data.meta.ContainerDataUnit;
 import com.haulmont.cuba.gui.components.data.meta.EntityDataGridItems;
 import com.haulmont.cuba.gui.components.data.meta.LegacyDataUnit;
+import com.haulmont.cuba.gui.components.data.value.ContainerValueSourceProvider;
 import com.haulmont.cuba.gui.components.formatters.CollectionFormatter;
 import com.haulmont.cuba.gui.components.security.ActionsPermissions;
 import com.haulmont.cuba.gui.components.sys.ShortcutsDelegate;
@@ -43,6 +45,8 @@ import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.data.DsBuilder;
 import com.haulmont.cuba.gui.data.impl.DatasourceImplementation;
 import com.haulmont.cuba.gui.model.CollectionContainer;
+import com.haulmont.cuba.gui.model.DataContextFactory;
+import com.haulmont.cuba.gui.model.InstanceContainer;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.theme.ThemeConstantsManager;
 import com.haulmont.cuba.web.App;
@@ -170,6 +174,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     protected boolean showIconsForPopupMenuActions;
 
     protected DataGridDataProvider<E> dataBinding;
+    protected ValueSourceProvider valueSourceProvider;
 
     static {
         ImmutableMap.Builder<Class<? extends Renderer>, Class<? extends Renderer>> builder =
@@ -770,7 +775,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         return this.dataBinding != null ? this.dataBinding.getDataGridItems() : null;
     }
 
-    protected DataGridItems<E> getDataGridSourceNN() {
+    protected DataGridItems<E> getDataGridItemsNN() {
         DataGridItems<E> dataGridItems = getItems();
         if (dataGridItems == null
                 || dataGridItems.getState() == BindingState.INACTIVE) {
@@ -779,12 +784,12 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         return dataGridItems;
     }
 
-    protected EntityDataGridItems<E> getEntityDataGridSource() {
+    protected EntityDataGridItems<E> getEntityDataGridItems() {
         return getItems() != null ? (EntityDataGridItems<E>) getItems() : null;
     }
 
-    protected EntityDataGridItems<E> getEntityDataGridSourceNN() {
-        return (EntityDataGridItems<E>) getDataGridSourceNN();
+    protected EntityDataGridItems<E> getEntityDataGridItemsNN() {
+        return (EntityDataGridItems<E>) getDataGridItemsNN();
     }
 
     @Override
@@ -1034,24 +1039,6 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         }
     }
 
-    protected Datasource createItemDatasource(Entity item) {
-        EntityDataGridItems<E> entityDataGridSource = getEntityDataGridSourceNN();
-
-        Datasource fieldDatasource = DsBuilder.create()
-                .setAllowCommit(false)
-                .setMetaClass(entityDataGridSource.getEntityMetaClass())
-                .setRefreshMode(CollectionDatasource.RefreshMode.NEVER)
-                .setViewName(View.LOCAL)
-                .buildDatasource();
-
-        ((DatasourceImplementation) fieldDatasource).valid();
-
-        //noinspection unchecked
-        fieldDatasource.setItem(item);
-
-        return fieldDatasource;
-    }
-
     @Override
     public boolean isEditorEnabled() {
         return component.getEditor().isEnabled();
@@ -1250,6 +1237,38 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         }
     }
 
+    protected Datasource createItemDatasource(E item) {
+        EntityDataGridItems<E> items = getEntityDataGridItemsNN();
+
+        Datasource fieldDatasource = DsBuilder.create()
+                .setAllowCommit(false)
+                .setMetaClass(items.getEntityMetaClass())
+                .setRefreshMode(CollectionDatasource.RefreshMode.NEVER)
+                .setViewName(View.LOCAL)
+                .buildDatasource();
+
+        ((DatasourceImplementation) fieldDatasource).valid();
+
+        //noinspection unchecked
+        fieldDatasource.setItem(item);
+
+        return fieldDatasource;
+    }
+
+    protected ValueSourceProvider createValueSourceProvider(E item) {
+        EntityDataGridItems<E> items = getEntityDataGridItemsNN();
+        DataContextFactory factory = beanLocator.get(DataContextFactory.class);
+        ViewRepository viewRepository = beanLocator.get(ViewRepository.NAME);
+        MetaClass metaClass = items.getEntityMetaClass();
+
+        //noinspection unchecked
+        InstanceContainer<E> instanceContainer = factory.createInstanceContainer(metaClass.getJavaClass());
+        instanceContainer.setView(viewRepository.getView(metaClass, View.LOCAL));
+        instanceContainer.setItem(item);
+
+        return new ContainerValueSourceProvider<>(instanceContainer);
+    }
+
     protected static class WebDataGridEditorFieldFactory<E extends Entity> implements CubaGridEditorFieldFactory<E> {
 
         protected WebAbstractDataGrid<?, E> dataGrid;
@@ -1269,11 +1288,19 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
                 return null;
             }
 
-            Datasource fieldDatasource = dataGrid.createItemDatasource(bean);
-            String fieldPropertyId = String.valueOf(column.getPropertyId());
-            Field columnComponent = column.getEditorFieldGenerator() != null
-                    ? column.getEditorFieldGenerator().createField(fieldDatasource, fieldPropertyId)
-                    : fieldFactory.createField(fieldDatasource, fieldPropertyId);
+            Field columnComponent;
+            if (column.getEditFieldGenerator() != null) {
+                ValueSourceProvider valueSourceProvider = dataGrid.createValueSourceProvider(bean);
+                EditorFieldGenerationContext<E> context = new EditorFieldGenerationContext<>(bean, valueSourceProvider);
+                columnComponent = column.getEditFieldGenerator().apply(context);
+            } else {
+                Datasource fieldDatasource = dataGrid.createItemDatasource(bean);
+                String fieldPropertyId = String.valueOf(column.getPropertyId());
+                columnComponent = column.getEditorFieldGenerator() != null
+                        ? column.getEditorFieldGenerator().createField(fieldDatasource, fieldPropertyId)
+                        : fieldFactory.createField(fieldDatasource, fieldPropertyId);
+            }
+
             columnComponent.setParent(dataGrid);
             columnComponent.setFrame(dataGrid.getFrame());
 
@@ -1537,7 +1564,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
 
     @Override
     public void setSelected(Collection<E> items) {
-        DataGridItems<E> dataGridItems = getDataGridSourceNN();
+        DataGridItems<E> dataGridItems = getDataGridItemsNN();
 
         for (E item : items) {
             if (!dataGridItems.containsItem(item)) {
@@ -1722,7 +1749,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
     }
 
     protected List<Column<E>> getInitialVisibleColumns() {
-        EntityDataGridItems<E> entityDataGridSource = getEntityDataGridSource();
+        EntityDataGridItems<E> entityDataGridSource = getEntityDataGridItems();
         if (entityDataGridSource == null
                 || entityDataGridSource.getState() == BindingState.INACTIVE) {
             return Collections.emptyList();
@@ -1763,7 +1790,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         Preconditions.checkNotNullArgument(item);
         Preconditions.checkNotNullArgument(destination);
 
-        DataGridItems<E> dataGridItems = getDataGridSourceNN();
+        DataGridItems<E> dataGridItems = getDataGridItemsNN();
         if (!dataGridItems.containsItem(item)) {
             throw new IllegalArgumentException("Unable to find item in DataGrid");
         }
@@ -2867,6 +2894,7 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         protected Grid.Column<E, ?> gridColumn;
 
         protected ColumnEditorFieldGenerator fieldGenerator;
+        protected Function<EditorFieldGenerationContext<E>, Field<?>> generator;
 
         public ColumnImpl(String id, @Nullable MetaPropertyPath propertyPath, WebAbstractDataGrid<?, E> owner) {
             this(id, propertyPath, propertyPath != null ? propertyPath.getRangeJavaClass() : String.class, owner);
@@ -3272,12 +3300,11 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
             return isShouldBeEditable();
         }
 
-        // TEST: gg,
         public boolean isShouldBeEditable() {
             // TODO: gg, merge two checks
             return editable
-                    && (!generated || fieldGenerator != null)
-                    && (!isRepresentsCollection() || fieldGenerator != null)
+                    && (!generated || fieldGenerator != null || generator != null)
+                    && (!isRepresentsCollection() || fieldGenerator != null || generator != null)
                     && isEditingPermitted();
         }
 
@@ -3318,6 +3345,17 @@ public abstract class WebAbstractDataGrid<C extends Grid<E> & CubaEnhancedGrid<E
         @Override
         public void setEditorFieldGenerator(ColumnEditorFieldGenerator fieldFactory) {
             this.fieldGenerator = fieldFactory;
+            updateEditable();
+        }
+
+        @Override
+        public Function<EditorFieldGenerationContext<E>, Field<?>> getEditFieldGenerator() {
+            return generator;
+        }
+
+        @Override
+        public void setEditFieldGenerator(Function<EditorFieldGenerationContext<E>, Field<?>> generator) {
+            this.generator = generator;
             updateEditable();
         }
 

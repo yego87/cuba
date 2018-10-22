@@ -145,13 +145,11 @@ public interface Navigation {
         protected final String nestedRoute;
         protected final Map<String, String> params;
 
-        public UriState(String root, String nestedRoute, Map<String, String> params) {
+        public UriState(String root, String stateMark, String nestedRoute, Map<String, String> params) {
             this.root = root;
+            this.stateMark = stateMark;
             this.nestedRoute = nestedRoute;
             this.params = params;
-
-            // TODO: implement
-            stateMark = "";
         }
 
         public String getRoot() {

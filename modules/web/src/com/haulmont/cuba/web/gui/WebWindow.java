@@ -99,6 +99,8 @@ public abstract class WebWindow implements Window, Component.Wrapper,
 
     private EventHub eventHub;
 
+    protected int stateMark;
+
     public WebWindow() {
         component = createLayout();
     }
@@ -1033,5 +1035,13 @@ public abstract class WebWindow implements Window, Component.Wrapper,
     @Override
     public void setIconFromSet(Icons.Icon icon) {
         setIcon(icons.get(icon));
+    }
+
+    public int getStateMark() {
+        return stateMark;
+    }
+
+    public void setStateMark(int stateMark) {
+        this.stateMark = stateMark;
     }
 }

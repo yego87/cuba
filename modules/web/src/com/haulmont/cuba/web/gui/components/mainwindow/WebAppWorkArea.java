@@ -93,6 +93,8 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
 
     protected boolean shortcutsInitialized = false;
 
+    protected int stateCounter = 0;
+
     public WebAppWorkArea() {
         component = new CssLayout();
         component.setPrimaryStyleName(WORKAREA_STYLENAME);
@@ -702,6 +704,10 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
             layout = (TabWindowContainer) singleWindowContainer.getWindowContainer();
         }
         return layout;
+    }
+
+    public int getNewStateMark() {
+        return stateCounter++;
     }
 
     // Allows Tabs reordering, do not support component / text drop to Tabs panel

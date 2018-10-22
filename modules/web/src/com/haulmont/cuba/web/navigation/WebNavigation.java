@@ -26,11 +26,9 @@ import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
 import com.vaadin.server.Page;
-import com.vaadin.ui.HasComponents;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -40,8 +38,6 @@ import java.util.Map;
 
 @Component(Navigation.NAME)
 public class WebNavigation implements Navigation {
-
-    private static final Logger log = LoggerFactory.getLogger(WebNavigation.class);
 
     protected static final String SHEBANG = "#!";
     protected static final int MAX_NESTED_ROUTES = 2;
@@ -88,45 +84,7 @@ public class WebNavigation implements Navigation {
 
     @Override
     public UriState getState() {
-        // TODO: omfg, check, refactor, etc
-        String uriFragment = Page.getCurrent().getUriFragment();
-        if (uriFragment == null || uriFragment.isEmpty() || "!".equals(uriFragment)) {
-            return null;
-        }
-        uriFragment = uriFragment.substring(1);
-
-        int slashIdx = uriFragment.indexOf('/');
-        if (slashIdx < 0) {
-            int paramsIdx = uriFragment.indexOf('?');
-            if (paramsIdx < 0) {
-                return new UriState(uriFragment, null, null);
-            } else {
-                String root = uriFragment.substring(0, paramsIdx);
-                Map<String, String> params = extractParams(uriFragment.substring(paramsIdx + 1));
-
-                return new UriState(root, null, params);
-            }
-        }
-
-        String root = uriFragment.substring(0, slashIdx);
-        if (uriFragment.length() <= slashIdx + 1) {
-            return new UriState(root, null, null);
-        }
-        String screenAndParams = uriFragment.substring(slashIdx + 1);
-
-        int paramsIdx = screenAndParams.indexOf('?');
-        if (paramsIdx < 0) {
-            return new UriState(root, screenAndParams, null);
-        }
-        String screen = screenAndParams.substring(0, paramsIdx);
-
-        if (screenAndParams.length() <= paramsIdx + 1) {
-            return new UriState(root, screen, null);
-        }
-        String paramString = screenAndParams.substring(paramsIdx + 1);
-        Map<String, String> params = extractParams(paramString);
-
-        return new UriState(root, screen, params);
+        return UrlTools.parseState(Page.getCurrent().getUriFragment());
     }
 
     protected Map<String, String> extractParams(String paramsString) {
@@ -147,21 +105,19 @@ public class WebNavigation implements Navigation {
         if (screen.getWindow() instanceof RootWindow) {
             state.append(getRoute(getPage(screen)));
         } else {
-            RootWindow topLevelWindow = AppUI.getCurrent().getTopLevelWindow();
-            Screen rootScreen = topLevelWindow.getFrameOwner();
+            Screen rootScreen = AppUI.getCurrent().getTopLevelWindow().getFrameOwner();
 
-            state.append(getRoute(getPage(rootScreen)));
-
-            // TODO: append UI state id
+            state.append(getRoute(getPage(rootScreen)))
+                    .append('/')
+                    .append(getScreenStateMark(screen))
+                    .append('/');
 
             String compositeState = buildCompositeState(screen);
-
             if (compositeState == null || compositeState.isEmpty()) {
-                return null;
+                throw new RuntimeException("Composite state is null");
             }
 
-            state.append('/')
-                    .append(compositeState);
+            state.append(compositeState);
         }
 
         state.append(buildParamsString(screen, urlParams));
@@ -169,18 +125,18 @@ public class WebNavigation implements Navigation {
         return state.toString();
     }
 
-    protected String buildCompositeState(Screen screen) {
-        com.vaadin.ui.Component screenComposition = screen.getWindow().unwrapComposition(com.vaadin.ui.Component.class);
-        HasComponents parent = screenComposition.getParent();
+    protected String getScreenStateMark(Screen screen) {
+        return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
+    }
 
-        if (!(parent instanceof TabWindowContainer)) {
-            return getRoute(getPage(screen));
-        }
+    protected String buildCompositeState(Screen screen) {
+        Iterator<Window> iterator = ((TabWindowContainer) screen.getWindow()
+                .unwrapComposition(com.vaadin.ui.Component.class)
+                .getParent())
+                .getBreadCrumbs().getWindows().iterator();
 
         StringBuilder state = new StringBuilder();
         int depth = 0;
-        Iterator<Window> iterator = ((TabWindowContainer) parent).getBreadCrumbs().getWindows().iterator();
-
         while (iterator.hasNext() && depth < MAX_NESTED_ROUTES) {
             if (depth > 0) {
                 state.append('/');

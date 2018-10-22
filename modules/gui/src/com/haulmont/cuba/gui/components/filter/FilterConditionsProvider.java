@@ -34,7 +34,7 @@ public class FilterConditionsProvider {
         String storeType = persistenceManager.getStoreType(entityName);
         Collection<FilterConditions> allFilterConditions = AppBeans.getAll(FilterConditions.class).values();
         return allFilterConditions.stream()
-                .filter(filterConditions -> Objects.equals(storeType, filterConditions.getStoreType()))
+                .filter(filterConditions -> Objects.equals(storeType, filterConditions.getStoreDialect()))
                 .findFirst()
                 .orElse(defaultFilterConditions());
     }
@@ -42,5 +42,4 @@ public class FilterConditionsProvider {
     protected FilterConditions defaultFilterConditions() {
         return AppBeans.get(JPQLFilterConditions.NAME);
     }
-
 }

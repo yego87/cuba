@@ -26,7 +26,6 @@ import com.haulmont.cuba.core.global.QueryTransformer;
 import com.haulmont.cuba.core.global.QueryTransformerFactory;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import org.dom4j.Element;
 
 @com.haulmont.chile.core.annotations.MetaClass(name = "sec$AbstractJPQLCondition")
@@ -52,14 +51,15 @@ public abstract class AbstractJPQLCondition extends AbstractCondition {
         entityParamView = element.attributeValue("paramView");
     }
 
-    protected AbstractJPQLCondition(AbstractJPQLConditionDescriptor descriptor) {
-        super(descriptor);
-        entityParamWhere = descriptor.getEntityParamWhere();
-        entityParamView = descriptor.getEntityParamView();
-
-        ConditionParamBuilder paramBuilder = AppBeans.get(ConditionParamBuilder.class);
-        param = paramBuilder.createParam(this);
-    }
+// TODO: ansu
+// protected AbstractJPQLCondition(ConditionDescriptor descriptor) {
+//        super(descriptor);
+//        entityParamWhere = descriptor.getEntityParamWhere();
+//        entityParamView = descriptor.getEntityParamView();
+//
+//        ConditionParamBuilder paramBuilder = AppBeans.get(ConditionParamBuilder.class);
+//        param = paramBuilder.createParam(this);
+//    }
 
     public void toXml(Element element, Param.ValueProperty valueProperty) {
         super.toXml(element, valueProperty);

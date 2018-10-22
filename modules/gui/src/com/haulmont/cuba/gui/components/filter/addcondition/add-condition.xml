@@ -21,7 +21,7 @@
     <dsContext>
         <collectionDatasource
                 id="conditionDescriptorsDs"
-                class="com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor"
+                class="com.haulmont.cuba.gui.components.filter.ConditionDescriptor"
                 datasourceClass="com.haulmont.cuba.gui.components.filter.addcondition.ConditionDescriptorsDs"/>
     </dsContext>
     <actions>

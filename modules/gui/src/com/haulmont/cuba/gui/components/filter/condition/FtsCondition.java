@@ -25,10 +25,8 @@ import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.core.global.filter.ConditionType;
 import com.haulmont.cuba.gui.components.filter.FtsFilterHelper;
 import com.haulmont.cuba.gui.components.filter.Param;
-import com.haulmont.cuba.gui.components.filter.descriptor.FtsConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.FtsOperationEditor;
-import com.haulmont.cuba.gui.data.Datasource;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.dom4j.Element;
 
@@ -42,6 +40,11 @@ public class FtsCondition extends AbstractCondition {
     protected String queryKeyParamName;
     protected String sessionIdParamName;
 
+    public FtsCondition() {
+        this.queryKeyParamName = generateQueryKeyParamName();
+        this.sessionIdParamName = generateSessionIdParamName();
+    }
+
     public FtsCondition(FtsCondition other) {
         super(other);
         this.queryKeyParamName = other.queryKeyParamName;
@@ -53,17 +56,6 @@ public class FtsCondition extends AbstractCondition {
         return new FtsOperationEditor(this);
     }
 
-    public FtsCondition(FtsConditionDescriptor descriptor) {
-        super(descriptor);
-        if (AppBeans.containsBean(FtsFilterHelper.NAME)) {
-            FtsFilterHelper ftsFilterHelper = AppBeans.get(FtsFilterHelper.class);
-            this.queryKeyParamName = generateQueryKeyParamName();
-            this.sessionIdParamName = generateSessionIdParamName();
-            this.text = ftsFilterHelper.createFtsWhereClause(metaClass.getName(),
-                    queryKeyParamName, sessionIdParamName);
-        }
-    }
-
     public FtsCondition(Element element, String messagesPack, String filterComponentName, com.haulmont.chile.core.model.MetaClass metaClass) {
         super(element, messagesPack, filterComponentName, metaClass);
         queryKeyParamName = element.attributeValue("queryKeyParamName");
@@ -71,7 +63,7 @@ public class FtsCondition extends AbstractCondition {
     }
 
     @Override
-    public AbstractCondition createCopy() {
+    public AbstractCondition copy() {
         return new FtsCondition(this);
     }
 
@@ -110,6 +102,15 @@ public class FtsCondition extends AbstractCondition {
 
     protected String generateSessionIdParamName() {
         return "__sessionId" + RandomStringUtils.randomAlphanumeric(6);
+    }
+
+    @Override
+    protected void updateText() {
+        if (AppBeans.containsBean(FtsFilterHelper.NAME)) {
+            FtsFilterHelper ftsFilterHelper = AppBeans.get(FtsFilterHelper.NAME);
+            this.text = ftsFilterHelper.createFtsWhereClause(metaClass.getName(),
+                    queryKeyParamName, sessionIdParamName);
+        }
     }
 
     @Override

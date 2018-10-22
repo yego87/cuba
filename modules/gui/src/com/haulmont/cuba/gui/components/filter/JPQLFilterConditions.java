@@ -19,14 +19,12 @@ package com.haulmont.cuba.gui.components.filter;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributes;
 import com.haulmont.cuba.core.global.FtsConfigHelper;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.NewCustomConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.CustomConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.PropertyConditionDescriptor;
-import org.dom4j.Element;
+import com.haulmont.cuba.core.global.filter.ConditionType;
+import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+
 @Component(JPQLFilterConditions.NAME)
 public class JPQLFilterConditions implements FilterConditions {
 
@@ -36,7 +34,7 @@ public class JPQLFilterConditions implements FilterConditions {
     protected DynamicAttributes dynamicAttributes;
 
     @Override
-    public String getStoreType() {
+    public String getStoreDialect() {
         return "jpql";
     }
 
@@ -51,51 +49,7 @@ public class JPQLFilterConditions implements FilterConditions {
     }
 
     @Override
-    public AbstractConditionDescriptor createNewPropertyDescriptor(String name,
-                                                                   String filterComponentName,
-                                                                   MetaClass metaClass,
-                                                                   String messagesPack,
-                                                                   String sourceQuery) {
-        //noinspection IncorrectCreateEntity
-        return new PropertyConditionDescriptor(name,
-                filterComponentName,
-                metaClass,
-                messagesPack,
-                sourceQuery);
-    }
-
-    @Override
-    public AbstractConditionDescriptor createExistingPropertyDescriptor(Element element,
-                                                                        String filterComponentName,
-                                                                        MetaClass metaClass,
-                                                                        String messagesPack,
-                                                                        String sourceQuery) {
-        //noinspection IncorrectCreateEntity
-        return new PropertyConditionDescriptor(element,
-                filterComponentName,
-                metaClass,
-                messagesPack,
-                sourceQuery);
-    }
-
-    @Override
-    public AbstractConditionDescriptor createNewCustomDescriptor(String filterComponentName,
-                                                                 MetaClass metaClass,
-                                                                 String sourceQuery) {
-        //noinspection IncorrectCreateEntity
-        return new NewCustomConditionDescriptor(filterComponentName, metaClass);
-    }
-
-    @Override
-    public AbstractConditionDescriptor createExistingCustomDescriptor(Element element,
-                                                                      String filterComponentName,
-                                                                      MetaClass metaClass,
-                                                                      String messagesPack,
-                                                                      String sourceQuery) {
-        //noinspection IncorrectCreateEntity
-        return new CustomConditionDescriptor(element,
-                filterComponentName,
-                metaClass,
-                messagesPack);
+    public <R extends AbstractCondition> ConditionFactory<R> resolveFactory(ConditionType conditionType) {
+        return null;
     }
 }

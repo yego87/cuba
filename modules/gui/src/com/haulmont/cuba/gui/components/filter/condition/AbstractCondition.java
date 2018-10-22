@@ -29,7 +29,7 @@ import com.haulmont.cuba.core.global.Scripting;
 import com.haulmont.cuba.core.global.filter.Op;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.ConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -59,12 +59,16 @@ public abstract class AbstractCondition extends BaseUuidEntity {
     }
 
     protected String name;
-    protected String paramName;
     protected String caption;
+    @MetaProperty
+    protected String locCaption;
+
+    protected MetaClass metaClass;
     protected String messagesPack;
     protected String filterComponentName;
+
+    protected String paramName;
     protected String text;
-    protected MetaClass metaClass;
     protected Boolean group = false;
     protected Boolean unary = false;
     protected Boolean inExpr = false;
@@ -77,10 +81,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
     protected Integer width = 1;
     protected Op operator;
 
-    @MetaProperty
-    protected String locCaption;
-
-
     protected List<Listener> listeners = new ArrayList<>();
     protected AbstractOperationEditor operationEditor;
 
@@ -89,9 +89,12 @@ public abstract class AbstractCondition extends BaseUuidEntity {
     protected AbstractCondition(AbstractCondition other) {
         this.name = other.name;
         this.caption = other.caption;
-        this.messagesPack = other.messagesPack;
         this.locCaption = other.locCaption;
+
+        this.messagesPack = other.messagesPack;
+        this.metaClass = other.metaClass;
         this.filterComponentName = other.filterComponentName;
+
         this.group = other.group;
         this.unary = other.unary;
         this.inExpr = other.inExpr;
@@ -100,7 +103,6 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         this.paramName = other.paramName;
         this.hidden = other.hidden;
         this.required = other.required;
-        this.metaClass = other.metaClass;
         this.width = other.width;
         this.param = other.param;
         this.text = other.text;
@@ -131,25 +133,30 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         resolveParam(element);
     }
 
-    protected AbstractCondition(AbstractConditionDescriptor descriptor) {
-        name = descriptor.getName();
-        caption = descriptor.getCaption();
-        locCaption = descriptor.getLocCaption();
-        filterComponentName = descriptor.getFilterComponentName();
-        javaClass = descriptor.getJavaClass();
-        unary = javaClass == null;
-        metaClass = descriptor.getDatasourceMetaClass();
-        messagesPack = descriptor.getMessagesPack();
-        ConditionParamBuilder paramBuilder = AppBeans.get(ConditionParamBuilder.class);
-        if (Strings.isNullOrEmpty(paramName)) {
-            paramName = paramBuilder.createParamName(this);
-        }
-        param = paramBuilder.createParam(this);
-        String operatorType = descriptor.getOperatorType();
-        if (operatorType != null) {
-            operator = Op.valueOf(operatorType);
-        }
-    }
+// TODO: ansu
+// protected AbstractCondition(ConditionDescriptor descriptor) {
+//        name = descriptor.getName();
+//        caption = descriptor.getCaption();
+//        locCaption = descriptor.getLocCaption();
+//
+//
+//        filterComponentName = descriptor.getFilterComponentName();
+//        metaClass = descriptor.getEntityMetaClass();
+//        messagesPack = descriptor.getMessagesPack();
+//
+//        javaClass = descriptor.getJavaClass();
+//        unary = javaClass == null;
+//
+//        ConditionParamBuilder paramBuilder = AppBeans.get(ConditionParamBuilder.class);
+//        if (Strings.isNullOrEmpty(paramName)) {
+//            paramName = paramBuilder.createParamName(this);
+//        }
+//        param = paramBuilder.createParam(this);
+//        String operatorType = descriptor.getOperatorType();
+//        if (operatorType != null) {
+//            operator = Op.valueOf(operatorType);
+//        }
+//    }
 
     protected void resolveParam(Element element) {
         Scripting scripting = AppBeans.get(Scripting.NAME);
@@ -218,6 +225,10 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getCaption() {
         return caption;
     }
@@ -238,6 +249,10 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         for (Listener listener : listeners) {
             listener.captionChanged();
         }
+    }
+
+    public void setEntityMetaClass(MetaClass metaClass) {
+        this.metaClass = metaClass;
     }
 
     public String getText() {
@@ -271,6 +286,18 @@ public abstract class AbstractCondition extends BaseUuidEntity {
 
     public String getFilterComponentName() {
         return filterComponentName;
+    }
+
+    public void setFilterComponentName(String filterComponentName) {
+        this.filterComponentName = filterComponentName;
+    }
+
+    public String getMessagesPack() {
+        return messagesPack;
+    }
+
+    public void setMessagesPack(String messagesPack) {
+        this.messagesPack = messagesPack;
     }
 
     public Boolean getHidden() {
@@ -398,7 +425,7 @@ public abstract class AbstractCondition extends BaseUuidEntity {
         return operationEditor;
     }
 
-    public abstract AbstractCondition createCopy();
+    public abstract AbstractCondition copy();
 
     public abstract String getEntityParamView();
 

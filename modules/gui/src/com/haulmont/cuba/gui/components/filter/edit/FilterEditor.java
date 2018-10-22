@@ -30,7 +30,6 @@ import com.haulmont.cuba.gui.components.filter.ConditionsTree;
 import com.haulmont.cuba.gui.components.filter.FilterHelper;
 import com.haulmont.cuba.gui.components.filter.GroupType;
 import com.haulmont.cuba.gui.components.filter.condition.*;
-import com.haulmont.cuba.gui.components.filter.descriptor.GroupConditionDescriptor;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.security.entity.FilterEntity;
 import org.apache.commons.lang3.BooleanUtils;
@@ -440,12 +439,13 @@ public class FilterEditor extends AbstractWindow {
     }
 
     protected void addGroup(GroupType groupType) {
-        GroupConditionDescriptor conditionDescriptor = new GroupConditionDescriptor(groupType, filter.getId(),
+        GroupCondition groupCondition = new GroupConditionDescriptor(filter.getId(),
                 ((FilterImplementation) filter).getEntityMetaClass());
+        conditionDescriptor.setGroupType(groupType);
         AbstractCondition condition = conditionDescriptor.createCondition();
         AbstractCondition selectedCondition = conditionsDs.getItem();
         Node<AbstractCondition> newNode = new Node<>(condition);
-        if (selectedCondition != null && selectedCondition instanceof GroupCondition) {
+        if (selectedCondition instanceof GroupCondition) {
             Node<AbstractCondition> node = conditions.getNode(selectedCondition);
             if (node != null) {
                 node.addChild(newNode);

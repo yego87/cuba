@@ -18,11 +18,11 @@
 package com.haulmont.cuba.gui.components.filter.addcondition;
 
 import com.haulmont.bali.datastruct.Tree;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.ConditionDescriptor;
 
 public interface ConditionDescriptorsTreeBuilderAPI {
 
     String NAME = "cuba_ConditionDescriptorsTreeBuilder";
 
-    Tree<AbstractConditionDescriptor> build();
+    Tree<ConditionDescriptor> build();
 }

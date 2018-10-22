@@ -18,30 +18,23 @@
 package com.haulmont.cuba.gui.components.filter.condition;
 
 import com.google.common.base.Strings;
-import com.haulmont.bali.util.Dom4j;
 import com.haulmont.chile.core.annotations.MetaClass;
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesUtils;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.MessageTools;
-import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.core.global.QueryUtils;
 import com.haulmont.cuba.core.global.filter.ConditionType;
 import com.haulmont.cuba.core.global.filter.Op;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.DynamicAttributesOperationEditor;
-import com.haulmont.cuba.gui.data.Datasource;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.dom4j.Element;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -59,7 +52,11 @@ public class DynamicAttributesCondition extends AbstractJPQLCondition {
     protected boolean isCollection;
     protected String propertyPath;
     protected String join;
-    private static Pattern LIKE_PATTERN = Pattern.compile("(like \\S+)\\s+(?!ESCAPE)");
+
+    private static final Pattern LIKE_PATTERN = Pattern.compile("(like \\S+)\\s+(?!ESCAPE)");
+
+    public DynamicAttributesCondition() {
+    }
 
     public DynamicAttributesCondition(DynamicAttributesCondition condition) {
         super(condition);
@@ -67,14 +64,6 @@ public class DynamicAttributesCondition extends AbstractJPQLCondition {
         this.categoryId = condition.getCategoryId();
         this.categoryAttributeId = condition.getCategoryAttributeId();
         this.isCollection = condition.getIsCollection();
-    }
-
-    public DynamicAttributesCondition(AbstractJPQLConditionDescriptor descriptor, String propertyPath) {
-        super(descriptor);
-        this.name = RandomStringUtils.randomAlphabetic(10);
-        Messages messages = AppBeans.get(Messages.class);
-        this.locCaption = messages.getMainMessage("newDynamicAttributeCondition");
-        this.propertyPath = propertyPath;
     }
 
     public DynamicAttributesCondition(Element element, String messagesPack, String filterComponentName, com.haulmont.chile.core.model.MetaClass metaClass) {
@@ -236,8 +225,12 @@ public class DynamicAttributesCondition extends AbstractJPQLCondition {
         return propertyPath;
     }
 
+    public void setPropertyPath(String propertyPath) {
+        this.propertyPath = propertyPath;
+    }
+
     @Override
-    public AbstractCondition createCopy() {
+    public AbstractCondition copy() {
         return new DynamicAttributesCondition(this);
     }
 

@@ -76,13 +76,13 @@ public class DynamicAttributesConditionFrame extends ConditionFrame<DynamicAttri
 
         categoryLookup.addValueChangeListener(e -> {
             if (e.getValue() != null) {
-                fillAttributeSelect((Category) e.getValue());
+                fillAttributeSelect(e.getValue());
             }
         });
 
         attributeLookup.addValueChangeListener(e -> {
             if (e.getValue() != null) {
-                CategoryAttribute categoryAttribute = (CategoryAttribute) e.getValue();
+                CategoryAttribute categoryAttribute = e.getValue();
                 fillOperationSelect(categoryAttribute);
             }
         });
@@ -124,7 +124,7 @@ public class DynamicAttributesConditionFrame extends ConditionFrame<DynamicAttri
         String cavAlias = "cav" + RandomStringUtils.randomNumeric(5);
 
         String paramName;
-        String operation = operationLookup.<Op>getValue().forJpql();
+        String operation = operationLookup.getValue().forJpql();
         Op op = operationLookup.getValue();
 
         Class javaClass = DynamicAttributesUtils.getAttributeClass(attribute);
@@ -184,7 +184,7 @@ public class DynamicAttributesConditionFrame extends ConditionFrame<DynamicAttri
         condition.setEntityParamView(null);
         condition.setEntityParamWhere(null);
         condition.setInExpr(Op.IN.equals(op) || Op.NOT_IN.equals(op));
-        condition.setOperator(operationLookup.<Op>getValue());
+        condition.setOperator(operationLookup.getValue());
         Class paramJavaClass = op.isUnary() ? Boolean.class : javaClass;
         condition.setJavaClass(javaClass);
 

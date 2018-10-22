@@ -17,12 +17,12 @@
 package com.haulmont.cuba.gui.components.filter;
 
 import com.haulmont.chile.core.model.MetaClass;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import org.dom4j.Element;
+import com.haulmont.cuba.core.global.filter.ConditionType;
+import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 
 public interface FilterConditions {
 
-    String getStoreType();
+    String getStoreDialect();
 
     default boolean supportsFts(MetaClass metaClass) {
         return false;
@@ -32,25 +32,5 @@ public interface FilterConditions {
         return false;
     }
 
-    AbstractConditionDescriptor createNewPropertyDescriptor(String name,
-                                                            String filterComponentName,
-                                                            MetaClass metaClass,
-                                                            String messagesPack,
-                                                            String sourceQuery);
-
-    AbstractConditionDescriptor createExistingPropertyDescriptor(Element element,
-                                                                 String filterComponentName,
-                                                                 MetaClass metaClass,
-                                                                 String messagesPack,
-                                                                 String sourceQuery);
-
-    AbstractConditionDescriptor createNewCustomDescriptor(String filterComponentName,
-                                                          MetaClass metaClass,
-                                                          String sourceQuery);
-
-    AbstractConditionDescriptor createExistingCustomDescriptor(Element element,
-                                                                 String filterComponentName,
-                                                                 MetaClass metaClass,
-                                                                 String messagesPack,
-                                                                 String sourceQuery);
+    <R extends AbstractCondition> ConditionFactory<R> resolveFactory(ConditionType conditionType);
 }

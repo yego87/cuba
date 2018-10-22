@@ -18,6 +18,7 @@
 package com.haulmont.cuba.gui.components.filter;
 
 import com.haulmont.bali.datastruct.Tree;
+import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.gui.WindowManager;
 import com.haulmont.cuba.gui.WindowManagerProvider;
@@ -26,9 +27,8 @@ import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.filter.addcondition.AddConditionWindow;
 import com.haulmont.cuba.gui.components.filter.addcondition.ConditionDescriptorsTreeBuilderAPI;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.NewCustomConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.NewDynamicAttributeConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.condition.CustomCondition;
+import com.haulmont.cuba.gui.components.filter.condition.DynamicAttributesCondition;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 
@@ -48,25 +48,26 @@ public class AddConditionHelper {
 
     public static final int PROPERTIES_HIERARCHY_DEPTH = 2;
 
-    protected WindowManager windowManager;
-    protected WindowConfig windowConfig;
     protected Filter filter;
     protected Handler handler;
     protected boolean hideDynamicAttributes;
     protected boolean hideCustomConditions;
 
+    protected WindowManager windowManager = AppBeans.get(WindowManagerProvider.class).get();
+    protected WindowConfig windowConfig = AppBeans.get(WindowConfig.class);
+
     public AddConditionHelper(Filter filter, Handler handler) {
         this(filter, false, false, handler);
     }
 
-    public AddConditionHelper(Filter filter, boolean hideDynamicAttributes,
-                              boolean hideCustomConditions, Handler handler) {
+    public AddConditionHelper(Filter filter,
+                              boolean hideDynamicAttributes,
+                              boolean hideCustomConditions,
+                              Handler handler) {
         this.filter = filter;
         this.handler = handler;
         this.hideDynamicAttributes = hideDynamicAttributes;
         this.hideCustomConditions = hideCustomConditions;
-        windowManager = AppBeans.get(WindowManagerProvider.class).get();
-        windowConfig = AppBeans.get(WindowConfig.class);
     }
 
     public interface Handler {
@@ -87,15 +88,15 @@ public class AddConditionHelper {
                 hideDynamicAttributes,
                 hideCustomConditions,
                 conditionsTree);
-        Tree<AbstractConditionDescriptor> descriptorsTree = descriptorsTreeBuilder.build();
+        Tree<ConditionDescriptor> descriptorsTree = descriptorsTreeBuilder.build();
         params.put("descriptorsTree", descriptorsTree);
         WindowInfo windowInfo = windowConfig.getWindowInfo("addCondition");
         AddConditionWindow window = (AddConditionWindow) windowManager.openWindow(windowInfo, OpenType.DIALOG, params);
         window.addCloseListener(actionId -> {
             if (Window.COMMIT_ACTION_ID.equals(actionId)) {
-                Collection<AbstractConditionDescriptor> descriptors = window.getDescriptors();
+                Collection<ConditionDescriptor> descriptors = window.getDescriptors();
                 if (descriptors != null) {
-                    for (AbstractConditionDescriptor descriptor : descriptors) {
+                    for (ConditionDescriptor descriptor : descriptors) {
                         _addCondition(descriptor, conditionsTree);
                     }
                 }
@@ -103,25 +104,12 @@ public class AddConditionHelper {
         });
     }
 
-    protected void _addCondition(AbstractConditionDescriptor descriptor, ConditionsTree conditionsTree) {
-        final AbstractCondition condition = descriptor.createCondition();
-
-        if (descriptor instanceof NewCustomConditionDescriptor) {
-            WindowInfo windowInfo = windowConfig.getWindowInfo("customConditionEditor");
-            Map<String, Object> params = new HashMap<>();
-            params.put("condition", condition);
-            params.put("conditionsTree", conditionsTree);
-            windowManager.openWindow(windowInfo, OpenType.DIALOG, params)
-                    .addCloseListener(actionId -> {
-                        if (Window.COMMIT_ACTION_ID.equals(actionId)) {
-                            handler.handle(condition);
-                        }
-                    });
-        } else if (descriptor instanceof NewDynamicAttributeConditionDescriptor) {
-            WindowInfo windowInfo = windowConfig.getWindowInfo("dynamicAttributesConditionEditor");
-            Map<String, Object> params = new HashMap<>();
-            params.put("condition", condition);
-            windowManager.openWindow(windowInfo, OpenType.DIALOG, params)
+    protected void _addCondition(ConditionDescriptor conditionInfo, ConditionsTree conditionsTree) {
+        ConditionFactory conditionFactory = null;
+        AbstractCondition condition = conditionFactory.create(conditionInfo, conditionInfo.getElement());
+        if (conditionInfo.isShowEditor()) {
+            WindowInfo windowInfo = windowConfig.getWindowInfo(getConditionEditor(condition));
+            windowManager.openWindow(windowInfo, OpenType.DIALOG, getEditorParams(condition, conditionsTree))
                     .addCloseListener(actionId -> {
                         if (Window.COMMIT_ACTION_ID.equals(actionId)) {
                             handler.handle(condition);
@@ -129,6 +117,22 @@ public class AddConditionHelper {
                     });
         } else {
             handler.handle(condition);
+        }
+    }
+
+    protected Map<String, Object> getEditorParams(AbstractCondition condition, ConditionsTree conditionsTree) {
+        return ParamsMap.of("condition", condition,
+                "conditionsTree", conditionsTree);
+    }
+
+    protected String getConditionEditor(AbstractCondition condition) {
+        //for compatibility with old condition screens
+        if (condition instanceof CustomCondition) {
+            return "customConditionEditor";
+        } else if (condition instanceof DynamicAttributesCondition) {
+            return "dynamicAttributesConditionEditor";
+        } else {
+            return String.format("%s.edit", condition.getMetaClass().getName());
         }
     }
 }

@@ -105,7 +105,7 @@ public class ConditionsTree extends Tree<AbstractCondition> {
 
     protected void recursivelyCopyNode(Node<AbstractCondition> srcNode, Node<AbstractCondition> dstNode) {
         AbstractCondition srcCondition = srcNode.getData();
-        AbstractCondition dstCondition = srcCondition.createCopy();
+        AbstractCondition dstCondition = srcCondition.copy();
         dstNode.setData(dstCondition);
         for (Node<AbstractCondition> srcChild : srcNode.getChildren()) {
             Node<AbstractCondition> dstChild = new Node<>();

@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.components.filter.descriptor;
+package com.haulmont.cuba.gui.components.filter;
 
-public class ExternalPropertyConditionDescriptor {
+import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
+import org.dom4j.Element;
+
+public interface ConditionFactory<R extends AbstractCondition> {
+
+    R create(ConditionDescriptor descriptor, Element element);
+
+    R create();
 
 }

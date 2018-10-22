@@ -19,7 +19,7 @@ package com.haulmont.cuba.gui.components.filter.addcondition;
 
 import com.google.common.base.Strings;
 import com.haulmont.bali.datastruct.Tree;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.ConditionDescriptor;
 import com.haulmont.cuba.gui.data.impl.AbstractTreeDatasource;
 
 import java.util.*;
@@ -29,7 +29,7 @@ import java.util.*;
  * checking that {@code treeCaption} property contains the string
  *
  */
-public class ConditionDescriptorsDs extends AbstractTreeDatasource<AbstractConditionDescriptor, UUID> {
+public class ConditionDescriptorsDs extends AbstractTreeDatasource<ConditionDescriptor, UUID> {
 
     protected String conditionsFilter;
 
@@ -80,7 +80,7 @@ public class ConditionDescriptorsDs extends AbstractTreeDatasource<AbstractCondi
         if (Strings.isNullOrEmpty(conditionsFilter)) {
             return true;
         }
-        AbstractConditionDescriptor item = getItem(itemId);
+        ConditionDescriptor item = getItem(itemId);
         return item != null && item.getTreeCaption().toLowerCase().contains(conditionsFilter.toLowerCase());
     }
 

@@ -37,7 +37,7 @@ import com.haulmont.cuba.gui.components.filter.Param;
 import com.haulmont.cuba.gui.components.filter.condition.AbstractCondition;
 import com.haulmont.cuba.gui.components.filter.condition.CustomCondition;
 import com.haulmont.cuba.gui.components.filter.condition.PropertyCondition;
-import com.haulmont.cuba.gui.components.filter.descriptor.PropertyConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.PropertyConditionDescriptor;
 import com.haulmont.cuba.gui.components.sys.ValuePathHelper;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.data.CollectionDatasource;

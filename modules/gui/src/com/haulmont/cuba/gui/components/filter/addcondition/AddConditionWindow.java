@@ -24,9 +24,8 @@ import com.haulmont.cuba.core.global.Metadata;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.KeyCombination.Key;
 import com.haulmont.cuba.gui.components.filter.FilterHelper;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.HeaderConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.PropertyConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.ConditionDescriptor;
+import com.haulmont.cuba.gui.components.filter.PropertyConditionDescriptor;
 import com.haulmont.cuba.gui.theme.ThemeConstants;
 import com.haulmont.cuba.gui.theme.ThemeConstantsManager;
 
@@ -117,7 +116,7 @@ public class AddConditionWindow extends AbstractWindow {
                 if (item instanceof HeaderConditionDescriptor) {
                     showNotification(messages.getMainMessage("filter.addCondition.youSelectedGroup"), NotificationType.WARNING);
                     return;
-                } else if (isEmbeddedProperty((AbstractConditionDescriptor) item)) {
+                } else if (isEmbeddedProperty((ConditionDescriptor) item)) {
                     showNotification(messages.getMainMessage("filter.addCondition.youSelectedEmbedded"), NotificationType.WARNING);
                     return;
                 }
@@ -127,7 +126,7 @@ public class AddConditionWindow extends AbstractWindow {
         close(COMMIT_ACTION_ID);
     }
 
-    protected boolean isEmbeddedProperty(AbstractConditionDescriptor item) {
+    protected boolean isEmbeddedProperty(ConditionDescriptor item) {
         if (item instanceof PropertyConditionDescriptor) {
             MetaProperty metaProperty = ((PropertyConditionDescriptor) item).getMetaProperty();
             if (metaProperty != null && metadata.getTools().isEmbedded(metaProperty)) {
@@ -141,7 +140,7 @@ public class AddConditionWindow extends AbstractWindow {
         close(CLOSE_ACTION_ID);
     }
 
-    public Collection<AbstractConditionDescriptor> getDescriptors() {
+    public Collection<ConditionDescriptor> getDescriptors() {
         return tree.getSelected();
     }
 }

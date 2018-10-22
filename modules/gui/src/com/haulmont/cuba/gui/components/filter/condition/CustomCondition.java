@@ -24,11 +24,8 @@ import com.haulmont.cuba.core.global.MessageTools;
 import com.haulmont.cuba.core.global.filter.ConditionType;
 import com.haulmont.cuba.gui.components.filter.ConditionParamBuilder;
 import com.haulmont.cuba.gui.components.filter.Param;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractConditionDescriptor;
-import com.haulmont.cuba.gui.components.filter.descriptor.AbstractJPQLConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.CustomOperationEditor;
-import com.haulmont.cuba.gui.data.Datasource;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 
@@ -69,16 +66,15 @@ public class CustomCondition extends AbstractJPQLCondition {
 
     }
 
-    public CustomCondition(AbstractJPQLConditionDescriptor descriptor, String where, String join, boolean inExpr) {
-        super(descriptor);
-        this.join = join;
-        this.text = where;
-        this.inExpr = inExpr;
-        //re-create param because at this moment we have a correct value of inExpr
-        param = AppBeans.get(ConditionParamBuilder.class).createParam(this);
-        if (param != null)
-            text = StringUtils.replace(text, "?", ":" + param.getName());
-    }
+// TODO: ansu
+// public CustomCondition(AbstractJPQLConditionDescriptor descriptor) {
+//        super(descriptor);
+//
+//        //re-create param because at this moment we have a correct value of inExpr
+//        param = AppBeans.get(ConditionParamBuilder.class).createParam(this);
+//        if (param != null)
+//            text = StringUtils.replace(text, "?", ":" + param.getName());
+//    }
 
     @Override
     public void toXml(Element element, Param.ValueProperty valueProperty) {
@@ -122,7 +118,7 @@ public class CustomCondition extends AbstractJPQLCondition {
     }
 
     @Override
-    public AbstractCondition createCopy() {
+    public AbstractCondition copy() {
         return new CustomCondition(this);
     }
 }

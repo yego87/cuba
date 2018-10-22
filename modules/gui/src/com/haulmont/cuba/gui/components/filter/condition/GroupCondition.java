@@ -20,7 +20,6 @@ package com.haulmont.cuba.gui.components.filter.condition;
 import com.haulmont.chile.core.annotations.MetaClass;
 import com.haulmont.cuba.core.entity.annotation.SystemLevel;
 import com.haulmont.cuba.gui.components.filter.GroupType;
-import com.haulmont.cuba.gui.components.filter.descriptor.GroupConditionDescriptor;
 import com.haulmont.cuba.gui.components.filter.operationedit.AbstractOperationEditor;
 import com.haulmont.cuba.gui.components.filter.operationedit.GroupOperationEditor;
 import org.dom4j.Element;
@@ -47,17 +46,12 @@ public class GroupCondition extends AbstractCondition {
         param = null;
     }
 
-    public GroupCondition(GroupConditionDescriptor descriptor) {
-        super(descriptor);
-        group = true;
-        groupType = descriptor.getGroupType();
-        locCaption = groupType.getLocCaption();
-        param = null;
-    }
-
-
     public GroupType getGroupType() {
         return groupType;
+    }
+
+    public void setGroupType(GroupType groupType) {
+        this.groupType = groupType;
     }
 
     @Override
@@ -67,7 +61,7 @@ public class GroupCondition extends AbstractCondition {
     }
 
     @Override
-    public AbstractCondition createCopy() {
+    public AbstractCondition copy() {
         return new GroupCondition(this);
     }
 

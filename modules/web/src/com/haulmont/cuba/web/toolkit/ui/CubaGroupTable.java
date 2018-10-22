@@ -143,12 +143,12 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     }
 
     protected void paintUpdatesForGroupRowWithAggregation(PaintTarget target, Object groupId) throws PaintException {
-        target.startTag("update");
+        target.startTag("updateAggregation");
         List<String> values = getAggregatedValuesForGroup(groupId);
         for (String value : values) {
             target.addText(value);
         }
-        target.endTag("update");
+        target.endTag("updateAggregation");
 
         cachedAggregatedValues.put(groupId, values);
     }
@@ -693,6 +693,14 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
             getState().clickableColumnKeys = clickableColumnKeys;
         }
+    }
+
+    @Override
+    protected void refreshRenderedCells() {
+        if (cachedAggregatedValues != null) {
+            cachedAggregatedValues.clear();
+        }
+        super.refreshRenderedCells();
     }
 
     public GroupPropertyValueFormatter getGroupPropertyValueFormatter() {

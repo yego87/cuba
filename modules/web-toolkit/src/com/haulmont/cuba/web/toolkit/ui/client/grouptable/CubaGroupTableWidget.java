@@ -349,7 +349,7 @@ public class CubaGroupTableWidget extends CubaScrollTableWidget {
                 }
 
                 int columnIndex = visibleColOrder.length - 1;
-                UIDL updateUIDL = child.getChildByTagName("update");
+                UIDL updateUIDL = child.getChildByTagName("updateAggregation");
 
                 // reverse walk on cells
                 for (int updInd = updateUIDL.getChildCount() - 1; updInd >= 0; updInd--, columnIndex--) {

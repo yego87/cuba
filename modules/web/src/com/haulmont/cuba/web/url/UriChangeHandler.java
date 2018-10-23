@@ -19,6 +19,7 @@ package com.haulmont.cuba.web.url;
 import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
+import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.WindowParams;
 import com.haulmont.cuba.gui.components.RootWindow;
@@ -26,21 +27,22 @@ import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
+import com.haulmont.cuba.gui.history.History;
 import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
-import com.haulmont.cuba.gui.screen.EditorScreen;
-import com.haulmont.cuba.gui.screen.MapScreenOptions;
-import com.haulmont.cuba.gui.screen.OpenMode;
-import com.haulmont.cuba.gui.screen.Screen;
+import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition;
 import com.haulmont.cuba.gui.xml.layout.ScreenXmlLoader;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.controllers.ControllerUtils;
+import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
 import com.haulmont.cuba.web.sys.VaadinSessionScope;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
+import com.vaadin.server.Page;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,13 +74,22 @@ public class UriChangeHandler {
     protected Screens screens;
 
     @Inject
+    protected History history;
+
+    @Inject
     protected ScreenXmlLoader screenXmlLoader;
+
     @Inject
     protected Scripting scripting;
+
     @Inject
     protected Metadata metadata;
+
     @Inject
     protected DataManager dataManager;
+
+    @Inject
+    protected Notifications notifications;
 
     @SuppressWarnings("unused")
     public void handleUriChange(String uri) {
@@ -92,12 +103,76 @@ public class UriChangeHandler {
     }
 
     protected boolean historyNavigation(UriState state) {
-        // TODO: implement
-        return false;
+        return history.searchBackward(state) || history.searchForward(state);
     }
 
     protected void handleHistoryNavigation(UriState state) {
-        // TODO: implement
+        if (history.searchForward(state)) {
+            Page.getCurrent().replaceState("#!" + history.now().toString());
+
+            Notifications.Notification notification = notifications.create();
+            notification.setCaption("Unable to go to future");
+            notification.setType(Notifications.NotificationType.HUMANIZED);
+            notification.show();
+
+            return;
+        }
+
+        if (history.searchBackward(state) && !state.equals(history.lookBackward())) {
+            reloadApp();
+            return;
+        }
+
+        if (state.equals(history.lookBackward())) {
+            handleHistoryBackward();
+        }
+    }
+
+    protected void handleHistoryBackward() {
+        Window window = findCurrentWindow();
+        if (window == null) {
+            // TODO: handle correctly (copy-pasted link, etc)
+            throw new IllegalStateException("Unable to find window corresponding to state: " + history.now());
+        }
+
+        window.getFrameOwner().close(FrameOwner.WINDOW_CLOSE_ACTION)
+                .then(() -> history.backward())
+                .otherwise(() -> {
+                    // TODO: squash history?
+                    Page.getCurrent().replaceState("#!" + history.now());
+                });
+    }
+
+    protected Window findCurrentWindow() {
+        WebAppWorkArea workArea = getConfiguredWorkArea();
+
+        if (workArea.getMode() == AppWorkArea.Mode.SINGLE) {
+            return ((TabWindowContainer) workArea.getSingleWindowContainer()
+                    .getComponent(0))
+                    .getBreadCrumbs()
+                    .getCurrentWindow();
+        } else {
+            String stateMark = history.now().getStateMark();
+
+            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+            for (int i = 0; i < tabSheet.getComponentCount(); i++) {
+                TabWindowContainer windowContainer = (TabWindowContainer) tabSheet.getTabComponent(tabSheet.getTab(i));
+                Window window = windowContainer.getBreadCrumbs().getCurrentWindow();
+                if (String.valueOf(((WebWindow) window).getStateMark()).equals(stateMark)) {
+                    return window;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected void reloadApp() {
+        String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
+        AppUI ui = AppUI.getCurrent();
+        if (ui != null) {
+            ui.getPage().open(url, "_self");
+        }
     }
 
     protected void handleScreenNavigation(UriState state) {
@@ -198,7 +273,7 @@ public class UriChangeHandler {
         if (screen instanceof EditorScreen) {
             //noinspection unchecked
             ((EditorScreen) screen).setEntityToEdit(
-                    (com.haulmont.cuba.core.entity.Entity) screenOptions.get(WindowParams.ITEM.name()));
+                    (Entity) screenOptions.get(WindowParams.ITEM.name()));
         }
 
         screens.show(screen);

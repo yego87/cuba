@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.web.navigation;
 
+import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.components.DialogWindow;
@@ -23,6 +24,7 @@ import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
+import com.haulmont.cuba.gui.history.History;
 import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
@@ -33,9 +35,11 @@ import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
+import com.haulmont.cuba.web.sys.VaadinSessionScope;
 import com.haulmont.cuba.web.sys.WindowBreadCrumbs;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -44,6 +48,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component(Navigation.NAME)
+@Scope(VaadinSessionScope.NAME)
 public class WebNavigation implements Navigation {
 
     protected static final String SHEBANG = "#!";
@@ -57,6 +62,12 @@ public class WebNavigation implements Navigation {
     @Inject
     protected Events events;
 
+    @Inject
+    protected BeanLocator beanLocator;
+
+    @Inject
+    protected History history;
+
     @Override
     public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
         UriState oldState = fireStateChanged ? getState() : null;
@@ -68,6 +79,8 @@ public class WebNavigation implements Navigation {
         }
 
         Page.getCurrent().setUriFragment("!" + navState, false);
+
+        history.push(getState());
 
         if (fireStateChanged) {
             fireStateChange(oldState);

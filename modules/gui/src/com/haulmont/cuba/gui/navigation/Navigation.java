@@ -20,7 +20,6 @@ import com.haulmont.cuba.gui.screen.Screen;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * This bean is intended for reflecting app state to URI based on currently opened screen.
@@ -137,42 +136,4 @@ public interface Navigation {
      * @return current state parsed from URI fragment.
      */
     UriState getState();
-
-    class UriState {
-
-        protected final String root;
-        protected final String stateMark;
-        protected final String nestedRoute;
-        protected final Map<String, String> params;
-
-        public UriState(String root, String stateMark, String nestedRoute, Map<String, String> params) {
-            this.root = root;
-            this.stateMark = stateMark;
-            this.nestedRoute = nestedRoute;
-            this.params = params;
-        }
-
-        public String getRoot() {
-            return root;
-        }
-
-        public String getNestedRoute() {
-            return nestedRoute;
-        }
-
-        public Map<String, String> getParams() {
-            return params;
-        }
-
-        public String getParamsString() {
-            if (params == null || params.isEmpty()) {
-                return "";
-            }
-
-            return params.entrySet()
-                    .stream()
-                    .map(entry -> String.format("%s=%s", entry.getKey(), entry.getValue()))
-                    .collect(Collectors.joining("&"));
-        }
-    }
 }

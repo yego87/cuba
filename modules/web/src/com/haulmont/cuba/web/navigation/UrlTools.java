@@ -16,7 +16,7 @@
 
 package com.haulmont.cuba.web.navigation;
 
-import com.haulmont.cuba.gui.navigation.Navigation.UriState;
+import com.haulmont.cuba.gui.navigation.UriState;
 
 import java.util.Collections;
 import java.util.HashMap;

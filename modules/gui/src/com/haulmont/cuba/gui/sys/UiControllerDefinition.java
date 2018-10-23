@@ -77,6 +77,9 @@ public final class UiControllerDefinition {
         }
 
         public Class<? extends Screen> getParent() {
+            if (parent == Screen.class) {
+                return null;
+            }
             return parent;
         }
 

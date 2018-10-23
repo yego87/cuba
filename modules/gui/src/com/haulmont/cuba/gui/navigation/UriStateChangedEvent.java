@@ -20,24 +20,26 @@ import org.springframework.context.ApplicationEvent;
 
 public class UriStateChangedEvent extends ApplicationEvent {
 
-    protected final Navigation.UriState oldState;
-    protected final Navigation.UriState state;
+    private static final long serialVersionUID = 2542146882366256709L;
 
-    public UriStateChangedEvent(Navigation.UriState oldState, Navigation.UriState state) {
+    protected final UriState oldState;
+    protected final UriState state;
+
+    public UriStateChangedEvent(UriState oldState, UriState state) {
         super(state);
         this.oldState = oldState;
         this.state = state;
     }
 
-    public Navigation.UriState getSource() {
-        return (Navigation.UriState) super.getSource();
+    public UriState getSource() {
+        return (UriState) super.getSource();
     }
 
-    public Navigation.UriState getOldState() {
+    public UriState getOldState() {
         return oldState;
     }
 
-    public Navigation.UriState getState() {
+    public UriState getState() {
         return state;
     }
 }

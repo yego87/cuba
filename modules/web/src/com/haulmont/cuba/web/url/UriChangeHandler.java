@@ -27,7 +27,7 @@ import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.navigation.Navigation;
-import com.haulmont.cuba.gui.navigation.Navigation.UriState;
+import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.MapScreenOptions;

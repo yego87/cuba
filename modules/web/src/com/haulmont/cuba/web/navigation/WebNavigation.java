@@ -17,29 +17,38 @@
 package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.core.global.Events;
+import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
+import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.navigation.Navigation;
+import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.WebWindow;
+import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
+import com.haulmont.cuba.web.sys.WindowBreadCrumbs;
+import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component(Navigation.NAME)
 public class WebNavigation implements Navigation {
 
     protected static final String SHEBANG = "#!";
+
+    // TODO: config property?
     protected static final int MAX_NESTED_ROUTES = 2;
 
     @Inject
@@ -54,14 +63,14 @@ public class WebNavigation implements Navigation {
 
         String navState = buildNavState(screen, uriParams);
         if (navState == null) {
+            // TODO: check and remove
             throw new RuntimeException("New nav state is null");
         }
 
         Page.getCurrent().setUriFragment("!" + navState, false);
 
         if (fireStateChanged) {
-            UriState state = getState();
-            events.publish(new UriStateChangedEvent(oldState, state));
+            fireStateChange(oldState);
         }
     }
 
@@ -71,20 +80,29 @@ public class WebNavigation implements Navigation {
 
         String navState = buildNavState(screen, uriParams);
         if (navState == null) {
+            // TODO: check and remove
             throw new RuntimeException("New nav state is null");
         }
 
         Page.getCurrent().replaceState(SHEBANG + navState);
 
         if (fireStateChanged) {
-            UriState state = getState();
-            events.publish(new UriStateChangedEvent(oldState, state));
+            fireStateChange(oldState);
         }
     }
 
     @Override
     public UriState getState() {
         return UrlTools.parseState(Page.getCurrent().getUriFragment());
+    }
+
+    protected void fireStateChange(UriState oldState) {
+        UriState state = getState();
+        if (oldState == null || oldState.equals(state)) {
+            return;
+        }
+
+        events.publish(new UriStateChangedEvent(oldState, state));
     }
 
     protected String buildNavState(Screen screen, Map<String, String> urlParams) {
@@ -94,18 +112,18 @@ public class WebNavigation implements Navigation {
             state.append(getRoute(getPage(screen)));
         } else {
             Screen rootScreen = AppUI.getCurrent().getTopLevelWindow().getFrameOwner();
+            state.append(getRoute(getPage(rootScreen)));
 
-            state.append(getRoute(getPage(rootScreen)))
-                    .append('/')
-                    .append(getScreenStateMark(screen))
-                    .append('/');
-
-            String compositeState = buildCompositeState(screen);
-            if (compositeState == null || compositeState.isEmpty()) {
-                throw new RuntimeException("Composite state is null");
+            String stateMark = getScreenStateMark(screen);
+            String nestedRoute = buildNestedRoute(screen);
+            if (nestedRoute == null || nestedRoute.isEmpty()) {
+                return getState().toString();
             }
 
-            state.append(compositeState);
+            state.append('/')
+                    .append(stateMark)
+                    .append('/')
+                    .append(nestedRoute);
         }
 
         state.append(buildParamsString(screen, urlParams));
@@ -117,23 +135,40 @@ public class WebNavigation implements Navigation {
         return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
     }
 
-    protected String buildCompositeState(Screen screen) {
+    protected String buildNestedRoute(Screen screen) {
         if (screen.getWindow() instanceof DialogWindow) {
-            return buildDialogCompositeState(screen);
+            return buildDialogRoute(screen);
         } else {
-            return buildScreenCompositeState(screen);
+            return buildScreenRoute(screen);
         }
     }
 
-    protected String buildDialogCompositeState(Screen screen) {
-        PageDefinition page = screen.getScreenContext().getWindowInfo().getPageDefinition();
+    protected String buildDialogRoute(Screen screen) {
+        PageDefinition page = getPage(screen);
+        if (page == null) {
+            return null;
+        }
+        if (page.getParent() == null) {
+            return page.getRoute();
+        }
 
+        Screen openedScreen = getCurrentScreen();
+        if (openedScreen.getClass() != page.getParent()) {
+            Notifications.Notification notification = screen.getScreenContext()
+                    .getNotifications()
+                    .create();
 
+            notification.setCaption("Dialog is opened out of its parent bounds");
+            notification.setType(Notifications.NotificationType.WARNING);
+            notification.show();
 
-        return "";
+            return "";
+        }
+
+        return buildScreenRoute(screen) + "/" + page.getRoute();
     }
 
-    protected String buildScreenCompositeState(Screen screen) {
+    protected String buildScreenRoute(Screen screen) {
         Iterator<Window> iterator = ((TabWindowContainer) screen.getWindow()
                 .unwrapComposition(com.vaadin.ui.Component.class)
                 .getParent())
@@ -171,36 +206,35 @@ public class WebNavigation implements Navigation {
         return state.endsWith(commonPart) ? route.substring(slashIdx + 1) : route;
     }
 
-    protected String buildParamsString(Screen screen, Map<String, String> params) {
-        StringBuilder sb = null;
-
+    protected String buildParamsString(Screen screen, Map<String, String> urlParams) {
+        String idParam = "";
         if (screen instanceof EditorScreen) {
             EditorScreen editor = (EditorScreen) screen;
             String base64Id = IdToBase64Converter.serialize(editor.getEditedEntity().getId());
-
-            sb = new StringBuilder("?")
-                    .append("id=")
-                    .append(base64Id);
+            idParam = "id=" + base64Id;
         }
 
-        if (params == null || params.isEmpty()) {
-            return sb == null ? "" : sb.toString();
+        String params = "";
+        if (urlParams != null && !urlParams.isEmpty()) {
+            params = urlParams.entrySet()
+                    .stream()
+                    .map(paramPair -> String.format("%s=%s", paramPair.getKey(), paramPair.getValue()))
+                    .collect(Collectors.joining("&"));
         }
 
-        boolean paramAdded = false;
-        if (sb == null) {
-            sb = new StringBuilder("?");
-        } else {
-            paramAdded = true;
+        if (idParam.isEmpty() && params.isEmpty()) {
+            return "";
         }
 
-        for (Map.Entry<String, String> paramEntry : params.entrySet()) {
-            if (!paramAdded) {
-                paramAdded = true;
-            } else {
-                sb.append('&');
-            }
-            sb.append(String.format("%s=%s", paramEntry.getKey(), paramEntry.getValue()));
+        StringBuilder sb = new StringBuilder("?");
+
+        if (!idParam.isEmpty()) {
+            sb.append(idParam);
+        }
+
+        if (!params.isEmpty()) {
+            sb.append(sb.length() > 1 ? "&" : "")
+                    .append(params);
         }
 
         return sb.toString();
@@ -212,5 +246,40 @@ public class WebNavigation implements Navigation {
 
     protected PageDefinition getPage(Screen screen) {
         return screen.getScreenContext().getWindowInfo().getPageDefinition();
+    }
+
+    // Copied from WebScreens
+    protected Screen getCurrentScreen() {
+        WebAppWorkArea workArea = getConfiguredWorkArea();
+        TabWindowContainer windowContainer;
+        if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
+            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+            windowContainer = (TabWindowContainer) tabSheet.getSelectedTab();
+        } else {
+            windowContainer = (TabWindowContainer) workArea.getSingleWindowContainer().getComponent(0);
+        }
+
+        if (windowContainer == null) {
+            throw new IllegalStateException("Window container is null");
+        }
+
+        WindowBreadCrumbs breadCrumbs = windowContainer.getBreadCrumbs();
+        if (breadCrumbs == null) {
+            throw new IllegalStateException("BreadCrumbs not found");
+        }
+
+        return breadCrumbs.getCurrentWindow().getFrameOwner();
+    }
+
+    // Copied from WebScreens
+    protected WebAppWorkArea getConfiguredWorkArea() {
+        Screen controller = AppUI.getCurrent().getTopLevelWindow().getFrameOwner();
+        if (controller instanceof Window.HasWorkArea) {
+            AppWorkArea workArea = ((Window.HasWorkArea) controller).getWorkArea();
+            if (workArea != null) {
+                return (WebAppWorkArea) workArea;
+            }
+        }
+        throw new IllegalStateException("RootWindow does not have any configured work area");
     }
 }

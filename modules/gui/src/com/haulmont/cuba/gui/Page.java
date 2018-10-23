@@ -43,14 +43,17 @@ import java.lang.annotation.*;
 public @interface Page {
 
     String VALUE_ATTRIBUTE = "value";
-    String PATH_ATTRIBUTE = "path";
+    String ROUTE_ATTRIBUTE = "route";
+    String PARENT_ATTRIBUTE = "parent";
     String PUBLIC_PAGE_ATTRIBUTE = "publicPage";
 
-    @AliasFor(PATH_ATTRIBUTE)
+    @AliasFor(ROUTE_ATTRIBUTE)
     String value() default "";
 
     @AliasFor(VALUE_ATTRIBUTE)
-    String path() default "";
+    String route() default "";
+
+    Class<? extends Screen> parent() default Screen.class;
 
     boolean publicPage() default false;
 }

@@ -17,6 +17,7 @@
 package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.core.global.Events;
+import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
@@ -32,7 +33,6 @@ import com.vaadin.server.Page;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -118,6 +118,22 @@ public class WebNavigation implements Navigation {
     }
 
     protected String buildCompositeState(Screen screen) {
+        if (screen.getWindow() instanceof DialogWindow) {
+            return buildDialogCompositeState(screen);
+        } else {
+            return buildScreenCompositeState(screen);
+        }
+    }
+
+    protected String buildDialogCompositeState(Screen screen) {
+        PageDefinition page = screen.getScreenContext().getWindowInfo().getPageDefinition();
+
+
+
+        return "";
+    }
+
+    protected String buildScreenCompositeState(Screen screen) {
         Iterator<Window> iterator = ((TabWindowContainer) screen.getWindow()
                 .unwrapComposition(com.vaadin.ui.Component.class)
                 .getParent())

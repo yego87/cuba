@@ -16,6 +16,8 @@
 
 package com.haulmont.cuba.gui.sys;
 
+import com.haulmont.cuba.gui.screen.Screen;
+
 public final class UiControllerDefinition {
 
     private static final String UI_CONTROLLER_DEF = "UiControllerDefinition{id='%s', controllerClass='%s'%s}";
@@ -30,10 +32,10 @@ public final class UiControllerDefinition {
         this.pageDefinition = null;
     }
 
-    public UiControllerDefinition(String id, String controllerClass, String path, boolean publicPage) {
+    public UiControllerDefinition(String id, String controllerClass, PageDefinition pageDefinition) {
         this.id = id;
         this.controllerClass = controllerClass;
-        this.pageDefinition = new PageDefinition(path, publicPage);
+        this.pageDefinition = pageDefinition;
     }
 
     public String getId() {
@@ -61,15 +63,21 @@ public final class UiControllerDefinition {
         private static final String PAGE_DEF = "PageDefinition{route='%s', publicPage='%s'}";
 
         private final String route;
+        private final Class<? extends Screen> parent;
         private final boolean publicPage;
 
-        public PageDefinition(String route, boolean publicPage) {
+        public PageDefinition(String route, Class<? extends Screen> parent, boolean publicPage) {
             this.route = route;
+            this.parent = parent;
             this.publicPage = publicPage;
         }
 
         public String getRoute() {
             return route;
+        }
+
+        public Class<? extends Screen> getParent() {
+            return parent;
         }
 
         public boolean isPublicPage() {

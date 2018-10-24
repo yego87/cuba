@@ -135,9 +135,7 @@ public class BulkEditors {
 
         protected String exclude;
         protected List<String> includeProperties = Collections.emptyList();
-        // TODO: gg, replace with no deprecated
         protected Map<String, Field.Validator> fieldValidators;
-        // TODO: gg, replace  no deprecated
         protected List<Field.Validator> modelValidators;
         protected Boolean loadDynamicAttributes;
         protected Boolean useConfirmDialog;
@@ -167,90 +165,181 @@ public class BulkEditors {
             this.handler = handler;
         }
 
+        /**
+         * Sets screen launch mode.
+         *
+         * @param launchMode the launch mode to set
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withLaunchMode(Screens.LaunchMode launchMode) {
             this.launchMode = launchMode;
             return this;
         }
 
+        /**
+         * Sets the list component that displays the items to be edited.
+         *
+         * @param listComponent the list component to be used
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withListComponent(ListComponent<E> listComponent) {
             this.listComponent = listComponent;
             return this;
         }
 
+        /**
+         * Sets a regular expression to exclude some fields explicitly
+         * from the list of attributes available for editing.
+         *
+         * @param exclude a regular expression
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withExclude(String exclude) {
             this.exclude = exclude;
             return this;
         }
 
+        /**
+         * Sets the entity attributes to be included to bulk editor window.
+         * If set, other attributes will be ignored.
+         *
+         * @param includeProperties the entity attributes to be included to bulk editor window
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withIncludeProperties(List<String> includeProperties) {
             this.includeProperties = includeProperties;
             return this;
         }
 
+        /**
+         * Sets a map with validators for fields that will be used for editing certain properties.
+         *
+         * @param fieldValidators a map with validators for fields that will be used for editing certain properties
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withFieldValidators(Map<String, Field.Validator> fieldValidators) {
             this.fieldValidators = fieldValidators;
             return this;
         }
 
+        /**
+         * Sets a map with validators for the result of bulk editing.
+         *
+         * @param modelValidators a map with validators for the result of bulk editing
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withModelValidators(List<Field.Validator> modelValidators) {
             this.modelValidators = modelValidators;
             return this;
         }
 
+        /**
+         * Sets whether or not the dynamic attributes of the edited entity should be displayed on
+         * the entity's bulk editor screen. The default value is true.
+         *
+         * @param loadDynamicAttributes whether or not the dynamic attributes
+         *                              of the edited entity should be displayed
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withLoadDynamicAttributes(Boolean loadDynamicAttributes) {
             this.loadDynamicAttributes = loadDynamicAttributes;
             return this;
         }
 
+        /**
+         * Sets whether or not the confirmation dialog should be displayed to
+         * the user before saving the changes. The default value is true.
+         *
+         * @param useConfirmDialog whether or not the confirmation dialog should be displayed
+         * @return this builder
+         */
         public BulkEditorBuilder<E> withUseConfirmDialog(Boolean useConfirmDialog) {
             this.useConfirmDialog = useConfirmDialog;
             return this;
         }
 
+        /**
+         * @return a {@link FrameOwner} of bulk editor
+         */
         public FrameOwner getOrigin() {
             return origin;
         }
 
+        /**
+         * @return a {@link MetaClass} of items
+         */
         public MetaClass getMetaClass() {
             return metaClass;
         }
 
+        /**
+         * @return a collection of items to be edited
+         */
         public Collection<E> getEntities() {
             return entities;
         }
 
+        /**
+         * @return screen launch mode
+         */
         public Screens.LaunchMode getLaunchMode() {
             return launchMode;
         }
 
+        /**
+         * @return the list component that displays the items to be edited
+         */
         public ListComponent<E> getListComponent() {
             return listComponent;
         }
 
+        /**
+         * @return a regular expression to exclude some fields
+         * explicitly from the list of attributes available for editing
+         */
         public String getExclude() {
             return exclude;
         }
 
+        /**
+         * @return the entity attributes to be included to bulk editor window
+         */
         public List<String> getIncludeProperties() {
             return includeProperties;
         }
 
+        /**
+         * @return a map with validators for fields that will be used for editing certain properties
+         */
         public Map<String, Field.Validator> getFieldValidators() {
             return fieldValidators;
         }
 
+        /**
+         * @return a map with validators for the result of bulk editing
+         */
         public List<Field.Validator> getModelValidators() {
             return modelValidators;
         }
 
+        /**
+         * @return whether or not the dynamic attributes of the edited entity should be displayed on
+         * the entity's bulk editor screen
+         */
         public Boolean isLoadDynamicAttributes() {
             return loadDynamicAttributes;
         }
 
+        /**
+         * @return whether or not the confirmation dialog should be displayed to the user before saving the changes
+         */
         public Boolean isUseConfirmDialog() {
             return useConfirmDialog;
         }
 
+        /**
+         * @return a new instance of {@link BulkEditorWindow}
+         */
         public BulkEditorWindow create() {
             return handler.apply(this);
         }

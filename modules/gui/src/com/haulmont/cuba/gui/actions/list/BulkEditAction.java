@@ -17,10 +17,14 @@
 package com.haulmont.cuba.gui.actions.list;
 
 import com.haulmont.chile.core.model.MetaClass;
+import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.Messages;
+import com.haulmont.cuba.core.global.Security;
 import com.haulmont.cuba.gui.BulkEditors;
 import com.haulmont.cuba.gui.ComponentsHelper;
+import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.components.ActionType;
+import com.haulmont.cuba.gui.components.BulkEditor;
 import com.haulmont.cuba.gui.components.Component;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.data.meta.EntityDataUnit;
@@ -28,6 +32,8 @@ import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
 
 import javax.inject.Inject;
+
+import static com.haulmont.cuba.gui.ComponentsHelper.getScreenContext;
 
 @ActionType(BulkEditAction.ID)
 public class BulkEditAction extends SecuredListAction {
@@ -58,8 +64,36 @@ public class BulkEditAction extends SecuredListAction {
     }
 
     @Inject
+    protected void setSecurity(Security security) {
+        this.security = security;
+
+        boolean permitted = security.isSpecificPermitted(BulkEditor.PERMISSION);
+        setVisible(permitted);
+        setEnabled(permitted);
+    }
+
+    @Inject
     public void setBulkEditors(BulkEditors bulkEditors) {
         this.bulkEditors = bulkEditors;
+    }
+
+    @Override
+    protected boolean isPermitted() {
+        if (target == null || !(target.getItems() instanceof EntityDataUnit)) {
+            return false;
+        }
+
+        MetaClass metaClass = ((EntityDataUnit) target.getItems()).getEntityMetaClass();
+        if (metaClass == null) {
+            return true;
+        }
+
+        boolean permitted = security.isScreenPermitted(BulkEditor.PERMISSION);
+        if (!permitted) {
+            return false;
+        }
+
+        return super.isPermitted();
     }
 
     @SuppressWarnings("unchecked")
@@ -75,6 +109,26 @@ public class BulkEditAction extends SecuredListAction {
             MetaClass metaClass = ((EntityDataUnit) target.getItems()).getEntityMetaClass();
             if (metaClass == null) {
                 throw new IllegalStateException("Target is not bound to entity");
+            }
+
+            if (!security.isSpecificPermitted(BulkEditor.PERMISSION)) {
+                Messages messages = AppBeans.get(Messages.NAME);
+
+                Notifications notifications = getScreenContext(target.getFrame()).getNotifications();
+                notifications.create()
+                        .setCaption(messages.getMainMessage("accessDenied.message"))
+                        .setType(Notifications.NotificationType.ERROR)
+                        .show();
+                return;
+            }
+
+            if (target.getSelected().isEmpty()) {
+                Notifications notifications = getScreenContext(target.getFrame()).getNotifications();
+                notifications.create()
+                        .setCaption(messages.getMainMessage("actions.BulkEdit.emptySelection"))
+                        .setType(Notifications.NotificationType.HUMANIZED)
+                        .show();
+                return;
             }
 
             Window window = ComponentsHelper.getWindowNN(target);

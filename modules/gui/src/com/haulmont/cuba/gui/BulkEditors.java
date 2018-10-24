@@ -45,7 +45,7 @@ import java.util.function.Function;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 
-@Component("cuba_BulkEditor")
+@Component("cuba_BulkEditors")
 public class BulkEditors {
 
     private static final Logger log = LoggerFactory.getLogger(BulkEditors.class);

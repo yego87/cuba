@@ -16,32 +16,39 @@
  */
 package com.haulmont.cuba.web.gui.components;
 
-import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.AppBeans;
+import com.haulmont.cuba.core.global.MetadataTools;
+import com.haulmont.cuba.gui.components.CaptionMode;
 import com.haulmont.cuba.gui.components.TwinColumn;
 import com.haulmont.cuba.gui.components.data.Options;
+import com.haulmont.cuba.gui.components.data.meta.EntityValueSource;
+import com.haulmont.cuba.gui.components.data.meta.OptionsBinding;
+import com.haulmont.cuba.gui.components.data.options.OptionsBinder;
 import com.haulmont.cuba.gui.data.Datasource;
-import com.haulmont.cuba.web.gui.components.converters.ObjectToObjectConverter;
-import com.haulmont.cuba.web.gui.data.PropertyWrapper;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaTwinColSelect;
-import com.vaadin.server.Resource;
-import com.vaadin.v7.data.Property;
-import com.vaadin.v7.data.util.converter.Converter;
-import com.vaadin.v7.ui.AbstractSelect;
 
+import javax.inject.Inject;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
-public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSelect, V, I> implements TwinColumn<V, I> {
+public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, Set<V>, V>
+        implements TwinColumn<V> {
 
     protected StyleProvider styleProvider;
+    protected OptionsBinding<V> optionsBinding;
+    protected Function<? super V, String> optionCaptionProvider;
+
+    protected MetadataTools metadataTools;
 
     protected IconResolver iconResolver = AppBeans.get(IconResolver.class);
 
     public WebTwinColumn() {
-        component = new CubaTwinColSelect() {
+        component = createComponent();
+        component.setItemCaptionGenerator(this::generateItemCaption);
+        /*{
             @Override
             public void setPropertyDataSource(Property newDataSource) {
                 super.setPropertyDataSource(new PropertyAdapter(newDataSource) {
@@ -71,37 +78,73 @@ public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSele
                     return null;
                 }
             }
-        };
-        attachListener(component);
-        component.setItemCaptionMode(AbstractSelect.ItemCaptionMode.ITEM);
-        component.setMultiSelect(true);
-        component.setInvalidAllowed(false);
-        component.setInvalidCommitted(true);
+        };*/
+    }
+
+    protected CubaTwinColSelect<V> createComponent() {
+        return new CubaTwinColSelect<>();
+    }
+
+    @Inject
+    protected void setMetadataTools(MetadataTools metadataTools) {
+        this.metadataTools = metadataTools;
     }
 
     @Override
-    public void setOptions(Options<I> options) {
-        // todo
+    public void setOptions(Options<V> options) {
+        if (this.optionsBinding != null) {
+            this.optionsBinding.unbind();
+            this.optionsBinding = null;
+        }
+
+        if (options != null) {
+            OptionsBinder optionsBinder = beanLocator.get(OptionsBinder.NAME);
+            this.optionsBinding = optionsBinder.bind(options, this, this::setItemsToPresentation);
+            this.optionsBinding.activate();
+        }
+    }
+
+    protected void setItemsToPresentation(Stream<V> options) {
+        component.setItems(options);
     }
 
     @Override
-    public Options<I> getOptions() {
-        // todo
-        return null;
+    public Options<V> getOptions() {
+        return optionsBinding != null ? optionsBinding.getSource() : null;
     }
 
     @Override
-    public void setOptionCaptionProvider(Function<? super I, String> captionProvider) {
-        // todo
+    public void setOptionCaptionProvider(Function<? super V, String> captionProvider) {
+        this.optionCaptionProvider = captionProvider;
+    }
+
+    protected String generateDefaultItemCaption(V item) {
+        if (valueBinding != null && valueBinding.getSource() instanceof EntityValueSource) {
+            EntityValueSource entityValueSource = (EntityValueSource) valueBinding.getSource();
+            return metadataTools.format(item, entityValueSource.getMetaPropertyPath().getMetaProperty());
+        }
+
+        return metadataTools.format(item);
+    }
+
+    protected String generateItemCaption(V item) {
+        if (item == null) {
+            return null;
+        }
+
+        if (optionCaptionProvider != null) {
+            return optionCaptionProvider.apply(item);
+        }
+
+        return generateDefaultItemCaption(item);
     }
 
     @Override
-    public Function<? super I, String> getOptionCaptionProvider() {
-        // todo
-        return null;
+    public Function<? super V, String> getOptionCaptionProvider() {
+        return optionCaptionProvider;
     }
 
-    public static class CollectionPropertyWrapper extends PropertyWrapper {
+    /*public static class CollectionPropertyWrapper extends PropertyWrapper {
 
         public CollectionPropertyWrapper(Object item, MetaPropertyPath propertyPath) {
             super(item, propertyPath);
@@ -152,16 +195,17 @@ public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSele
         public Class getType() {
             return Object.class;
         }
-    }
+    }*/
 
     @Override
     public V getValue() {
-        if (optionsDatasource != null) {
-            final Object key = super.getValue();
-            return getValueFromKey(key);
-        } else {
-            return wrapAsCollection(super.getValue());
-        }
+        return super.getValue();
+//        if (optionsDatasource != null) {
+//            final Object key = super.getValue();
+//            return getValueFromKey(key);
+//        } else {
+//            return wrapAsCollection(super.getValue());
+//        }
     }
 
     @Override
@@ -171,12 +215,13 @@ public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSele
 
     @Override
     public int getColumns() {
-        return component.getColumns();
+        // doesn't support cause of Vaadin 8
+        return 0;
     }
 
     @Override
     public void setColumns(int columns) {
-        component.setColumns(columns);
+        // doesn't support cause of Vaadin 8
     }
 
     @Override
@@ -192,17 +237,17 @@ public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSele
     @Override
     public void setDatasource(Datasource datasource, String property) {
         super.setDatasource(datasource, property);
-        component.setConverter(new ObjectToObjectConverter());
+//        component.setConverter(new ObjectToObjectConverter());
     }
 
     @Override
     public void setStyleProvider(final StyleProvider styleProvider) {
         this.styleProvider = styleProvider;
         if (styleProvider != null) {
-            component.setStyleGenerator((source, itemId, selected) -> {
-                final Entity item = optionsDatasource.getItem(itemId);
-                return styleProvider.getStyleName(item, itemId, component.isSelected(itemId));
-            });
+//            component.setStyleGenerator((source, itemId, selected) -> {
+//                final Entity item = optionsDatasource.getItem(itemId);
+//                return styleProvider.getStyleName(item, itemId, component.isSelected(itemId));
+//            });
         } else {
             component.setStyleGenerator(null);
         }
@@ -238,7 +283,29 @@ public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSele
         return component.getRightColumnCaption();
     }
 
-    protected <T> T getValueFromKey(Object key) {
+    @Override
+    public CaptionMode getCaptionMode() {
+        // doesn't support cause of Vaadin 8
+        return null;
+    }
+
+    @Override
+    public void setCaptionMode(CaptionMode captionMode) {
+        // doesn't support cause of Vaadin 8
+    }
+
+    @Override
+    public String getCaptionProperty() {
+        // doesn't support cause of Vaadin 8
+        return null;
+    }
+
+    @Override
+    public void setCaptionProperty(String captionProperty) {
+        // doesn't support cause of Vaadin 8
+    }
+
+/*    protected <T> T getValueFromKey(Object key) {
         if (key instanceof Collection) {
             final Set<Object> set = new LinkedHashSet<>();
             for (Object o : (Collection) key) {
@@ -263,6 +330,7 @@ public class WebTwinColumn<V, I> extends WebAbstractOptionsField<CubaTwinColSele
         }
         return t;
     }
+    */
 
     protected Object getKeyFromValue(Object value) {
         if (value == null) {

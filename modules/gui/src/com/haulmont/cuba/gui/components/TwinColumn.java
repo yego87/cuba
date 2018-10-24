@@ -18,11 +18,19 @@ package com.haulmont.cuba.gui.components;
 
 import com.haulmont.cuba.core.entity.Entity;
 
-public interface TwinColumn<V, I> extends OptionsField<V, I> {
+public interface TwinColumn<V> extends OptionsField<V, V> {
 
     String NAME = "twinColumn";
 
+    /**
+     * @deprecated use {@link #setWidth(String)} instead
+     */
+    @Deprecated
     int getColumns();
+    /**
+     * @deprecated use {@link #getWidth()} instead
+     */
+    @Deprecated
     void setColumns(int columns);
 
     int getRows();

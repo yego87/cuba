@@ -25,7 +25,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.ListBox;
 import com.vaadin.client.UIDL;
 import com.vaadin.client.ui.VButton;
-import com.vaadin.v7.client.ui.VTwinColSelect;
+import com.vaadin.client.ui.VTwinColSelect;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -43,67 +43,67 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
     protected HandlerRegistration removeAllHandlerRegistration;
 
     public CubaTwinColSelectWidget() {
-        add.setText(">");
-        add.addStyleName("add");
-        remove.setText("<");
-        remove.addStyleName("remove");
+//        add.setText(">");
+//        add.addStyleName("add");
+//        remove.setText("<");
+//        remove.addStyleName("remove");
     }
 
-    @Override
+//    @Override
     protected DoubleClickListBox createOptionsBox() {
         return new CubaDoubleClickListBox();
     }
 
-    @Override
+//    @Override
     protected DoubleClickListBox createSelectionsBox() {
         return new CubaDoubleClickListBox();
     }
 
-    @Override
-    public void buildOptions(UIDL uidl) {
-        options.setMultipleSelect(isMultiselect());
-        selections.setMultipleSelect(isMultiselect());
-
-        int optionsSelectedIndex = options.getSelectedIndex();
-        int selectionsSelectedIndex = selections.getSelectedIndex();
-        options.clear();
-        selections.clear();
-
-        int selectedOptions = 0;
-        int availableOptions = 0;
-
-        for (Object anUidl : uidl) {
-            UIDL optionUidl = (UIDL) anUidl;
-
-            if (optionUidl.hasAttribute("selected")) {
-                selections.addItem(optionUidl.getStringAttribute("caption"),
-                        optionUidl.getStringAttribute("key"));
-                if (optionUidl.hasAttribute("style")) {
-                    CubaDoubleClickListBox cubaSelections = (CubaDoubleClickListBox) selections;
-                    cubaSelections.setOptionClassName(selectedOptions, optionUidl.getStringAttribute("style"));
-
-                }
-                selectedOptions++;
-            } else {
-                options.addItem(optionUidl.getStringAttribute("caption"),
-                        optionUidl.getStringAttribute("key"));
-                if (optionUidl.hasAttribute("style")) {
-                    CubaDoubleClickListBox cubaOptions = (CubaDoubleClickListBox) options;
-                    cubaOptions.setOptionClassName(availableOptions, optionUidl.getStringAttribute("style"));
-
-                }
-                availableOptions++;
-            }
-        }
-
-        if (getRows() > 0) {
-            options.setVisibleItemCount(getRows());
-            selections.setVisibleItemCount(getRows());
-        }
-
-        setSelectedIndex(options, optionsSelectedIndex);
-        setSelectedIndex(selections, selectionsSelectedIndex);
-    }
+//    @Override
+//    public void buildOptions(UIDL uidl) {
+//        options.setMultipleSelect(isMultiselect());
+//        selections.setMultipleSelect(isMultiselect());
+//
+//        int optionsSelectedIndex = options.getSelectedIndex();
+//        int selectionsSelectedIndex = selections.getSelectedIndex();
+//        options.clear();
+//        selections.clear();
+//
+//        int selectedOptions = 0;
+//        int availableOptions = 0;
+//
+//        for (Object anUidl : uidl) {
+//            UIDL optionUidl = (UIDL) anUidl;
+//
+//            if (optionUidl.hasAttribute("selected")) {
+//                selections.addItem(optionUidl.getStringAttribute("caption"),
+//                        optionUidl.getStringAttribute("key"));
+//                if (optionUidl.hasAttribute("style")) {
+//                    CubaDoubleClickListBox cubaSelections = (CubaDoubleClickListBox) selections;
+//                    cubaSelections.setOptionClassName(selectedOptions, optionUidl.getStringAttribute("style"));
+//
+//                }
+//                selectedOptions++;
+//            } else {
+//                options.addItem(optionUidl.getStringAttribute("caption"),
+//                        optionUidl.getStringAttribute("key"));
+//                if (optionUidl.hasAttribute("style")) {
+//                    CubaDoubleClickListBox cubaOptions = (CubaDoubleClickListBox) options;
+//                    cubaOptions.setOptionClassName(availableOptions, optionUidl.getStringAttribute("style"));
+//
+//                }
+//                availableOptions++;
+//            }
+//        }
+//
+//        if (getRows() > 0) {
+//            options.setVisibleItemCount(getRows());
+//            selections.setVisibleItemCount(getRows());
+//        }
+//
+//        setSelectedIndex(options, optionsSelectedIndex);
+//        setSelectedIndex(selections, selectionsSelectedIndex);
+//    }
 
     protected void setSelectedIndex(ListBox listBox, int index) {
         if (listBox.getItemCount() > 0 && index >= 0) {
@@ -142,20 +142,20 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
     }
 
     protected void addAll() {
-        Set<String> movedItems = moveAllItems(options, selections);
-        selectedKeys.addAll(movedItems);
-
-        client.updateVariable(paintableId, "selected",
-                selectedKeys.toArray(new String[selectedKeys.size()]),
-                isImmediate());
+//        Set<String> movedItems = moveAllItems(options, selections);
+//        selectedKeys.addAll(movedItems);
+//
+//        client.updateVariable(paintableId, "selected",
+//                selectedKeys.toArray(new String[selectedKeys.size()]),
+//                isImmediate());
     }
 
     protected void removeAll() {
-        moveAllItems(selections, options);
-        selectedKeys.clear();
-        client.updateVariable(paintableId, "selected",
-                selectedKeys.toArray(new String[selectedKeys.size()]),
-                isImmediate());
+//        moveAllItems(selections, options);
+//        selectedKeys.clear();
+//        client.updateVariable(paintableId, "selected",
+//                selectedKeys.toArray(new String[selectedKeys.size()]),
+//                isImmediate());
     }
 
     public boolean isAddAllBtnEnabled() {
@@ -176,23 +176,23 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
     protected void enableAddAllBtn() {
         HTML br1 = new HTML("<span/>");
         br1.setStyleName(CLASSNAME + "-deco");
-        buttons.add(br1);
-        buttons.insert(br1, buttons.getWidgetIndex(add) + 1);
+//        buttons.add(br1);
+//        buttons.insert(br1, buttons.getWidgetIndex(add) + 1);
         addAll = new VButton();
         addAll.setText(">>");
         addAll.addStyleName("addAll");
         addAllHandlerRegistration = addAll.addClickHandler(this);
-        buttons.insert(addAll, buttons.getWidgetIndex(br1) + 1);
+//        buttons.insert(addAll, buttons.getWidgetIndex(br1) + 1);
 
         HTML br2 = new HTML("<span/>");
         br2.setStyleName(CLASSNAME + "-deco");
-        buttons.add(br2);
+//        buttons.add(br2);
 
         removeAll = new VButton();
         removeAll.setText("<<");
         removeAll.addStyleName("removeAll");
         removeAllHandlerRegistration = removeAll.addClickHandler(this);
-        buttons.add(removeAll);
+//        buttons.add(removeAll);
     }
 
     protected void disableAddAllBtn() {
@@ -207,10 +207,10 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
 
     public class CubaDoubleClickListBox extends DoubleClickListBox {
         public void setOptionClassName(int optionIndex, String className) {
-            assert optionIndex >= 0 && options.getItemCount() > optionIndex;
-            SelectElement select = getElement().cast();
-            Element elem = select.getOptions().getItem(optionIndex);
-            elem.addClassName(className);
+//            assert optionIndex >= 0 && options.getItemCount() > optionIndex;
+//            SelectElement select = getElement().cast();
+//            Element elem = select.getOptions().getItem(optionIndex);
+//            elem.addClassName(className);
         }
     }
 }

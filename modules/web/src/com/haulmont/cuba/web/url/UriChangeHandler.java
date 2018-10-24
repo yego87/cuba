@@ -93,86 +93,130 @@ public class UriChangeHandler {
 
     @SuppressWarnings("unused")
     public void handleUriChange(String uri) {
-        UriState state = navigation.getState();
+        UriState uriState = navigation.getState();
 
-        if (historyNavigation(state)) {
-            handleHistoryNavigation(state);
+        if (historyNavigation(uriState)) {
+            handleHistoryNavigation(uriState);
         } else {
-            handleScreenNavigation(state);
+            handleScreenNavigation(uriState);
         }
     }
 
-    protected boolean historyNavigation(UriState state) {
-        return history.searchBackward(state) || history.searchForward(state);
+    protected boolean historyNavigation(UriState uriState) {
+        return history.searchBackward(uriState) || history.searchForward(uriState);
     }
 
-    protected void handleHistoryNavigation(UriState state) {
-        if (history.searchForward(state)) {
-            Page.getCurrent().replaceState("#!" + history.now().toString());
-
-            Notifications.Notification notification = notifications.create();
-            notification.setCaption("Unable to go to future");
-            notification.setType(Notifications.NotificationType.HUMANIZED);
-            notification.show();
-
+    protected void handleHistoryNavigation(UriState uriState) {
+        if (handleHistoryForward(uriState)) {
             return;
         }
 
-        if (history.searchBackward(state) && !state.equals(history.lookBackward())) {
-            reloadApp();
+        if (handleHistoryJumpBack(uriState)) {
             return;
         }
 
-        if (state.equals(history.lookBackward())) {
-            handleHistoryBackward();
+        if (!uriState.equals(history.lookBackward())) {
+            throw new RuntimeException("Unable to handle history navigation");
         }
+
+        handleHistoryBackward();
+    }
+
+    protected boolean handleHistoryForward(UriState uriState) {
+        if (history.searchForward(uriState)) {
+            Page.getCurrent().replaceState("#!" + history.now());
+
+            notifications.create()
+                    .setCaption("Unable to go to future")
+                    .setType(Notifications.NotificationType.HUMANIZED)
+                    .show();
+
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean handleHistoryJumpBack(UriState uriState) {
+        if (history.searchBackward(uriState) && !uriState.equals(history.lookBackward())) {
+            AppUI ui = AppUI.getCurrent();
+            if (ui != null) {
+                String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
+                ui.getPage().open(url, "_self");
+            }
+            // TODO: else?
+            return true;
+        }
+        return false;
     }
 
     protected void handleHistoryBackward() {
-        Window window = findCurrentWindow();
-        if (window == null) {
-            // TODO: handle correctly (copy-pasted link, etc)
-            throw new IllegalStateException("Unable to find window corresponding to state: " + history.now());
+        Window lastOpenedWindow = findWindowByHistory(history.now());
+        if (lastOpenedWindow != null) {
+            lastOpenedWindow.getFrameOwner()
+                    .close(FrameOwner.WINDOW_CLOSE_ACTION)
+                    .then(this::proceedHistoryBackward)
+                    .otherwise(this::revertHistoryBackward);
+        } else {
+            proceedHistoryBackward();
         }
-
-        window.getFrameOwner().close(FrameOwner.WINDOW_CLOSE_ACTION)
-                .then(() -> history.backward())
-                .otherwise(() -> {
-                    // TODO: squash history?
-                    Page.getCurrent().replaceState("#!" + history.now());
-                });
     }
 
-    protected Window findCurrentWindow() {
+    protected void proceedHistoryBackward() {
+        UriState prevState = history.backward();
+
+        Window prevWindow = findWindowByHistory(prevState);
+        if (prevWindow != null) {
+            selectWindow(prevWindow);
+        }
+
+        Page.getCurrent().replaceState("#!" + prevState);
+    }
+
+    protected void selectWindow(Window window) {
         WebAppWorkArea workArea = getConfiguredWorkArea();
+        if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
+            TabWindowContainer windowContainer = (TabWindowContainer) window.unwrapComposition(com.vaadin.ui.Component.class)
+                    .getParent();
+
+            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+            tabSheet.setSelectedTab(tabSheet.getTab(windowContainer));
+        }
+    }
+
+    protected void revertHistoryBackward() {
+        Page.getCurrent().replaceState("#!" + history.now());
+    }
+
+    protected Window findWindowByHistory(UriState uriState) {
+        WebAppWorkArea workArea = getConfiguredWorkArea();
+        String stateMark = uriState.getStateMark();
 
         if (workArea.getMode() == AppWorkArea.Mode.SINGLE) {
-            return ((TabWindowContainer) workArea.getSingleWindowContainer()
+            Window window = ((TabWindowContainer) workArea.getSingleWindowContainer()
                     .getComponent(0))
                     .getBreadCrumbs()
                     .getCurrentWindow();
-        } else {
-            String stateMark = history.now().getStateMark();
 
+            return stateMark.equals(getWindowStateMark(window)) ?
+                    window : null;
+        } else {
             TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
             for (int i = 0; i < tabSheet.getComponentCount(); i++) {
-                TabWindowContainer windowContainer = (TabWindowContainer) tabSheet.getTabComponent(tabSheet.getTab(i));
-                Window window = windowContainer.getBreadCrumbs().getCurrentWindow();
-                if (String.valueOf(((WebWindow) window).getStateMark()).equals(stateMark)) {
+                String tabId = tabSheet.getTab(i);
+                Window window = ((TabWindowContainer) tabSheet.getTabComponent(tabId))
+                        .getBreadCrumbs()
+                        .getCurrentWindow();
+
+                if (stateMark.equals(getWindowStateMark(window))) {
                     return window;
                 }
             }
         }
-
         return null;
     }
 
-    protected void reloadApp() {
-        String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
-        AppUI ui = AppUI.getCurrent();
-        if (ui != null) {
-            ui.getPage().open(url, "_self");
-        }
+    protected String getWindowStateMark(Window window) {
+        return String.valueOf(((WebWindow) window).getStateMark());
     }
 
     protected void handleScreenNavigation(UriState state) {

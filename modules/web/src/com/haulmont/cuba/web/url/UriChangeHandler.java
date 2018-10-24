@@ -91,6 +91,13 @@ public class UriChangeHandler {
     @Inject
     protected Notifications notifications;
 
+    @Order(Events.LOWEST_PLATFORM_PRECEDENCE)
+    @EventListener
+    @SuppressWarnings("unused")
+    protected void handleUriStateChanged(UriStateChangedEvent event) {
+        // TODO: handle?
+    }
+
     @SuppressWarnings("unused")
     public void handleUriChange(String uri) {
         UriState uriState = navigation.getState();
@@ -107,52 +114,47 @@ public class UriChangeHandler {
     }
 
     protected void handleHistoryNavigation(UriState uriState) {
-        if (handleHistoryForward(uriState)) {
+        if (jumpOverHistory(uriState)) {
+            reloadApp();
             return;
         }
 
-        if (handleHistoryJumpBack(uriState)) {
-            return;
-        }
+        boolean backward = uriState.equals(history.lookBackward());
+        boolean forward = uriState.equals(history.lookForward());
 
-        if (!uriState.equals(history.lookBackward())) {
+        if (!backward && !forward) {
             throw new RuntimeException("Unable to handle history navigation");
         }
 
-        handleHistoryBackward();
-    }
-
-    protected boolean handleHistoryForward(UriState uriState) {
-        if (history.searchForward(uriState)) {
-            Page.getCurrent().replaceState("#!" + history.now());
-
-            notifications.create()
-                    .setCaption("Unable to go to future")
-                    .setType(Notifications.NotificationType.HUMANIZED)
-                    .show();
-
-            return true;
+        if (backward) {
+            handleHistoryBackward();
+        } else {
+            handleHistoryForward();
         }
-        return false;
     }
 
-    protected boolean handleHistoryJumpBack(UriState uriState) {
+    protected boolean jumpOverHistory(UriState uriState) {
         if (history.searchBackward(uriState) && !uriState.equals(history.lookBackward())) {
-            AppUI ui = AppUI.getCurrent();
-            if (ui != null) {
-                String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
-                ui.getPage().open(url, "_self");
-            }
-            // TODO: else?
+            return true;
+        }
+        if (history.searchForward(uriState) && !uriState.equals(history.lookForward())) {
             return true;
         }
         return false;
+    }
+
+    protected void reloadApp() {
+        AppUI ui = AppUI.getCurrent();
+        if (ui != null) {
+            String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
+            ui.getPage().open(url, "_self");
+        }
     }
 
     protected void handleHistoryBackward() {
-        Window lastOpenedWindow = findWindowByHistory(history.now());
-        if (lastOpenedWindow != null) {
-            lastOpenedWindow.getFrameOwner()
+        Window nowWindow = findWindowByHistory(history.now());
+        if (nowWindow != null) {
+            nowWindow.getFrameOwner()
                     .close(FrameOwner.WINDOW_CLOSE_ACTION)
                     .then(this::proceedHistoryBackward)
                     .otherwise(this::revertHistoryBackward);
@@ -169,7 +171,34 @@ public class UriChangeHandler {
             selectWindow(prevWindow);
         }
 
-        Page.getCurrent().replaceState("#!" + prevState);
+        String state;
+        if (prevState.getNestedRoute() != null && !prevState.getNestedRoute().isEmpty()) {
+            state = prevState.toString();
+        } else {
+            state = AppUI.getCurrent().getTopLevelWindow().getFrameOwner()
+                    .getScreenContext().getWindowInfo().getPageDefinition()
+                    .getRoute();
+        }
+
+        Page.getCurrent().replaceState("#!" + state);
+    }
+
+    protected void handleHistoryForward() {
+        Window window = findWindowByHistory(history.now());
+        if (window == null) {
+            return;
+        }
+
+        String route = window.getFrameOwner()
+                .getScreenContext()
+                .getNavigationInfo()
+                .getResolvedRoute();
+        Page.getCurrent().replaceState("#!" + route);
+
+        notifications.create()
+                .setCaption("Unable to navigate forward through history")
+                .setType(Notifications.NotificationType.HUMANIZED)
+                .show();
     }
 
     protected void selectWindow(Window window) {
@@ -179,12 +208,21 @@ public class UriChangeHandler {
                     .getParent();
 
             TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
-            tabSheet.setSelectedTab(tabSheet.getTab(windowContainer));
+            String tabId = tabSheet.getTab(windowContainer);
+            if (tabId == null || tabId.isEmpty()) {
+                throw new IllegalStateException("Unable to find tab");
+            }
+
+            tabSheet.setSelectedTab(tabId);
         }
     }
 
     protected void revertHistoryBackward() {
-        Page.getCurrent().replaceState("#!" + history.now());
+        String route = findWindowByHistory(history.now()).getFrameOwner()
+                .getScreenContext()
+                .getNavigationInfo()
+                .getResolvedRoute();
+        Page.getCurrent().replaceState("#!" + route);
     }
 
     protected Window findWindowByHistory(UriState uriState) {
@@ -366,11 +404,5 @@ public class UriChangeHandler {
 
     protected void handleParamsChange(UriState state) {
         // TODO: invoke urlParamsChanged screen hook
-    }
-
-    @Order(Events.LOWEST_PLATFORM_PRECEDENCE)
-    @EventListener
-    protected void handleUriStateChanged(UriStateChangedEvent event) {
-        // TODO: handle?
     }
 }

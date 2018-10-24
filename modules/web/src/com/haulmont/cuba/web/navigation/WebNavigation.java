@@ -78,6 +78,9 @@ public class WebNavigation implements Navigation {
             throw new RuntimeException("New nav state is null");
         }
 
+        screen.getScreenContext().getNavigationInfo()
+                .update(navState, uriParams);
+
         Page.getCurrent().setUriFragment("!" + navState, false);
 
         history.push(getState());
@@ -96,6 +99,9 @@ public class WebNavigation implements Navigation {
             // TODO: check and remove
             throw new RuntimeException("New nav state is null");
         }
+
+        screen.getScreenContext().getNavigationInfo()
+                .update(navState, uriParams);
 
         Page.getCurrent().replaceState(SHEBANG + navState);
 

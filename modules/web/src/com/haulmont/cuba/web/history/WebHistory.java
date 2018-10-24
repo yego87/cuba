@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 @Component(History.NAME)
 @Scope(VaadinSessionScope.NAME)
@@ -52,25 +53,28 @@ public class WebHistory implements History {
         if (now < 0) {
             throw new IllegalStateException("There's no history");
         }
-        return history.get(now);
+        UriState uriState = history.get(now);
+        if (uriState == null) {
+            throw new IllegalStateException("History is broken");
+        }
+
+        return uriState;
     }
 
     @Override
     public UriState lookBackward() {
-        return (now - 1) >= 0 ?
-                history.get(now - 1) : null;
+        return (now - 1) >= 0 ? history.get(now - 1) : null;
     }
 
     @Override
     public UriState lookForward() {
-        return (now + 1) < history.size() ?
-                history.get(now + 1) : null;
+        return (now + 1) < history.size() ? history.get(now + 1) : null;
     }
 
     @Override
     public boolean searchBackward(UriState uriState) {
-        for (int i = now; i >= 0; i--) {
-            if (history.get(i).equals(uriState)) {
+        for (int i = now - 1; i >= 0; i--) {
+            if (Objects.equals(history.get(i), uriState)) {
                 return true;
             }
         }
@@ -79,8 +83,8 @@ public class WebHistory implements History {
 
     @Override
     public boolean searchForward(UriState uriState) {
-        for (int i = now; i < history.size(); i++) {
-            if (history.get(i).equals(uriState)) {
+        for (int i = now + 1; i < history.size(); i++) {
+            if (Objects.equals(history.get(i), uriState)) {
                 return true;
             }
         }
@@ -95,7 +99,7 @@ public class WebHistory implements History {
 
     protected void checkIfCanGoBackward() {
         if (now - 1 < 0) {
-            throw new IllegalStateException("There is no \"past\" entries in history.");
+            throw new IllegalStateException("There is no past entries in history.");
         }
     }
 }

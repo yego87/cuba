@@ -20,6 +20,7 @@ import com.haulmont.cuba.gui.Dialogs;
 import com.haulmont.cuba.gui.Fragments;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
+import com.haulmont.cuba.gui.config.NavigationInfo;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.screen.ScreenContext;
 import com.haulmont.cuba.gui.screen.ScreenOptions;
@@ -28,6 +29,7 @@ public class ScreenContextImpl implements ScreenContext {
 
     protected final ScreenOptions options;
     protected final WindowInfo windowInfo;
+    protected final NavigationInfo navigationInfo;
 
     protected final Screens screens;
     protected final Dialogs dialogs;
@@ -37,6 +39,7 @@ public class ScreenContextImpl implements ScreenContext {
     public ScreenContextImpl(WindowInfo windowInfo, ScreenOptions options,
                              Screens screens, Dialogs dialogs, Notifications notifications, Fragments fragments) {
         this.windowInfo = windowInfo;
+        this.navigationInfo = new NavigationInfo();
         this.options = options;
 
         this.screens = screens;
@@ -53,6 +56,11 @@ public class ScreenContextImpl implements ScreenContext {
     @Override
     public WindowInfo getWindowInfo() {
         return windowInfo;
+    }
+
+    @Override
+    public NavigationInfo getNavigationInfo() {
+        return navigationInfo;
     }
 
     @Override

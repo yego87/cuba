@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.screen;
+package com.haulmont.cuba.gui.config;
 
-import com.haulmont.cuba.gui.Dialogs;
-import com.haulmont.cuba.gui.Fragments;
-import com.haulmont.cuba.gui.Notifications;
-import com.haulmont.cuba.gui.Screens;
-import com.haulmont.cuba.gui.config.NavigationInfo;
-import com.haulmont.cuba.gui.config.WindowInfo;
+import java.util.Map;
 
-public interface ScreenContext {
+public class NavigationInfo {
 
-    ScreenOptions getScreenOptions();
+    protected String resolvedRoute;
+    protected Map<String, String> uriParams;
 
-    WindowInfo getWindowInfo();
+    public void update(String resolvedRoute, Map<String, String> uriParams) {
+        this.resolvedRoute = resolvedRoute;
+        this.uriParams = uriParams;
+    }
 
-    NavigationInfo getNavigationInfo();
+    public String getResolvedRoute() {
+        return resolvedRoute;
+    }
 
-    Screens getScreens();
-
-    Dialogs getDialogs();
-
-    Notifications getNotifications();
-
-    Fragments getFragments();
+    public Map<String, String> getUriParams() {
+        return uriParams;
+    }
 }

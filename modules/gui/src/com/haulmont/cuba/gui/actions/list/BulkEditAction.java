@@ -67,9 +67,10 @@ public class BulkEditAction extends SecuredListAction {
     protected void setSecurity(Security security) {
         this.security = security;
 
-        boolean permitted = security.isSpecificPermitted(BulkEditor.PERMISSION);
-        setVisible(permitted);
-        setEnabled(permitted);
+        if (!security.isSpecificPermitted(BulkEditor.PERMISSION)) {
+            setVisible(false);
+            setEnabled(false);
+        }
     }
 
     @Inject
@@ -102,7 +103,7 @@ public class BulkEditAction extends SecuredListAction {
         // if standard behaviour
         if (!hasSubscriptions(ActionPerformedEvent.class)) {
             if (!(target.getItems() instanceof EntityDataUnit)) {
-                throw new IllegalStateException("BulkEditAction target dataSource is null " +
+                throw new IllegalStateException("BulkEditAction target Items is null " +
                         "or does not implement EntityDataUnit");
             }
 
@@ -112,8 +113,6 @@ public class BulkEditAction extends SecuredListAction {
             }
 
             if (!security.isSpecificPermitted(BulkEditor.PERMISSION)) {
-                Messages messages = AppBeans.get(Messages.NAME);
-
                 Notifications notifications = getScreenContext(target.getFrame()).getNotifications();
                 notifications.create()
                         .setCaption(messages.getMainMessage("accessDenied.message"))

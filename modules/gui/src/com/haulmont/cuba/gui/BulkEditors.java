@@ -53,16 +53,16 @@ public class BulkEditors {
     @Inject
     protected WindowConfig windowConfig;
 
-    public <E extends Entity> BulkEditorBuilder<E> builder(MetaClass metaClass,
-                                                           Collection<E> entities, FrameOwner origin) {
+    public <E extends Entity> EditorBuilder<E> builder(MetaClass metaClass,
+                                                       Collection<E> entities, FrameOwner origin) {
         checkNotNullArgument(metaClass);
         checkNotNullArgument(entities);
         checkNotNullArgument(origin);
 
-        return new BulkEditorBuilder<>(metaClass, entities, origin, this::buildBulkEditor);
+        return new EditorBuilder<>(metaClass, entities, origin, this::buildEditor);
     }
 
-    protected <E extends Entity> BulkEditorWindow buildBulkEditor(BulkEditorBuilder<E> builder) {
+    protected <E extends Entity> BulkEditorWindow buildEditor(EditorBuilder<E> builder) {
         FrameOwner origin = builder.getOrigin();
         Screens screens = origin.getScreenContext().getScreens();
 
@@ -123,12 +123,12 @@ public class BulkEditors {
                 && ((StandardCloseAction) closeAction).getActionId().equals(Window.COMMIT_ACTION_ID);
     }
 
-    public static class BulkEditorBuilder<E extends Entity> {
+    public static class EditorBuilder<E extends Entity> {
 
         protected final MetaClass metaClass;
         protected final FrameOwner origin;
         protected final Collection<E> entities;
-        protected final Function<BulkEditorBuilder<E>, BulkEditorWindow> handler;
+        protected final Function<EditorBuilder<E>, BulkEditorWindow> handler;
 
         protected Screens.LaunchMode launchMode = OpenMode.DIALOG;
         protected ListComponent<E> listComponent;
@@ -140,7 +140,7 @@ public class BulkEditors {
         protected Boolean loadDynamicAttributes;
         protected Boolean useConfirmDialog;
 
-        public BulkEditorBuilder(BulkEditorBuilder<E> builder) {
+        public EditorBuilder(EditorBuilder<E> builder) {
             this.metaClass = builder.metaClass;
             this.origin = builder.origin;
             this.handler = builder.handler;
@@ -157,8 +157,8 @@ public class BulkEditors {
             this.useConfirmDialog = builder.useConfirmDialog;
         }
 
-        public BulkEditorBuilder(MetaClass metaClass, Collection<E> entities, FrameOwner origin,
-                                 Function<BulkEditorBuilder<E>, BulkEditorWindow> handler) {
+        public EditorBuilder(MetaClass metaClass, Collection<E> entities, FrameOwner origin,
+                             Function<EditorBuilder<E>, BulkEditorWindow> handler) {
             this.metaClass = metaClass;
             this.entities = entities;
             this.origin = origin;
@@ -171,7 +171,7 @@ public class BulkEditors {
          * @param launchMode the launch mode to set
          * @return this builder
          */
-        public BulkEditorBuilder<E> withLaunchMode(Screens.LaunchMode launchMode) {
+        public EditorBuilder<E> withLaunchMode(Screens.LaunchMode launchMode) {
             this.launchMode = launchMode;
             return this;
         }
@@ -182,7 +182,7 @@ public class BulkEditors {
          * @param listComponent the list component to be used
          * @return this builder
          */
-        public BulkEditorBuilder<E> withListComponent(ListComponent<E> listComponent) {
+        public EditorBuilder<E> withListComponent(ListComponent<E> listComponent) {
             this.listComponent = listComponent;
             return this;
         }
@@ -194,7 +194,7 @@ public class BulkEditors {
          * @param exclude a regular expression
          * @return this builder
          */
-        public BulkEditorBuilder<E> withExclude(String exclude) {
+        public EditorBuilder<E> withExclude(String exclude) {
             this.exclude = exclude;
             return this;
         }
@@ -206,7 +206,7 @@ public class BulkEditors {
          * @param includeProperties the entity attributes to be included to bulk editor window
          * @return this builder
          */
-        public BulkEditorBuilder<E> withIncludeProperties(List<String> includeProperties) {
+        public EditorBuilder<E> withIncludeProperties(List<String> includeProperties) {
             this.includeProperties = includeProperties;
             return this;
         }
@@ -217,7 +217,7 @@ public class BulkEditors {
          * @param fieldValidators a map with validators for fields that will be used for editing certain properties
          * @return this builder
          */
-        public BulkEditorBuilder<E> withFieldValidators(Map<String, Field.Validator> fieldValidators) {
+        public EditorBuilder<E> withFieldValidators(Map<String, Field.Validator> fieldValidators) {
             this.fieldValidators = fieldValidators;
             return this;
         }
@@ -228,7 +228,7 @@ public class BulkEditors {
          * @param modelValidators a map with validators for the result of bulk editing
          * @return this builder
          */
-        public BulkEditorBuilder<E> withModelValidators(List<Field.Validator> modelValidators) {
+        public EditorBuilder<E> withModelValidators(List<Field.Validator> modelValidators) {
             this.modelValidators = modelValidators;
             return this;
         }
@@ -241,7 +241,7 @@ public class BulkEditors {
          *                              of the edited entity should be displayed
          * @return this builder
          */
-        public BulkEditorBuilder<E> withLoadDynamicAttributes(Boolean loadDynamicAttributes) {
+        public EditorBuilder<E> withLoadDynamicAttributes(Boolean loadDynamicAttributes) {
             this.loadDynamicAttributes = loadDynamicAttributes;
             return this;
         }
@@ -253,7 +253,7 @@ public class BulkEditors {
          * @param useConfirmDialog whether or not the confirmation dialog should be displayed
          * @return this builder
          */
-        public BulkEditorBuilder<E> withUseConfirmDialog(Boolean useConfirmDialog) {
+        public EditorBuilder<E> withUseConfirmDialog(Boolean useConfirmDialog) {
             this.useConfirmDialog = useConfirmDialog;
             return this;
         }

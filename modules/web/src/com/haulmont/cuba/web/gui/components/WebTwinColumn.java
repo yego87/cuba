@@ -215,13 +215,17 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
 
     @Override
     public int getColumns() {
-        // doesn't support cause of Vaadin 8
+        /* vaadin8
+        return component.getColumns();
+        */
         return 0;
     }
 
     @Override
     public void setColumns(int columns) {
-        // doesn't support cause of Vaadin 8
+        /* vaadin8
+        component.setColumns(columns);
+        */
     }
 
     @Override
@@ -243,14 +247,15 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
     @Override
     public void setStyleProvider(final StyleProvider styleProvider) {
         this.styleProvider = styleProvider;
+        /* vaadin8
         if (styleProvider != null) {
-//            component.setStyleGenerator((source, itemId, selected) -> {
-//                final Entity item = optionsDatasource.getItem(itemId);
-//                return styleProvider.getStyleName(item, itemId, component.isSelected(itemId));
-//            });
+            component.setStyleGenerator((source, itemId, selected) -> {
+                final Entity item = optionsDatasource.getItem(itemId);
+                return styleProvider.getStyleName(item, itemId, component.isSelected(itemId));
+            });
         } else {
             component.setStyleGenerator(null);
-        }
+        }*/
     }
 
     @Override
@@ -285,27 +290,28 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
 
     @Override
     public CaptionMode getCaptionMode() {
-        // doesn't support cause of Vaadin 8
+        // vaadin8
         return null;
     }
 
     @Override
     public void setCaptionMode(CaptionMode captionMode) {
-        // doesn't support cause of Vaadin 8
+        // vaadin8
     }
 
     @Override
     public String getCaptionProperty() {
-        // doesn't support cause of Vaadin 8
+        // vaadin8
         return null;
     }
 
     @Override
     public void setCaptionProperty(String captionProperty) {
-        // doesn't support cause of Vaadin 8
+        // vaadin8
     }
 
-/*    protected <T> T getValueFromKey(Object key) {
+    /*
+    protected <T> T getValueFromKey(Object key) {
         if (key instanceof Collection) {
             final Set<Object> set = new LinkedHashSet<>();
             for (Object o : (Collection) key) {

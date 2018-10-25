@@ -22,15 +22,7 @@ public interface TwinColumn<V> extends OptionsField<V, V> {
 
     String NAME = "twinColumn";
 
-    /**
-     * @deprecated use {@link #setWidth(String)} instead
-     */
-    @Deprecated
     int getColumns();
-    /**
-     * @deprecated use {@link #getWidth()} instead
-     */
-    @Deprecated
     void setColumns(int columns);
 
     int getRows();

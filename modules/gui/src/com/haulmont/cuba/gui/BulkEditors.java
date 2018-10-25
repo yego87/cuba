@@ -45,6 +45,9 @@ import java.util.function.Function;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 
+/**
+ * A bean that creates an instance of {@link EditorBuilder}.
+ */
 @Component("cuba_BulkEditors")
 public class BulkEditors {
 
@@ -123,6 +126,11 @@ public class BulkEditors {
                 && ((StandardCloseAction) closeAction).getActionId().equals(Window.COMMIT_ACTION_ID);
     }
 
+    /**
+     * A builder that creates a new {@link BulkEditorWindow} with defined parameters.
+     *
+     * @param <E> item type
+     */
     public static class EditorBuilder<E extends Entity> {
 
         protected final MetaClass metaClass;

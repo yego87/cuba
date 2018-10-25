@@ -61,8 +61,7 @@ public class UriState {
                 .collect(Collectors.joining("&"));
     }
 
-    @Override
-    public String toString() {
+    public String asRoute() {
         StringBuilder sb = new StringBuilder(root);
 
         if (stateMark != null && !stateMark.isEmpty()) {
@@ -90,7 +89,8 @@ public class UriState {
             return false;
         }
 
-        return Objects.equals(this.toString(), that.toString());
+        UriState thatState = (UriState) that;
+        return Objects.equals(this.asRoute(), thatState.asRoute());
     }
 
     @Override

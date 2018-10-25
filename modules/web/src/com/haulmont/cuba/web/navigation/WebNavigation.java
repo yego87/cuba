@@ -19,10 +19,10 @@ package com.haulmont.cuba.web.navigation;
 import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.Notifications;
+import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
-import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.history.History;
 import com.haulmont.cuba.gui.navigation.Navigation;
@@ -33,11 +33,8 @@ import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.WebWindow;
-import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
 import com.haulmont.cuba.web.sys.VaadinSessionScope;
-import com.haulmont.cuba.web.sys.WindowBreadCrumbs;
-import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -45,6 +42,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component(Navigation.NAME)
@@ -68,25 +66,25 @@ public class WebNavigation implements Navigation {
     @Inject
     protected History history;
 
+    @Inject
+    protected Screens screens;
+
     @Override
     public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
         UriState oldState = fireStateChanged ? getState() : null;
 
         String navState = buildNavState(screen, uriParams);
-        if (navState == null) {
-            // TODO: check and remove
-            throw new RuntimeException("New nav state is null");
-        }
 
         screen.getScreenContext().getNavigationInfo()
                 .update(navState, uriParams);
 
         Page.getCurrent().setUriFragment("!" + navState, false);
 
-        history.push(getState());
+        UriState newState = getState();
+        history.push(newState);
 
         if (fireStateChanged) {
-            fireStateChange(oldState);
+            fireStateChange(oldState, newState);
         }
     }
 
@@ -95,18 +93,16 @@ public class WebNavigation implements Navigation {
         UriState oldState = fireStateChanged ? getState() : null;
 
         String navState = buildNavState(screen, uriParams);
-        if (navState == null) {
-            // TODO: check and remove
-            throw new RuntimeException("New nav state is null");
-        }
 
         screen.getScreenContext().getNavigationInfo()
                 .update(navState, uriParams);
 
         Page.getCurrent().replaceState(SHEBANG + navState);
 
+        // TODO: History changes?
+
         if (fireStateChanged) {
-            fireStateChange(oldState);
+            fireStateChange(oldState, getState());
         }
     }
 
@@ -115,13 +111,10 @@ public class WebNavigation implements Navigation {
         return UrlTools.parseState(Page.getCurrent().getUriFragment());
     }
 
-    protected void fireStateChange(UriState oldState) {
-        UriState state = getState();
-        if (oldState == null || oldState.equals(state)) {
-            return;
+    protected void fireStateChange(UriState oldState, UriState newState) {
+        if (!Objects.equals(oldState, newState)) {
+            events.publish(new UriStateChangedEvent(oldState, newState));
         }
-
-        events.publish(new UriStateChangedEvent(oldState, state));
     }
 
     protected String buildNavState(Screen screen, Map<String, String> urlParams) {
@@ -130,13 +123,14 @@ public class WebNavigation implements Navigation {
         if (screen.getWindow() instanceof RootWindow) {
             state.append(getRoute(getPage(screen)));
         } else {
-            Screen rootScreen = AppUI.getCurrent().getTopLevelWindow().getFrameOwner();
+            RootWindow topLevelWindow = AppUI.getCurrent().getTopLevelWindow();
+            Screen rootScreen = topLevelWindow != null ? topLevelWindow.getFrameOwner() : null;
             state.append(getRoute(getPage(rootScreen)));
 
             String stateMark = getScreenStateMark(screen);
             String nestedRoute = buildNestedRoute(screen);
             if (nestedRoute == null || nestedRoute.isEmpty()) {
-                return getState().toString();
+                return getState().asRoute();
             }
 
             state.append('/')
@@ -188,34 +182,37 @@ public class WebNavigation implements Navigation {
     }
 
     protected String buildScreenRoute(Screen screen) {
-        Iterator<Window> iterator = ((TabWindowContainer) screen.getWindow()
+        Iterator<Window> breadCrumbsScreens = ((TabWindowContainer) screen.getWindow()
                 .unwrapComposition(com.vaadin.ui.Component.class)
                 .getParent())
                 .getBreadCrumbs().getWindows().iterator();
 
         StringBuilder state = new StringBuilder();
         int depth = 0;
-        while (iterator.hasNext() && depth < MAX_NESTED_ROUTES) {
+
+        while (breadCrumbsScreens.hasNext() && depth < MAX_NESTED_ROUTES) {
             if (depth > 0) {
                 state.append('/');
             }
-
             depth++;
-            Screen _screen = iterator.next().getFrameOwner();
-            String route = getRoute(getPage(_screen));
 
-            if (_screen instanceof EditorScreen) {
+            Screen nestedScreen = breadCrumbsScreens.next().getFrameOwner();
+            String route = getRoute(getPage(nestedScreen));
+
+            if (nestedScreen instanceof EditorScreen) {
                 route = squashEditorRoute(state.toString(), route);
             }
 
             state.append(route);
         }
+
         return state.toString();
     }
 
     // Helpers
 
     protected String squashEditorRoute(String state, String route) {
+        // TODO: make it more stable and reliable
         int slashIdx = route.indexOf('/');
         if (slashIdx <= 0) {
             return route;
@@ -264,41 +261,14 @@ public class WebNavigation implements Navigation {
     }
 
     protected PageDefinition getPage(Screen screen) {
-        return screen.getScreenContext().getWindowInfo().getPageDefinition();
+        return screen == null ? null :
+                screen.getScreenContext().getWindowInfo().getPageDefinition();
     }
 
     // Copied from WebScreens
     protected Screen getCurrentScreen() {
-        WebAppWorkArea workArea = getConfiguredWorkArea();
-        TabWindowContainer windowContainer;
-        if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
-            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
-            windowContainer = (TabWindowContainer) tabSheet.getSelectedTab();
-        } else {
-            windowContainer = (TabWindowContainer) workArea.getSingleWindowContainer().getComponent(0);
-        }
-
-        if (windowContainer == null) {
-            throw new IllegalStateException("Window container is null");
-        }
-
-        WindowBreadCrumbs breadCrumbs = windowContainer.getBreadCrumbs();
-        if (breadCrumbs == null) {
-            throw new IllegalStateException("BreadCrumbs not found");
-        }
-
-        return breadCrumbs.getCurrentWindow().getFrameOwner();
-    }
-
-    // Copied from WebScreens
-    protected WebAppWorkArea getConfiguredWorkArea() {
-        Screen controller = AppUI.getCurrent().getTopLevelWindow().getFrameOwner();
-        if (controller instanceof Window.HasWorkArea) {
-            AppWorkArea workArea = ((Window.HasWorkArea) controller).getWorkArea();
-            if (workArea != null) {
-                return (WebAppWorkArea) workArea;
-            }
-        }
-        throw new IllegalStateException("RootWindow does not have any configured work area");
+        Iterator<Screen> screens = this.screens.getUiState().getCurrentBreadcrumbs()
+                .iterator();
+        return screens.hasNext() ? screens.next() : null;
     }
 }

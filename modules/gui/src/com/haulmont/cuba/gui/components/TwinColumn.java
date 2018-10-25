@@ -18,7 +18,9 @@ package com.haulmont.cuba.gui.components;
 
 import com.haulmont.cuba.core.entity.Entity;
 
-public interface TwinColumn<V> extends OptionsField<V, V> {
+import java.util.Set;
+
+public interface TwinColumn<V> extends OptionsField<Set<V>, V> {
 
     String NAME = "twinColumn";
 

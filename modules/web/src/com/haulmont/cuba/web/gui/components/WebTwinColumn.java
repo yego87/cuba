@@ -16,7 +16,6 @@
  */
 package com.haulmont.cuba.web.gui.components;
 
-import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.MetadataTools;
 import com.haulmont.cuba.gui.components.CaptionMode;
@@ -25,17 +24,17 @@ import com.haulmont.cuba.gui.components.data.Options;
 import com.haulmont.cuba.gui.components.data.meta.EntityValueSource;
 import com.haulmont.cuba.gui.components.data.meta.OptionsBinding;
 import com.haulmont.cuba.gui.components.data.options.OptionsBinder;
-import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.CubaTwinColSelect;
+import org.springframework.beans.factory.InitializingBean;
 
 import javax.inject.Inject;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, Set<V>, V>
-        implements TwinColumn<V> {
+public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, Set<V>, Set<V>>
+        implements TwinColumn<V>, InitializingBean {
 
     protected StyleProvider styleProvider;
     protected OptionsBinding<V> optionsBinding;
@@ -47,7 +46,7 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
 
     public WebTwinColumn() {
         component = createComponent();
-        component.setItemCaptionGenerator(this::generateItemCaption);
+        attachValueChangeListener(component);
         /*{
             @Override
             public void setPropertyDataSource(Property newDataSource) {
@@ -83,6 +82,15 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
 
     protected CubaTwinColSelect<V> createComponent() {
         return new CubaTwinColSelect<>();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        initComponent(component);
+    }
+
+    protected void initComponent(CubaTwinColSelect<V> component) {
+        component.setItemCaptionGenerator(this::generateItemCaption);
     }
 
     @Inject
@@ -197,21 +205,23 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
         }
     }*/
 
+    /*
     @Override
     public V getValue() {
         return super.getValue();
-//        if (optionsDatasource != null) {
-//            final Object key = super.getValue();
-//            return getValueFromKey(key);
-//        } else {
-//            return wrapAsCollection(super.getValue());
-//        }
+        if (optionsDatasource != null) {
+            final Object key = super.getValue();
+            return getValueFromKey(key);
+        } else {
+            return wrapAsCollection(super.getValue());
+        }
     }
 
     @Override
     public void setValue(V value) {
         super.setValue((V) getKeyFromValue(value));
     }
+    */
 
     @Override
     public int getColumns() {
@@ -238,11 +248,13 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
         component.setRows(rows);
     }
 
+    /*
     @Override
     public void setDatasource(Datasource datasource, String property) {
         super.setDatasource(datasource, property);
-//        component.setConverter(new ObjectToObjectConverter());
+        component.setConverter(new ObjectToObjectConverter());
     }
+    */
 
     @Override
     public void setStyleProvider(final StyleProvider styleProvider) {
@@ -337,7 +349,7 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
         return t;
     }
     */
-
+    /*
     protected Object getKeyFromValue(Object value) {
         if (value == null) {
             return null;
@@ -354,17 +366,18 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
             set.add(getKey(value));
         }
         return set;
-    }
-
+    }*/
+    /*
     protected Object getKey(Object o) {
         Object t;
         if (o instanceof Entity) {
             t = ((Entity) o).getId();
         } /*else if (o instanceof Enum) {
             t = o;
-        }*/ else {
+        }*//* else {
             t = o;
         }
         return t;
     }
+    */
 }

@@ -43,24 +43,24 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
     protected HandlerRegistration removeAllHandlerRegistration;
 
     public CubaTwinColSelectWidget() {
-//        add.setText(">");
-//        add.addStyleName("add");
-//        remove.setText("<");
-//        remove.addStyleName("remove");
+        addItemsLeftToRightButton.setText(">");
+        addItemsLeftToRightButton.addStyleName("add");
+        removeItemsRightToLeftButton.setText("<");
+        removeItemsRightToLeftButton.addStyleName("remove");
     }
 
-//    @Override
+    @Override
     protected DoubleClickListBox createOptionsBox() {
         return new CubaDoubleClickListBox();
     }
 
-//    @Override
+    @Override
     protected DoubleClickListBox createSelectionsBox() {
         return new CubaDoubleClickListBox();
     }
 
 //    @Override
-//    public void buildOptions(UIDL uidl) {
+    public void buildOptions(UIDL uidl) {
 //        options.setMultipleSelect(isMultiselect());
 //        selections.setMultipleSelect(isMultiselect());
 //
@@ -103,7 +103,39 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
 //
 //        setSelectedIndex(options, optionsSelectedIndex);
 //        setSelectedIndex(selections, selectionsSelectedIndex);
-//    }
+    }
+
+    @Override
+    protected void moveSelectedItemsLeftToRight() {
+        int optionsSelectedIndex = optionsListBox.getSelectedIndex();
+
+        super.moveSelectedItemsLeftToRight();
+
+        updateSelectionListBox(optionsListBox, optionsSelectedIndex);
+    }
+
+    @Override
+    protected void moveSelectedItemsRightToLeft() {
+        int selectionsSelectedIndex = selectionsListBox.getSelectedIndex();
+
+        super.moveSelectedItemsRightToLeft();
+
+        updateSelectionListBox(selectionsListBox, selectionsSelectedIndex);
+    }
+
+    protected void updateSelectionListBox(ListBox listBox, int index) {
+        // select first element if there is no selected element but we
+        // clicked on add or remove button
+        if (index < 0 && listBox.getItemCount() > 0) {
+            index = 0;
+        }
+        // select previous (above) row if replaced row was last
+        if (index == listBox.getItemCount()) {
+            index--;
+        }
+
+        setSelectedIndex(listBox, index);
+    }
 
     protected void setSelectedIndex(ListBox listBox, int index) {
         if (listBox.getItemCount() > 0 && index >= 0) {
@@ -116,9 +148,9 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
         super.onClick(event);
         if (addAllBtnEnabled) {
             if (event.getSource() == addAll) {
-                addAll();
+                moveAllItems(optionsListBox, selectionsListBox);
             } else if (event.getSource() == removeAll) {
-                removeAll();
+                moveAllItems(selectionsListBox, optionsListBox);
             }
         }
     }
@@ -141,23 +173,6 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
         return movedItems;
     }
 
-    protected void addAll() {
-//        Set<String> movedItems = moveAllItems(options, selections);
-//        selectedKeys.addAll(movedItems);
-//
-//        client.updateVariable(paintableId, "selected",
-//                selectedKeys.toArray(new String[selectedKeys.size()]),
-//                isImmediate());
-    }
-
-    protected void removeAll() {
-//        moveAllItems(selections, options);
-//        selectedKeys.clear();
-//        client.updateVariable(paintableId, "selected",
-//                selectedKeys.toArray(new String[selectedKeys.size()]),
-//                isImmediate());
-    }
-
     public boolean isAddAllBtnEnabled() {
         return addAllBtnEnabled;
     }
@@ -176,23 +191,23 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
     protected void enableAddAllBtn() {
         HTML br1 = new HTML("<span/>");
         br1.setStyleName(CLASSNAME + "-deco");
-//        buttons.add(br1);
-//        buttons.insert(br1, buttons.getWidgetIndex(add) + 1);
+        buttons.add(br1);
+        buttons.insert(br1, buttons.getWidgetIndex(addItemsLeftToRightButton) + 1);
         addAll = new VButton();
         addAll.setText(">>");
         addAll.addStyleName("addAll");
         addAllHandlerRegistration = addAll.addClickHandler(this);
-//        buttons.insert(addAll, buttons.getWidgetIndex(br1) + 1);
+        buttons.insert(addAll, buttons.getWidgetIndex(br1) + 1);
 
         HTML br2 = new HTML("<span/>");
         br2.setStyleName(CLASSNAME + "-deco");
-//        buttons.add(br2);
+        buttons.add(br2);
 
         removeAll = new VButton();
         removeAll.setText("<<");
         removeAll.addStyleName("removeAll");
         removeAllHandlerRegistration = removeAll.addClickHandler(this);
-//        buttons.add(removeAll);
+        buttons.add(removeAll);
     }
 
     protected void disableAddAllBtn() {
@@ -207,10 +222,10 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
 
     public class CubaDoubleClickListBox extends DoubleClickListBox {
         public void setOptionClassName(int optionIndex, String className) {
-//            assert optionIndex >= 0 && options.getItemCount() > optionIndex;
-//            SelectElement select = getElement().cast();
-//            Element elem = select.getOptions().getItem(optionIndex);
-//            elem.addClassName(className);
+            assert optionIndex >= 0 && optionsListBox.getItemCount() > optionIndex;
+            SelectElement select = getElement().cast();
+            Element elem = select.getOptions().getItem(optionIndex);
+            elem.addClassName(className);
         }
     }
 }

@@ -23,7 +23,6 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.ListBox;
-import com.vaadin.client.UIDL;
 import com.vaadin.client.ui.VButton;
 import com.vaadin.client.ui.VTwinColSelect;
 
@@ -59,51 +58,53 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
         return new CubaDoubleClickListBox();
     }
 
-//    @Override
+    /*
+    @Override
     public void buildOptions(UIDL uidl) {
-//        options.setMultipleSelect(isMultiselect());
-//        selections.setMultipleSelect(isMultiselect());
-//
-//        int optionsSelectedIndex = options.getSelectedIndex();
-//        int selectionsSelectedIndex = selections.getSelectedIndex();
-//        options.clear();
-//        selections.clear();
-//
-//        int selectedOptions = 0;
-//        int availableOptions = 0;
-//
-//        for (Object anUidl : uidl) {
-//            UIDL optionUidl = (UIDL) anUidl;
-//
-//            if (optionUidl.hasAttribute("selected")) {
-//                selections.addItem(optionUidl.getStringAttribute("caption"),
-//                        optionUidl.getStringAttribute("key"));
-//                if (optionUidl.hasAttribute("style")) {
-//                    CubaDoubleClickListBox cubaSelections = (CubaDoubleClickListBox) selections;
-//                    cubaSelections.setOptionClassName(selectedOptions, optionUidl.getStringAttribute("style"));
-//
-//                }
-//                selectedOptions++;
-//            } else {
-//                options.addItem(optionUidl.getStringAttribute("caption"),
-//                        optionUidl.getStringAttribute("key"));
-//                if (optionUidl.hasAttribute("style")) {
-//                    CubaDoubleClickListBox cubaOptions = (CubaDoubleClickListBox) options;
-//                    cubaOptions.setOptionClassName(availableOptions, optionUidl.getStringAttribute("style"));
-//
-//                }
-//                availableOptions++;
-//            }
-//        }
-//
-//        if (getRows() > 0) {
-//            options.setVisibleItemCount(getRows());
-//            selections.setVisibleItemCount(getRows());
-//        }
-//
-//        setSelectedIndex(options, optionsSelectedIndex);
-//        setSelectedIndex(selections, selectionsSelectedIndex);
+        options.setMultipleSelect(isMultiselect());
+        selections.setMultipleSelect(isMultiselect());
+
+        int optionsSelectedIndex = options.getSelectedIndex();
+        int selectionsSelectedIndex = selections.getSelectedIndex();
+        options.clear();
+        selections.clear();
+
+        int selectedOptions = 0;
+        int availableOptions = 0;
+
+        for (Object anUidl : uidl) {
+            UIDL optionUidl = (UIDL) anUidl;
+
+            if (optionUidl.hasAttribute("selected")) {
+                selections.addItem(optionUidl.getStringAttribute("caption"),
+                        optionUidl.getStringAttribute("key"));
+                if (optionUidl.hasAttribute("style")) {
+                    CubaDoubleClickListBox cubaSelections = (CubaDoubleClickListBox) selections;
+                    cubaSelections.setOptionClassName(selectedOptions, optionUidl.getStringAttribute("style"));
+
+                }
+                selectedOptions++;
+            } else {
+                options.addItem(optionUidl.getStringAttribute("caption"),
+                        optionUidl.getStringAttribute("key"));
+                if (optionUidl.hasAttribute("style")) {
+                    CubaDoubleClickListBox cubaOptions = (CubaDoubleClickListBox) options;
+                    cubaOptions.setOptionClassName(availableOptions, optionUidl.getStringAttribute("style"));
+
+                }
+                availableOptions++;
+            }
+        }
+
+        if (getRows() > 0) {
+            options.setVisibleItemCount(getRows());
+            selections.setVisibleItemCount(getRows());
+        }
+
+        setSelectedIndex(options, optionsSelectedIndex);
+        setSelectedIndex(selections, selectionsSelectedIndex);
     }
+    */
 
     @Override
     protected void moveSelectedItemsLeftToRight() {

@@ -16,6 +16,8 @@
 
 package com.haulmont.cuba.gui.components;
 
+import com.haulmont.cuba.gui.ComponentsHelper;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -103,11 +105,12 @@ public interface ComponentContainer extends Component {
      * Focuses the first {@link Focusable} component, if present.
      */
     default void focusFirstComponent() {
-        getComponents().stream()
-                .filter(component ->
-                        component instanceof Focusable)
-                .findFirst()
-                .ifPresent(focusable ->
-                        ((Focusable) focusable).focus());
+        ComponentsHelper.walkComponents(this, component -> {
+            if (component instanceof Focusable) {
+                ((Focusable) component).focus();
+                return true;
+            }
+            return false;
+        });
     }
 }

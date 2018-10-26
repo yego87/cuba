@@ -98,4 +98,16 @@ public interface ComponentContainer extends Component {
 
     /** Get all components belonging to the whole components tree below this container */
     Collection<Component> getComponents();
+
+    /**
+     * Focuses the first {@link Focusable} component, if present.
+     */
+    default void focusFirstComponent() {
+        getComponents().stream()
+                .filter(component ->
+                        component instanceof Focusable)
+                .findFirst()
+                .ifPresent(focusable ->
+                        ((Focusable) focusable).focus());
+    }
 }

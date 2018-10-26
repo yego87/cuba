@@ -19,6 +19,8 @@ package spec.cuba.web.datacontext
 import com.haulmont.bali.util.Dom4j
 import com.haulmont.cuba.core.global.ViewRepository
 import com.haulmont.cuba.gui.model.*
+import com.haulmont.cuba.gui.model.impl.NoopDataContext
+import com.haulmont.cuba.gui.model.impl.ScreenDataImpl
 import com.haulmont.cuba.gui.model.impl.ScreenDataXmlLoader
 import com.haulmont.cuba.gui.model.impl.StandardCollectionLoader
 import com.haulmont.cuba.gui.model.impl.StandardInstanceLoader
@@ -47,7 +49,7 @@ class ScreenDataTest extends WebSpec {
             </data>
             '''
         Document document = Dom4j.readDocument(xml)
-        ScreenData screenData = cont.getBean(ScreenData)
+        ScreenData screenData = new ScreenDataImpl()
         ScreenDataXmlLoader screenDataLoader = cont.getBean(ScreenDataXmlLoader)
 
         when:
@@ -115,7 +117,7 @@ class ScreenDataTest extends WebSpec {
             </data>
             '''
         Document document = Dom4j.readDocument(xml)
-        ScreenData screenData = cont.getBean(ScreenData)
+        ScreenData screenData = new ScreenDataImpl()
         ScreenDataXmlLoader screenDataLoader = cont.getBean(ScreenDataXmlLoader)
 
         when:
@@ -192,7 +194,7 @@ class ScreenDataTest extends WebSpec {
             </data>
             '''
         Document document = Dom4j.readDocument(xml)
-        ScreenData screenData = cont.getBean(ScreenData)
+        ScreenData screenData = new ScreenDataImpl()
         ScreenDataXmlLoader screenDataLoader = cont.getBean(ScreenDataXmlLoader)
 
         when:
@@ -230,8 +232,10 @@ class ScreenDataTest extends WebSpec {
         def tag3 = new ProductTag(name: 't3')
         def product1 = new Product(name: 'p1', tags: [tag1, tag2])
         def product2 = new Product(name: 'p2', tags: [tag2, tag3])
+        def product3 = new Product(name: 'p3', tags: [tag3])
         def line1 = new OrderLine(order: order1, product: product1)
         def line2 = new OrderLine(order: order1, product: product2)
+        def line3 = new OrderLine(order: order1, product: product3)
         order1.orderLines = [line1, line2]
 
         def xml = '''
@@ -248,7 +252,7 @@ class ScreenDataTest extends WebSpec {
             </data>
             '''
         Document document = Dom4j.readDocument(xml)
-        ScreenData screenData = cont.getBean(ScreenData)
+        ScreenData screenData = new ScreenDataImpl()
         ScreenDataXmlLoader screenDataLoader = cont.getBean(ScreenDataXmlLoader)
 
         when:
@@ -281,5 +285,36 @@ class ScreenDataTest extends WebSpec {
 
         productCont.item == product1
         tagsCont.items == [tag1, tag2]
+
+        when: "replacing the collection value"
+
+        orderCont.item.orderLines = [line3, line2]
+
+        then:
+
+        linesCont.items == [line3, line2]
+    }
+
+    def "read-only data context"() {
+        def xml = '''
+            <data readOnly="true">
+                <instance id="userCont"
+                          class="com.haulmont.cuba.security.entity.User" view="user.edit">
+                    <loader/>
+                </instance>
+            </data>
+            '''
+        Document document = Dom4j.readDocument(xml)
+        ScreenData screenData = new ScreenDataImpl()
+        ScreenDataXmlLoader screenDataLoader = cont.getBean(ScreenDataXmlLoader)
+
+        when:
+
+        screenDataLoader.load(screenData, document.rootElement)
+        DataContext dataContext = screenData.dataContext
+
+        then:
+
+        dataContext instanceof NoopDataContext
     }
 }

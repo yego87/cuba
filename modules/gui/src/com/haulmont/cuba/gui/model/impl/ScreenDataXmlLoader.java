@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.text.ParseException;
+import java.util.Collection;
 
 @Component(ScreenDataXmlLoader.NAME)
 public class ScreenDataXmlLoader {
@@ -48,7 +49,7 @@ public class ScreenDataXmlLoader {
     protected MetadataTools metadataTools;
 
     @Inject
-    protected DataContextFactory factory;
+    protected DataElementsFactory factory;
 
     @Inject
     protected ConditionXmlLoader conditionXmlLoader;
@@ -56,6 +57,10 @@ public class ScreenDataXmlLoader {
     public void load(ScreenData screenData, Element element) {
         Preconditions.checkNotNullArgument(screenData, "screenData is null");
         Preconditions.checkNotNullArgument(element, "element is null");
+
+        boolean readOnly = Boolean.valueOf(element.attributeValue("readOnly"));
+        DataContext dataContext = readOnly ? new NoopDataContext() : factory.createDataContext();
+        ((ScreenDataImpl) screenData).setDataContext(dataContext);
 
         for (Element el : element.elements()) {
             if (el.getName().equals("collection")) {
@@ -170,6 +175,13 @@ public class ScreenDataXmlLoader {
                 Entity item = parentContainer.getItemOrNull();
                 container.setItems(item != null ? item.getValue(property) : null);
             });
+
+            parentContainer.addItemPropertyChangeListener(e -> {
+                if (e.getProperty().equals(property)) {
+                    container.setItems((Collection<Entity>) e.getValue());
+                }
+            });
+
             nestedContainer = container;
 
         } else if (element.getName().equals("instance")) {
@@ -183,6 +195,12 @@ public class ScreenDataXmlLoader {
             parentContainer.addItemChangeListener(e -> {
                 Entity item = parentContainer.getItemOrNull();
                 container.setItem(item != null ? item.getValue(property) : null);
+            });
+
+            parentContainer.addItemPropertyChangeListener(e -> {
+                if (e.getProperty().equals(property)) {
+                    container.setItem((Entity) e.getValue());
+                }
             });
 
             nestedContainer = container;

@@ -20,7 +20,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.haulmont.bali.events.Subscription;
 import com.haulmont.bali.events.TriggerOnce;
-import com.haulmont.chile.core.datatypes.Datatypes;
+import com.haulmont.chile.core.datatypes.Datatype;
+import com.haulmont.chile.core.datatypes.DatatypeRegistry;
 import com.haulmont.chile.core.model.MetaProperty;
 import com.haulmont.cuba.client.ClientConfig;
 import com.haulmont.cuba.core.app.LockService;
@@ -52,12 +53,12 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
 
     private T entityToEdit;
     private boolean crossFieldValidate = true;
-    private boolean justLocked = false; // todo
+    private boolean justLocked = false;
     private boolean readOnly = false; // todo
 
     protected StandardEditor() {
         addInitListener(this::initActions);
-        addBeforeShowListener(this::setupEntityToEdit);
+        addBeforeShowListener(this::beforeShow);
     }
 
     protected void initActions(@SuppressWarnings("unused") InitEvent event) {
@@ -89,7 +90,13 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
         window.addAction(closeAction);
     }
 
-    protected void setupEntityToEdit(@SuppressWarnings("unused") BeforeShowEvent event) {
+    private void beforeShow(@SuppressWarnings("unused") BeforeShowEvent beforeShowEvent) {
+        setupEntityToEdit();
+        loadData();
+        setupLock();
+    }
+
+    protected void setupEntityToEdit() {
         if (getEntityStates().isNew(entityToEdit) || doNotReloadEditedEntity()) {
             T mergedEntity = getScreenData().getDataContext().merge(entityToEdit);
 
@@ -101,8 +108,10 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
             InstanceLoader loader = getEditedEntityLoader();
             loader.setEntityId(entityToEdit.getId());
         }
+    }
 
-        setupLock();
+    protected void loadData() {
+        getScreenData().loadAll();
     }
 
     protected void setupLock() {
@@ -111,42 +120,51 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
 
         if (!getEntityStates().isNew(entityToEdit)
                 && security.isEntityOpPermitted(container.getEntityMetaClass(), EntityOp.UPDATE)) {
-            readOnly = false;
+            this.readOnly = false;
 
             LockService lockService = getBeanLocator().get(LockService.class);
 
             LockInfo lockInfo = lockService.lock(getLockName(), entityToEdit.getId().toString());
             if (lockInfo == null) {
-                justLocked = true;
-                addAfterCloseListener(afterCloseEvent -> {
-                    releaseLock();
-                });
+                this.justLocked = true;
+
+                addAfterDetachListener(afterDetachEvent ->
+                        releaseLock()
+                );
             } else if (!(lockInfo instanceof LockNotSupported)) {
                 UserSessionSource userSessionSource = getBeanLocator().get(UserSessionSource.class);
 
                 Messages messages = getBeanLocator().get(Messages.class);
+
+                Datatype<Date> dateDatatype = getBeanLocator().get(DatatypeRegistry.class)
+                        .getNN(Date.class);
+
                 getScreenContext().getNotifications().create()
                         .setCaption(messages.getMainMessage("entityLocked.msg"))
                         .setDescription(
-                        String.format(messages.getMainMessage("entityLocked.desc"),
-                                lockInfo.getUser().getLogin(),
-                                Datatypes.getNN(Date.class).format(lockInfo.getSince(), userSessionSource.getLocale())
-                        ))
+                                messages.formatMainMessage("entityLocked.desc",
+                                        lockInfo.getUser().getLogin(),
+                                        dateDatatype.format(lockInfo.getSince(), userSessionSource.getLocale())
+                                ))
                         .setType(Notifications.NotificationType.HUMANIZED)
                         .show();
 
-                Action action = getWindow().getAction(WINDOW_COMMIT);
-                if (action != null)
-                    action.setEnabled(false);
-                action = getWindow().getAction(WINDOW_COMMIT_AND_CLOSE);
-                if (action != null)
-                    action.setEnabled(false);
-                readOnly = true;
+                Action commitAction = getWindow().getAction(WINDOW_COMMIT);
+                if (commitAction != null) {
+                    commitAction.setEnabled(false);
+                }
+
+                Action commitCloseAction = getWindow().getAction(WINDOW_COMMIT_AND_CLOSE);
+                if (commitCloseAction != null) {
+                    commitCloseAction.setEnabled(false);
+                }
+
+                this.readOnly = true;
             }
         }
     }
 
-    public void releaseLock() {
+    protected void releaseLock() {
         if (justLocked) {
             Entity entity = getEditedEntityContainer().getItemOrNull();
             if (entity != null) {
@@ -173,11 +191,13 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
     }
 
     protected boolean isEntityModifiedInParentContext() {
+        boolean result = false;
         DataContext parentDc = getScreenData().getDataContext().getParent();
-        if (parentDc == null)
-            return false;
-
-        return isEntityModifiedRecursive(entityToEdit, parentDc, new HashSet<>());
+        while (!result && parentDc != null) {
+            result = isEntityModifiedRecursive(entityToEdit, parentDc, new HashSet<>());
+            parentDc = parentDc.getParent();
+        }
+        return result;
     }
 
     protected boolean isEntityModifiedRecursive(Entity entity, DataContext dataContext, HashSet<Object> visited) {
@@ -195,12 +215,14 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
                     if (value != null) {
                         if (value instanceof Collection) {
                             for (Object item : ((Collection) value)) {
-                                if (isEntityModifiedRecursive((Entity) item, dataContext, visited))
+                                if (isEntityModifiedRecursive((Entity) item, dataContext, visited)) {
                                     return true;
+                                }
                             }
                         } else {
-                            if (isEntityModifiedRecursive((Entity) value, dataContext, visited))
+                            if (isEntityModifiedRecursive((Entity) value, dataContext, visited)) {
                                 return true;
+                            }
                         }
                     }
                 }
@@ -353,7 +375,11 @@ public abstract class StandardEditor<T extends Entity> extends Screen implements
         }
     }
 
-    protected Subscription addInitEntityListener(Consumer<InitEntityEvent> listener) {
-        return getEventHub().subscribe(InitEntityEvent.class, listener);
+    /**
+     * Adds a listener to {@link InitEntityEvent}.
+     */
+    @SuppressWarnings("unchecked")
+    protected Subscription addInitEntityListener(Consumer<InitEntityEvent<T>> listener) {
+        return getEventHub().subscribe(InitEntityEvent.class, (Consumer) listener);
     }
 }

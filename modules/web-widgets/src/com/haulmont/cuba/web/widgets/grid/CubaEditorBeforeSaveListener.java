@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.tmp;
+package com.haulmont.cuba.web.widgets.grid;
 
-import com.haulmont.cuba.gui.screen.Screen;
-import com.haulmont.cuba.gui.screen.Subscribe;
-import com.haulmont.cuba.gui.screen.UiController;
-import com.haulmont.cuba.gui.screen.UiDescriptor;
+import com.vaadin.ui.Grid;
 
-@UiController("tmpGroupTreeDataGrid")
-@UiDescriptor("tmp-group-treedatagrid.xml")
-public class TmpGroupTreeDataGrid extends Screen {
+/**
+ * An event listener for a {@link Grid} editor before save events.
+ *
+ * @param <T> the bean type
+ */
+public interface CubaEditorBeforeSaveListener<T> {
 
-    @Subscribe
-    protected void beforeShow(BeforeShowEvent event) {
-        getScreenData().loadAll();
-    }
+    void onEditorBeforeSave(CubaEditorBeforeSaveEvent<T> event);
 }

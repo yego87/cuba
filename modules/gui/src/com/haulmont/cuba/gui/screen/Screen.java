@@ -230,6 +230,16 @@ public abstract class Screen implements FrameOwner {
         return eventHub.subscribe(AfterCloseEvent.class, listener);
     }
 
+    /**
+     * JavaDoc
+     *
+     * @param listener
+     * @return
+     */
+    protected Subscription addAfterDetachListener(Consumer<AfterDetachEvent> listener) {
+        return eventHub.subscribe(AfterDetachEvent.class, listener);
+    }
+
     protected OperationResult showUnsavedChangesDialog(CloseAction closeAction) {
         UnknownOperationResult result = new UnknownOperationResult();
         Messages messages = beanLocator.get(Messages.NAME);
@@ -241,9 +251,8 @@ public abstract class Screen implements FrameOwner {
                 .setActions(
                         new DialogAction(DialogAction.Type.YES)
                                 .withHandler(e -> {
-                                    closeWithDiscard()
-                                            .then(result::success)
-                                            .otherwise(result::fail);
+
+                                    result.resolveWith(closeWithDiscard());
                                 }),
                         new DialogAction(DialogAction.Type.NO, Action.Status.PRIMARY)
                                 .withHandler(e -> {
@@ -270,17 +279,15 @@ public abstract class Screen implements FrameOwner {
                         new DialogAction(DialogAction.Type.OK, Action.Status.PRIMARY)
                                 .withCaption(messages.getMainMessage("closeUnsaved.save"))
                                 .withHandler(e -> {
-                                    closeWithCommit()
-                                            .then(result::success)
-                                            .otherwise(result::fail);
+
+                                    result.resolveWith(closeWithCommit());
                                 }),
                         new BaseAction("discard")
                                 .withIcon(icons.get(CubaIcon.DIALOG_CANCEL))
                                 .withCaption(messages.getMainMessage("closeUnsaved.discard"))
                                 .withHandler(e -> {
-                                    closeWithDiscard()
-                                            .then(result::success)
-                                            .otherwise(result::fail);
+
+                                    result.resolveWith(closeWithDiscard());
                                 }),
                         new DialogAction(DialogAction.Type.CANCEL)
                                 .withIcon(null)
@@ -688,6 +695,21 @@ public abstract class Screen implements FrameOwner {
 
         public CloseAction getCloseAction() {
             return closeAction;
+        }
+    }
+
+    /**
+     * Event that is fired after the screen has been removed from UI. Usually this event is used for resource cleanup.
+     */
+    public static class AfterDetachEvent extends EventObject {
+
+        public AfterDetachEvent(Screen source) {
+            super(source);
+        }
+
+        @Override
+        public Screen getSource() {
+            return (Screen) super.getSource();
         }
     }
 }

@@ -22,7 +22,6 @@ import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.WindowParams;
-import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
@@ -50,10 +49,7 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component(UriChangeHandler.NAME)
 @Scope(VaadinSessionScope.NAME)
@@ -97,6 +93,10 @@ public class UriChangeHandler {
 
     public void handleUriChange() {
         UriState uriState = navigation.getState();
+        if (uriState == null) {
+            reloadApp();
+            return;
+        }
 
         if (historyNavigation(uriState)) {
             handleHistoryNavigation(uriState);
@@ -119,7 +119,8 @@ public class UriChangeHandler {
         boolean forward = uriState.equals(history.lookForward());
 
         if (!backward && !forward) {
-            throw new RuntimeException("Unable to handle history navigation");
+            reloadApp();
+            return;
         }
 
         if (backward) {
@@ -139,18 +140,10 @@ public class UriChangeHandler {
         return false;
     }
 
-    protected void reloadApp() {
-        AppUI ui = AppUI.getCurrent();
-        if (ui != null) {
-            String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
-            ui.getPage().open(url, "_self");
-        }
-    }
-
     protected void handleHistoryBackward() {
-        Window nowWindow = findWindowByState(history.now());
-        if (nowWindow != null) {
-            nowWindow.getFrameOwner()
+        Screen screen = findScreenByState(history.now());
+        if (screen != null) {
+            screen.getWindow().getFrameOwner()
                     .close(FrameOwner.WINDOW_CLOSE_ACTION)
                     .then(this::proceedHistoryBackward)
                     .otherwise(this::revertHistoryBackward);
@@ -160,36 +153,31 @@ public class UriChangeHandler {
     }
 
     protected void proceedHistoryBackward() {
+        UriState now = history.now();
         UriState prevState = history.backward();
 
-        Window prevWindow = findWindowByState(prevState);
-        if (prevWindow != null) {
-            selectWindow(prevWindow);
-        }
+        focusScreen(findScreenByState(prevState));
 
-        String state;
-        if (prevState.getNestedRoute() != null && !prevState.getNestedRoute().isEmpty()) {
-            state = prevState.asRoute();
+        boolean rootBackward = isRootRoute(prevState) && rootChanged(prevState);
+        String state = !rootBackward ? prevState.asRoute() : now.asRoute();
+
+        if (rootBackward) {
+            reloadApp();
         } else {
-            state = screens.getUiState()
-                    .getRootScreen()
-                    .getScreenContext()
-                    .getWindowInfo()
-                    .getPageDefinition()
-                    .getRoute();
+            Page.getCurrent().replaceState("#!" + state);
         }
-
-        Page.getCurrent().replaceState("#!" + state);
     }
 
     protected void handleHistoryForward() {
-        Window window = findWindowByState(history.now());
-        if (window == null) {
-            return;
+        Screen currentScreen = findScreenByState(history.now());
+        if (currentScreen == null) {
+            currentScreen = getCurrentScreen();
+            if (currentScreen == null) {
+                currentScreen = screens.getUiState().getRootScreen();
+            }
         }
 
-        String route = window.getFrameOwner()
-                .getScreenContext()
+        String route = currentScreen.getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
         Page.getCurrent().replaceState("#!" + route);
@@ -200,13 +188,20 @@ public class UriChangeHandler {
                 .show();
     }
 
-    protected void selectWindow(Window window) {
+    protected void focusScreen(Screen screen) {
+        if (screen == null) {
+            return;
+        }
+
+        Window window = screen.getWindow();
+
         WebAppWorkArea workArea = getConfiguredWorkArea();
         if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
-            TabWindowContainer windowContainer = (TabWindowContainer) window.unwrapComposition(com.vaadin.ui.Component.class)
+            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+            TabWindowContainer windowContainer = (TabWindowContainer) window
+                    .unwrapComposition(com.vaadin.ui.Component.class)
                     .getParent();
 
-            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
             String tabId = tabSheet.getTab(windowContainer);
             if (tabId == null || tabId.isEmpty()) {
                 throw new IllegalStateException("Unable to find tab");
@@ -217,23 +212,21 @@ public class UriChangeHandler {
     }
 
     protected void revertHistoryBackward() {
-        String route = findWindowByState(history.now()).getFrameOwner()
+        String route = findScreenByState(history.now())
                 .getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
         Page.getCurrent().replaceState("#!" + route);
     }
 
-    protected Window findWindowByState(UriState uriState) {
+    protected Screen findScreenByState(UriState uriState) {
         String stateMark = uriState.getStateMark();
-        Screen screen = screens.getUiState()
-                .getActiveWorkAreaScreens()
+        return screens.getUiState()
+                .getActiveScreens()
                 .stream()
                 .filter(s -> Objects.equals(stateMark, getStateMark(s.getWindow())))
                 .findFirst()
                 .orElse(null);
-
-        return screen != null ? screen.getWindow() : null;
     }
 
     protected String getStateMark(Window window) {
@@ -284,17 +277,10 @@ public class UriChangeHandler {
         return !Objects.equals(currentScreenRoute, state.asRoute());
     }
 
-    // Copied from WebScreens
     protected WebAppWorkArea getConfiguredWorkArea() {
-        RootWindow topLevelWindow = AppUI.getCurrent().getTopLevelWindow();
-        if (topLevelWindow == null) {
-            throw new IllegalStateException("There is no root screen opened");
-        }
-
-        Screen controller = topLevelWindow.getFrameOwner();
-
-        if (controller instanceof Window.HasWorkArea) {
-            AppWorkArea workArea = ((Window.HasWorkArea) controller).getWorkArea();
+        Screen rootScreen = screens.getUiState().getRootScreen();
+        if (rootScreen instanceof Window.HasWorkArea) {
+            AppWorkArea workArea = ((Window.HasWorkArea) rootScreen).getWorkArea();
             if (workArea != null) {
                 return (WebAppWorkArea) workArea;
             }
@@ -372,5 +358,28 @@ public class UriChangeHandler {
     @SuppressWarnings("unused")
     protected void handleParamsChange(UriState state) {
         // TODO: invoke urlParamsChanged screen hook
+    }
+
+    protected void reloadApp() {
+        AppUI ui = AppUI.getCurrent();
+        if (ui != null) {
+            String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
+            ui.getPage().open(url, "_self");
+        }
+    }
+
+    protected boolean isRootRoute(UriState uriState) {
+        String route = uriState.getNestedRoute();
+        return route == null || route.isEmpty();
+    }
+
+    protected Screen getCurrentScreen() {
+        Iterator<Screen> breadCrumbsScreens = screens.getUiState()
+                .getCurrentBreadcrumbs()
+                .iterator();
+
+        Screen screen = breadCrumbsScreens.hasNext() ? breadCrumbsScreens.next() : null;
+
+        return screen == null ? screens.getUiState().getRootScreen() : screen;
     }
 }

@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.web.history;
 
+import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.history.History;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.web.sys.VaadinSessionScope;
@@ -36,6 +37,12 @@ public class WebHistory implements History {
 
     @Override
     public void push(UriState uriState) {
+        Preconditions.checkNotNullArgument(uriState);
+
+        if (uriState.equals(now())) {
+            return;
+        }
+
         dropFutureEntries();
 
         history.add(++now, uriState);
@@ -50,11 +57,10 @@ public class WebHistory implements History {
 
     @Override
     public UriState now() {
-        if (now < 0) {
-            throw new IllegalStateException("There's no history");
-        }
-        UriState uriState = history.get(now);
-        if (uriState == null) {
+        UriState uriState = now < 0 ? null
+                : history.get(now);
+
+        if (uriState == null && now >= 0) {
             throw new IllegalStateException("History is broken");
         }
 

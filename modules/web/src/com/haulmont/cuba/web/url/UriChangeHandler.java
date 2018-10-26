@@ -263,7 +263,7 @@ public class UriChangeHandler {
                 .getNavigationInfo()
                 .getResolvedRoute();
 
-        return !Objects.equals(resolvedRoute, state.asRoute());
+        return !Objects.equals(resolvedRoute, state.getRoot());
     }
 
     @SuppressWarnings("unused")

@@ -118,7 +118,7 @@ public class WebScreens implements Screens, WindowManager {
     @Inject
     protected AttributeAccessSupport attributeAccessSupport;
     @Inject
-    private Navigation navigation;
+    protected Navigation navigation;
 
     @Inject
     protected ScreenViewsLoader screenViewsLoader;

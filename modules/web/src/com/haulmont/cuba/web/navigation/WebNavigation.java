@@ -18,7 +18,6 @@ package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
-import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
@@ -40,9 +39,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component(Navigation.NAME)
@@ -51,7 +48,6 @@ public class WebNavigation implements Navigation {
 
     protected static final String SHEBANG = "#!";
 
-    // TODO: config property?
     protected static final int MAX_NESTED_ROUTES = 2;
 
     @Inject
@@ -66,43 +62,40 @@ public class WebNavigation implements Navigation {
     @Inject
     protected History history;
 
-    @Inject
     protected Screens screens;
 
     @Override
     public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
-        UriState oldState = fireStateChanged ? getState() : null;
+        UriState oldUriState = fireStateChanged ? getState() : null;
 
-        String navState = buildNavState(screen, uriParams);
+        String navigationState = buildNavState(screen, uriParams);
 
         screen.getScreenContext().getNavigationInfo()
-                .update(navState, uriParams);
+                .update(navigationState, uriParams);
 
-        Page.getCurrent().setUriFragment("!" + navState, false);
+        Page.getCurrent().setUriFragment("!" + navigationState, false);
 
-        UriState newState = getState();
-        history.push(newState);
+        UriState newUriState = getState();
+        history.push(newUriState);
 
         if (fireStateChanged) {
-            fireStateChange(oldState, newState);
+            fireStateChange(oldUriState, newUriState);
         }
     }
 
     @Override
     public void replaceState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
-        UriState oldState = fireStateChanged ? getState() : null;
+        UriState oldUriState = fireStateChanged ? getState() : null;
 
-        String navState = buildNavState(screen, uriParams);
+        String navigationState = buildNavState(screen, uriParams);
 
         screen.getScreenContext().getNavigationInfo()
-                .update(navState, uriParams);
+                .update(navigationState, uriParams);
 
-        Page.getCurrent().replaceState(SHEBANG + navState);
-
-        // TODO: History changes?
+        Page.getCurrent().replaceState(SHEBANG + navigationState);
 
         if (fireStateChanged) {
-            fireStateChange(oldState, getState());
+            fireStateChange(oldUriState, getState());
         }
     }
 
@@ -121,31 +114,23 @@ public class WebNavigation implements Navigation {
         StringBuilder state = new StringBuilder();
 
         if (screen.getWindow() instanceof RootWindow) {
-            state.append(getRoute(getPage(screen)));
+            state.append(getRoute(screen));
         } else {
-            RootWindow topLevelWindow = AppUI.getCurrent().getTopLevelWindow();
-            Screen rootScreen = topLevelWindow != null ? topLevelWindow.getFrameOwner() : null;
-            state.append(getRoute(getPage(rootScreen)));
+            Screen rootScreen = getScreens().getUiState().getRootScreen();
+            state.append(getRoute(rootScreen));
 
             String stateMark = getScreenStateMark(screen);
-            String nestedRoute = buildNestedRoute(screen);
-            if (nestedRoute == null || nestedRoute.isEmpty()) {
-                return getState().asRoute();
-            }
+            state.append('/').append(stateMark);
 
-            state.append('/')
-                    .append(stateMark)
-                    .append('/')
-                    .append(nestedRoute);
+            String nestedRoute = buildNestedRoute(screen);
+            if (nestedRoute != null && !nestedRoute.isEmpty()) {
+                state.append('/').append(nestedRoute);
+            }
         }
 
         state.append(buildParamsString(screen, urlParams));
 
         return state.toString();
-    }
-
-    protected String getScreenStateMark(Screen screen) {
-        return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
     }
 
     protected String buildNestedRoute(Screen screen) {
@@ -156,36 +141,31 @@ public class WebNavigation implements Navigation {
         }
     }
 
-    protected String buildDialogRoute(Screen screen) {
-        PageDefinition page = getPage(screen);
+    protected String buildDialogRoute(Screen dialog) {
+        PageDefinition page = getPage(dialog);
         if (page == null) {
             return null;
         }
+
+        String dialogRoute = page.getRoute();
         if (page.getParent() == null) {
-            return page.getRoute();
+            return dialogRoute;
         }
 
-        Screen openedScreen = getCurrentScreen();
-        if (openedScreen.getClass() != page.getParent()) {
-            Notifications.Notification notification = screen.getScreenContext()
-                    .getNotifications()
-                    .create();
+        Screen currentScreen = getCurrentScreen();
+        boolean openedInContext = currentScreen.getClass() == page.getParent();
 
-            notification.setCaption("Dialog is opened out of its parent bounds");
-            notification.setType(Notifications.NotificationType.WARNING);
-            notification.show();
-
-            return "";
-        }
-
-        return buildScreenRoute(screen) + "/" + page.getRoute();
+        return openedInContext ? buildScreenRoute(currentScreen) + "/" + dialogRoute
+                : dialogRoute;
     }
 
     protected String buildScreenRoute(Screen screen) {
         Iterator<Window> breadCrumbsScreens = ((TabWindowContainer) screen.getWindow()
                 .unwrapComposition(com.vaadin.ui.Component.class)
                 .getParent())
-                .getBreadCrumbs().getWindows().iterator();
+                .getBreadCrumbs()
+                .getWindows()
+                .iterator();
 
         StringBuilder state = new StringBuilder();
         int depth = 0;
@@ -197,11 +177,7 @@ public class WebNavigation implements Navigation {
             depth++;
 
             Screen nestedScreen = breadCrumbsScreens.next().getFrameOwner();
-            String route = getRoute(getPage(nestedScreen));
-
-            if (nestedScreen instanceof EditorScreen) {
-                route = squashEditorRoute(state.toString(), route);
-            }
+            String route = formNestedScreenRoute(state.toString(), nestedScreen);
 
             state.append(route);
         }
@@ -209,66 +185,70 @@ public class WebNavigation implements Navigation {
         return state.toString();
     }
 
-    // Helpers
+    protected String formNestedScreenRoute(String state, Screen screen) {
+        String screenRoute = getRoute(screen);
 
-    protected String squashEditorRoute(String state, String route) {
-        // TODO: make it more stable and reliable
-        int slashIdx = route.indexOf('/');
-        if (slashIdx <= 0) {
-            return route;
+        if (screen instanceof EditorScreen) {
+            int slashIdx = screenRoute.indexOf('/');
+            if (slashIdx > 0) {
+                String editorContext = screenRoute.substring(0, slashIdx + 1);
+                if (state.endsWith(editorContext)) {
+                    screenRoute = screenRoute.substring(slashIdx + 1);
+                }
+            }
         }
 
-        String commonPart = route.substring(0, slashIdx + 1);
-        return state.endsWith(commonPart) ? route.substring(slashIdx + 1) : route;
+        return screenRoute;
     }
 
     protected String buildParamsString(Screen screen, Map<String, String> urlParams) {
-        String idParam = "";
+        Map<String, String> params = new LinkedHashMap<>();
+
         if (screen instanceof EditorScreen) {
-            EditorScreen editor = (EditorScreen) screen;
-            String base64Id = IdToBase64Converter.serialize(editor.getEditedEntity().getId());
-            idParam = "id=" + base64Id;
+            Object entityId = ((EditorScreen) screen).getEditedEntity().getId();
+            String base64Id = IdToBase64Converter.serialize(entityId);
+
+            params.put("id", base64Id);
         }
 
-        String params = "";
-        if (urlParams != null && !urlParams.isEmpty()) {
-            params = urlParams.entrySet()
-                    .stream()
-                    .map(paramPair -> String.format("%s=%s", paramPair.getKey(), paramPair.getValue()))
-                    .collect(Collectors.joining("&"));
-        }
+        params.putAll(urlParams != null ? urlParams : Collections.emptyMap());
 
-        if (idParam.isEmpty() && params.isEmpty()) {
-            return "";
-        }
+        String paramsString = params.entrySet()
+                .stream()
+                .map(param -> String.format("%s=%s", param.getKey(), param.getValue()))
+                .collect(Collectors.joining("&"));
 
-        StringBuilder sb = new StringBuilder("?");
-
-        if (!idParam.isEmpty()) {
-            sb.append(idParam);
-        }
-
-        if (!params.isEmpty()) {
-            sb.append(sb.length() > 1 ? "&" : "")
-                    .append(params);
-        }
-
-        return sb.toString();
+        return !paramsString.isEmpty() ? "?" + paramsString : "";
     }
 
-    protected String getRoute(PageDefinition pageDefinition) {
-        return pageDefinition == null ? "" : pageDefinition.getRoute();
+    protected String getRoute(Screen screen) {
+        PageDefinition page = getPage(screen);
+        String route = page != null ? page.getRoute() : null;
+
+        return route == null || route.isEmpty() ? "" : route;
     }
 
     protected PageDefinition getPage(Screen screen) {
-        return screen == null ? null :
-                screen.getScreenContext().getWindowInfo().getPageDefinition();
+        if (screen != null) {
+            return screen.getScreenContext().getWindowInfo().getPageDefinition();
+        }
+        return null;
     }
 
-    // Copied from WebScreens
     protected Screen getCurrentScreen() {
-        Iterator<Screen> screens = this.screens.getUiState().getCurrentBreadcrumbs()
+        Iterator<Screen> screens = getScreens().getUiState().getCurrentBreadcrumbs()
                 .iterator();
         return screens.hasNext() ? screens.next() : null;
+    }
+
+    protected Screens getScreens() {
+        if (screens == null) {
+            screens = AppUI.getCurrent().getScreens();
+        }
+        return screens;
+    }
+
+    protected String getScreenStateMark(Screen screen) {
+        return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
     }
 }

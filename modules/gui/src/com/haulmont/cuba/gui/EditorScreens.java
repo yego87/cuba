@@ -18,6 +18,7 @@ package com.haulmont.cuba.gui;
 
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.chile.core.model.MetaProperty;
+import com.haulmont.cuba.client.ClientConfig;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.ExtendedEntities;
 import com.haulmont.cuba.core.global.Metadata;
@@ -27,6 +28,7 @@ import com.haulmont.cuba.gui.components.ListComponent;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.data.DataUnit;
 import com.haulmont.cuba.gui.components.data.meta.ContainerDataUnit;
+import com.haulmont.cuba.gui.components.data.meta.EntityDataUnit;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.model.*;
@@ -41,6 +43,15 @@ import java.util.function.Function;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 
+/**
+ * Class that provides fluent interface for building entity editor screens with various options.
+ * <p>
+ * Inject the class into your screen controller and use {@link #builder(Class, FrameOwner)} or
+ * {@link #builder(ListComponent)} methods as entry points.
+ *
+ * @see Screens
+ * @see LookupScreens
+ */
 @Component("cuba_EditorScreens")
 public class EditorScreens {
 
@@ -50,7 +61,35 @@ public class EditorScreens {
     protected ExtendedEntities extendedEntities;
     @Inject
     protected WindowConfig windowConfig;
+    @Inject
+    protected ClientConfig clientConfig;
 
+    /**
+     * Creates a screen builder.
+     * <p>
+     * Example of building a screen for editing an entity:
+     * <pre>{@code
+     * SomeCustomerEditor screen = editorScreens.builder(Customer.class, this)
+     *         .withScreen(SomeCustomerEditor.class)
+     *         .withListComponent(customersTable)
+     *         .editEntity(customersTable.getSingleSelected())
+     *         .build();
+     * }</pre>
+     * <p>
+     * Example of building a screen for creating a new entity instance:
+     * <pre>{@code
+     * SomeCustomerEditor screen = editorScreens.builder(Customer.class, this)
+     *         .withScreen(SomeCustomerEditor.class)
+     *         .withListComponent(customersTable)
+     *         .newEntity()
+     *         .build();
+     * }</pre>
+     *
+     * @param entityClass   edited entity class
+     * @param origin        invoking screen
+     *
+     * @see #builder(ListComponent)
+     */
     public <E extends Entity> EditorBuilder<E> builder(Class<E> entityClass, FrameOwner origin) {
         checkNotNullArgument(entityClass);
         checkNotNullArgument(origin);
@@ -58,17 +97,54 @@ public class EditorScreens {
         return new EditorBuilder<>(origin, entityClass, this::buildEditor);
     }
 
+    /**
+     * Creates a screen builder.
+     * <p>
+     * Example of building a screen for editing a currently selected entity:
+     * <pre>{@code
+     * SomeCustomerEditor screen = editorScreens.builder(customersTable)
+     *          .withScreen(SomeCustomerEditor.class)
+     *          .build();
+     * }</pre>
+     * <p>
+     * Example of building a screen for creating a new entity instance:
+     * <pre>{@code
+     * SomeCustomerEditor screen = editorScreens.builder(customersTable)
+     *          .withScreen(SomeCustomerEditor.class)
+     *          .newEntity()
+     *          .build();
+     * }</pre>
+     *
+     * @param listComponent {@code Table}, {@code DataGrid} or another component containing the list of entities
+     *
+     * @see #builder(Class, FrameOwner)
+     */
+    public <E extends Entity> EditorBuilder<E> builder(ListComponent<E> listComponent) {
+        checkNotNullArgument(listComponent);
+
+        FrameOwner frameOwner = listComponent.getFrame().getFrameOwner();
+        Class<E> entityClass;
+        DataUnit<E> items = listComponent.getItems();
+        if (items instanceof EntityDataUnit<?>) {
+            entityClass = ((EntityDataUnit<E>) items).getEntityMetaClass().getJavaClass();
+        } else {
+            throw new IllegalStateException(String.format("Component %s is not bound to data", listComponent));
+        }
+        EditorBuilder<E> builder = new EditorBuilder<>(frameOwner, entityClass, this::buildEditor);
+        builder.withListComponent(listComponent);
+        builder.editEntity(listComponent.getSingleSelected());
+        return builder;
+    }
+
     @SuppressWarnings("unchecked")
     protected <E extends Entity, S extends Screen> S buildEditor(EditorBuilder<E> builder) {
         FrameOwner origin = builder.getOrigin();
         Screens screens = origin.getScreenContext().getScreens();
 
-        if (builder.getMode() == Mode.EDIT && builder.getEntity() == null) {
+        if (builder.getMode() == Mode.EDIT && builder.getEditedEntity() == null) {
             throw new IllegalStateException(String.format("Editor of %s cannot be open with mode EDIT, entity is not set",
                     builder.getEntityClass()));
         }
-
-        E entity = builder.getEntity();
 
         ListComponent<E> listComponent = builder.getListComponent();
 
@@ -82,15 +158,21 @@ public class EditorScreens {
         }
 
 
+        E entity;
         if (builder.getMode() == Mode.CREATE) {
-            if (entity == null) {
+            if (builder.getNewEntity() == null) {
                 entity = metadata.create(builder.getEntityClass());
+            } else {
+                entity = builder.getNewEntity();
+            }
+            if (container instanceof Nested) {
+                initializeNestedEntity(entity, (Nested) container);
             }
             if (builder.getInitializer() != null) {
                 builder.getInitializer().accept(entity);
-            } else if (container instanceof Nested) {
-                initializeNestedEntity(entity, (Nested) container);
             }
+        } else {
+            entity = builder.getEditedEntity();
         }
 
         Screen screen;
@@ -139,7 +221,11 @@ public class EditorScreens {
                 CloseAction closeAction = afterCloseEvent.getCloseAction();
                 if (isCommitCloseAction(closeAction)) {
                     if (builder.getMode() == Mode.CREATE) {
-                        ct.getMutableItems().add(0, editorScreen.getEditedEntity());
+                        if (ct instanceof Nested || !clientConfig.getCreateActionAddsFirst()) {
+                            ct.getMutableItems().add(editorScreen.getEditedEntity());
+                        } else {
+                            ct.getMutableItems().add(0, editorScreen.getEditedEntity());
+                        }
                     } else {
                         ct.replaceItem(editorScreen.getEditedEntity());
                     }
@@ -204,18 +290,25 @@ public class EditorScreens {
                 && ((StandardCloseAction) closeAction).getActionId().equals(Window.COMMIT_ACTION_ID);
     }
 
+    /**
+     * Editor screen purpose: to create a new entity instance or to edit an existing one.
+     */
     public enum Mode {
         CREATE,
         EDIT
     }
 
+    /**
+     * Builder that is not aware of concrete screen class. It's {@link #build()} method returns {@link Screen}.
+     */
     public static class EditorBuilder<E extends Entity> {
 
         protected final FrameOwner origin;
         protected final Class<E> entityClass;
         protected final Function<EditorBuilder<E>, Screen> handler;
 
-        protected E entity;
+        protected E newEntity;
+        protected E editedEntity;
         protected CollectionContainer<E> container;
         protected Consumer<E> initializer;
         protected Screens.LaunchMode launchMode = OpenMode.THIS_TAB;
@@ -235,7 +328,8 @@ public class EditorScreens {
             // copy all properties
 
             this.mode = builder.mode;
-            this.entity = builder.entity;
+            this.newEntity = builder.newEntity;
+            this.editedEntity = builder.editedEntity;
             this.container = builder.container;
             this.initializer = builder.initializer;
             this.options = builder.options;
@@ -250,120 +344,234 @@ public class EditorScreens {
             this.handler = handler;
         }
 
+        /**
+         * Sets {@link Mode} to {@code CREATE} and returns the builder for chaining.
+         * <p>A new entity instance will be created automatically. It can be initialized by code passed to
+         * the {@link #withInitializer(Consumer)} method.
+         *
+         * @see #newEntity(Entity)
+         */
         public EditorBuilder<E> newEntity() {
             this.mode = Mode.CREATE;
             return this;
         }
 
-        public EditorBuilder<E> withEntity(E entity) {
-            this.entity = entity;
+        /**
+         * Sets {@link Mode} to {@code CREATE} and returns the builder for chaining.
+         * <p>The new entity instance is accepted as the parameter. It can be initialized by code passed to
+         * the {@link #withInitializer(Consumer)} method.
+         *
+         * @param entity    new entity instance to be passed to the editor screen
+         * @see #newEntity()
+         */
+        public EditorBuilder<E> newEntity(E entity) {
+            this.newEntity = entity;
             return this;
         }
 
+
+        /**
+         * Sets {@link Mode} to {@code EDIT} and returns the builder for chaining.
+         *
+         * @param entity    entity instance to be passed to the editor screen
+         * @see #newEntity()
+         */
         public EditorBuilder<E> editEntity(E entity) {
-            this.entity = entity;
+            this.editedEntity = entity;
             this.mode = Mode.EDIT;
             return this;
         }
 
+        /**
+         * Sets {@code CollectionContainer} and returns the builder for chaining.
+         * <p>The container is updated after the editor screen is committed. If the container is {@link Nested},
+         * the framework automatically initializes the reference to the parent entity and sets up data contexts
+         * for editing compositions.
+         */
         public EditorBuilder<E> withContainer(CollectionContainer<E> container) {
             this.container = container;
             return this;
         }
 
+        /**
+         * Sets code to initialize a new entity instance and returns the builder for chaining.
+         * <p>The initializer is invoked only when {@link Mode} is {@code CREATE}, i.e. when {@link #newEntity()} or
+         * {@link #newEntity(Entity)} methods are invoked on the builder.
+         */
         public EditorBuilder<E> withInitializer(Consumer<E> initializer) {
             this.initializer = initializer;
 
             return this;
         }
 
+        /**
+         * Sets {@link Screens.LaunchMode} for the editor screen and returns the builder for chaining.
+         * <p>For example: {@code builder.withLaunchMode(OpenMode.DIALOG).build();}
+         */
         public EditorBuilder<E> withLaunchMode(Screens.LaunchMode launchMode) {
             this.launchMode = launchMode;
             return this;
         }
 
+        /**
+         * Sets parent {@link DataContext} for the editor screen and returns the builder for chaining.
+         * <p>The screen will commit data to the parent context instead of directly to {@code DataManager}.
+         */
         public EditorBuilder<E> withParentDataContext(DataContext parentDataContext) {
             this.parentDataContext = parentDataContext;
             return this;
         }
 
+        /**
+         * Sets {@link ScreenOptions} for the editor screen and returns the builder for chaining.
+         */
         public EditorBuilder<E> withOptions(ScreenOptions options) {
             this.options = options;
             return this;
         }
 
+        /**
+         * Sets list component and returns the builder for chaining.
+         * <p>The component is used to get the {@code container} if it is not set explicitly by
+         * {@link #withContainer(CollectionContainer)} method. Usually, the list component is a {@code Table}
+         * or {@code DataGrid} displaying the list of entities.
+         */
         public EditorBuilder<E> withListComponent(ListComponent<E> listComponent) {
             this.listComponent = listComponent;
             return this;
         }
 
+        /**
+         * Sets screen id and returns the builder for chaining.
+         *
+         * @param screenId  identifier of the editor screen as specified in the {@code UiController} annotation
+         *                  or {@code screens.xml}.
+         */
         public EditorBuilder<E> withScreen(String screenId) {
             this.screenId = screenId;
             return this;
         }
 
+        /**
+         * Sets screen class and returns the {@link EditorClassBuilder} for chaining.
+         *
+         * @param screenClass class of the screen controller
+         */
         public <S extends Screen & EditorScreen<E>> EditorClassBuilder<E, S> withScreen(Class<S> screenClass) {
             return new EditorClassBuilder<>(this, screenClass);
         }
 
+        /**
+         * Sets the field component and returns the builder for chaining.
+         * <p>If the field is set, the framework sets the committed entity to the field after successful editor commit.
+         */
         public <T extends com.haulmont.cuba.gui.components.Component & HasValue<E>> EditorBuilder<E> withField(T field) {
             this.field = field;
             return this;
         }
 
+        /**
+         * Returns the field component set by {@link #withField(com.haulmont.cuba.gui.components.Component)}.
+         */
         public com.haulmont.cuba.gui.components.Component getField() {
             return field;
         }
 
+        /**
+         * Returns screen id set by {@link #withScreen(String)}.
+         */
         public String getScreenId() {
             return screenId;
         }
 
+        /**
+         * Returns parent data context set by {@link #withParentDataContext(DataContext)}.
+         */
         public DataContext getParentDataContext() {
             return parentDataContext;
         }
 
+        /**
+         * Returns edited entity class.
+         */
         public Class<E> getEntityClass() {
             return entityClass;
         }
 
-        public E getEntity() {
-            return entity;
+        /**
+         * Returns new entity set by {@link #newEntity(Entity)}.
+         */
+        public E getNewEntity() {
+            return newEntity;
         }
 
+        /**
+         * Returns entity set by {@link #editEntity(Entity)}.
+         */
+        public E getEditedEntity() {
+            return editedEntity;
+        }
+
+        /**
+         * Returns container set by {@link #withContainer(CollectionContainer)}.
+         */
         public CollectionContainer<E> getContainer() {
             return container;
         }
 
+        /**
+         * Returns initializer set by {@link #withInitializer(Consumer)}.
+         */
         public Consumer<E> getInitializer() {
             return initializer;
         }
 
+        /**
+         * Returns launch mode set by {@link #withLaunchMode(Screens.LaunchMode)}.
+         */
         public Screens.LaunchMode getLaunchMode() {
             return launchMode;
         }
 
+        /**
+         * Returns invoking screen.
+         */
         public FrameOwner getOrigin() {
             return origin;
         }
 
+        /**
+         * Returns screen options set by {@link #withOptions(ScreenOptions)}.
+         */
         public ScreenOptions getOptions() {
             return options;
         }
 
+        /**
+         * Returns list component set by {@link #withListComponent(ListComponent)}.
+         */
         public ListComponent<E> getListComponent() {
             return listComponent;
         }
 
+        /**
+         * Returns builder mode derived from previous calls to {@link #newEntity()} or {@link #editEntity(Entity)}.
+         */
         public Mode getMode() {
             return mode;
         }
 
-        public Screen create() {
+        /**
+         * Builds the editor screen.
+         */
+        public Screen build() {
             return handler.apply(this);
         }
     }
 
+    /**
+     * Builder that knows the concrete screen class. It's {@link #build()} method returns that class.
+     */
     public static class EditorClassBuilder<E extends Entity, S extends Screen & EditorScreen<E>>
             extends EditorBuilder<E> {
 
@@ -388,8 +596,8 @@ public class EditorScreens {
         }
 
         @Override
-        public EditorClassBuilder<E, S> withEntity(E entity) {
-            super.withEntity(entity);
+        public EditorClassBuilder<E, S> newEntity(E entity) {
+            super.newEntity(entity);
             return this;
         }
 
@@ -440,13 +648,16 @@ public class EditorScreens {
             return this;
         }
 
+        /**
+         * Returns editor screen class.
+         */
         public Class<S> getScreenClass() {
             return screenClass;
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public S create() {
+        public S build() {
             return (S) handler.apply(this);
         }
     }

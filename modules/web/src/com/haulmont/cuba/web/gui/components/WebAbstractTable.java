@@ -40,7 +40,7 @@ import com.haulmont.cuba.gui.components.LookupComponent.LookupSelectionChangeNot
 import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.components.data.BindingState;
 import com.haulmont.cuba.gui.components.data.TableItems;
-import com.haulmont.cuba.gui.components.data.meta.AggregatableTableItems;
+import com.haulmont.cuba.gui.components.data.AggregatableTableItems;
 import com.haulmont.cuba.gui.components.data.meta.ContainerDataUnit;
 import com.haulmont.cuba.gui.components.data.meta.EntityTableItems;
 import com.haulmont.cuba.gui.components.data.meta.LegacyDataUnit;
@@ -1487,9 +1487,9 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         @Override
         public void addContainerPropertyAggregation(Object propertyId, Type type) {
             if (aggregationProperties == null) {
-                aggregationProperties = new LinkedList<>();
+                aggregationProperties = new ArrayList<>();
             } else if (aggregationProperties.contains(propertyId)) {
-                throw new IllegalStateException("Such aggregation property is already exists");
+                throw new IllegalStateException(String.format("Aggregation property %s already exists", propertyId));
             }
             aggregationProperties.add(propertyId);
         }
@@ -1537,9 +1537,9 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
         @Override
         public void addContainerPropertyAggregation(Object propertyId, AggregationContainer.Type type) {
             if (aggregationProperties == null) {
-                aggregationProperties = new LinkedList<>();
+                aggregationProperties = new ArrayList<>();
             } else if (aggregationProperties.contains(propertyId)) {
-                throw new IllegalStateException("Such aggregation property is already exists");
+                throw new IllegalStateException(String.format("Aggregation property %s already exists", propertyId));
             }
             aggregationProperties.add(propertyId);
         }

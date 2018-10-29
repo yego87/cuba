@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.components.data.meta;
+package com.haulmont.cuba.gui.components.data;
 
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.components.AggregationInfo;
-import com.haulmont.cuba.gui.components.data.TableItems;
 
 import java.util.Collection;
 import java.util.Map;

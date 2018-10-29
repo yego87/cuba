@@ -41,6 +41,7 @@ import com.haulmont.cuba.web.sys.TabWindowContainer;
 import com.haulmont.cuba.web.sys.VaadinSessionScope;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
+import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.EventListener;
@@ -106,42 +107,32 @@ public class UriChangeHandler {
     }
 
     protected boolean historyNavigation(UriState uriState) {
-        return history.searchBackward(uriState) || history.searchForward(uriState);
+        return Objects.equals(uriState, history.lookBackward()) || Objects.equals(uriState, history.lookForward());
     }
 
     protected void handleHistoryNavigation(UriState uriState) {
-        if (jumpOverHistory(uriState)) {
-            reloadApp();
-            return;
-        }
-
-        boolean backward = uriState.equals(history.lookBackward());
-        boolean forward = uriState.equals(history.lookForward());
-
-        if (!backward && !forward) {
-            reloadApp();
-            return;
-        }
-
-        if (backward) {
+        if (Objects.equals(uriState, history.lookBackward())) {
             handleHistoryBackward();
         } else {
             handleHistoryForward();
         }
     }
 
-    protected boolean jumpOverHistory(UriState uriState) {
-        if (history.searchBackward(uriState) && !uriState.equals(history.lookBackward())) {
-            return true;
-        }
-        if (history.searchForward(uriState) && !uriState.equals(history.lookForward())) {
-            return true;
-        }
-        return false;
-    }
-
     protected void handleHistoryBackward() {
-        Screen screen = findScreenByState(history.now());
+        UriState prevState = history.lookBackward();
+        Screen prevScreen = findScreenByState(prevState);
+        if (prevScreen == null && StringUtils.isNoneEmpty(prevState.getStateMark())) {
+            revertHistoryBackward();
+
+            notifications.create()
+                    .setCaption("Unable to perform backward navigation due to closed previous screen")
+                    .setType(Notifications.NotificationType.HUMANIZED)
+                    .show();
+
+            return;
+        }
+
+        Screen screen = findActiveScreenByState(history.now());
         if (screen != null) {
             screen.getWindow().getFrameOwner()
                     .close(FrameOwner.WINDOW_CLOSE_ACTION)
@@ -156,7 +147,7 @@ public class UriChangeHandler {
         UriState now = history.now();
         UriState prevState = history.backward();
 
-        focusScreen(findScreenByState(prevState));
+        focusScreen(findActiveScreenByState(prevState));
 
         boolean rootBackward = isRootRoute(prevState) && rootChanged(prevState);
         String state = !rootBackward ? prevState.asRoute() : now.asRoute();
@@ -169,7 +160,7 @@ public class UriChangeHandler {
     }
 
     protected void handleHistoryForward() {
-        Screen currentScreen = findScreenByState(history.now());
+        Screen currentScreen = findActiveScreenByState(history.now());
         if (currentScreen == null) {
             currentScreen = getCurrentScreen();
             if (currentScreen == null) {
@@ -180,7 +171,7 @@ public class UriChangeHandler {
         String route = currentScreen.getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
-        Page.getCurrent().replaceState("#!" + route);
+        Page.getCurrent().setUriFragment("!" + route);
 
         notifications.create()
                 .setCaption("Unable to navigate forward through history")
@@ -212,14 +203,24 @@ public class UriChangeHandler {
     }
 
     protected void revertHistoryBackward() {
-        String route = findScreenByState(history.now())
+        String route = findActiveScreenByState(history.now())
                 .getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
-        Page.getCurrent().replaceState("#!" + route);
+        Page.getCurrent().setUriFragment("!" + route);
     }
 
     protected Screen findScreenByState(UriState uriState) {
+        String stateMark = uriState.getStateMark();
+        return screens.getUiState()
+                .getOpenedScreens()
+                .stream()
+                .filter(s -> Objects.equals(stateMark, getStateMark(s.getWindow())))
+                .findFirst()
+                .orElse(null);
+    }
+
+    protected Screen findActiveScreenByState(UriState uriState) {
         String stateMark = uriState.getStateMark();
         return screens.getUiState()
                 .getActiveScreens()

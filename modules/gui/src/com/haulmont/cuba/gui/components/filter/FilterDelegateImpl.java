@@ -521,11 +521,11 @@ public class FilterDelegateImpl implements FilterDelegate {
             if (!WindowParams.DISABLE_AUTO_REFRESH.getBool(window.getContext())) {
                 if (getResultingManualApplyRequired()) {
                     if (BooleanUtils.isTrue(defaultFilter.getApplyDefault())) {
-                        adapter.beforeApplyDefault();
+                        adapter.preventNextDataLoading();
                         apply(true);
                     }
                 } else {
-                    adapter.beforeApplyDefault();
+                    adapter.preventNextDataLoading();
                     apply(true);
                 }
                 if (filterEntity != null) {
@@ -1521,6 +1521,12 @@ public class FilterDelegateImpl implements FilterDelegate {
     @Override
     public boolean getTextMaxResults() {
         return textMaxResults;
+    }
+
+    @Override
+    public void applyWithoutLoadingData(boolean notifyInvalidConditions) {
+        adapter.preventNextDataLoading();
+        apply(notifyInvalidConditions);
     }
 
     @Override
@@ -2834,7 +2840,7 @@ public class FilterDelegateImpl implements FilterDelegate {
         void pinQuery();
         void unpinAllQuery();
         String getQuery();
-        void beforeApplyDefault();
+        void preventNextDataLoading();
     }
 
     protected static class LoaderAdapter implements Adapter {
@@ -2842,7 +2848,7 @@ public class FilterDelegateImpl implements FilterDelegate {
         protected CollectionLoader loader;
         protected Filter filter;
         protected QueryFilter queryFilter;
-        protected boolean applyingDefault;
+        protected boolean preventDataLoading;
 
         /**
          * Condition which was set on DataLoader before applying the filter
@@ -2941,8 +2947,8 @@ public class FilterDelegateImpl implements FilterDelegate {
                 loader.setCondition(dataLoaderCondition);
             }
 
-            if (applyingDefault) {
-                applyingDefault = false;
+            if (preventDataLoading) {
+                preventDataLoading = false;
             } else {
                 loader.load();
             }
@@ -2993,8 +2999,8 @@ public class FilterDelegateImpl implements FilterDelegate {
         }
 
         @Override
-        public void beforeApplyDefault() {
-            applyingDefault = true;
+        public void preventNextDataLoading() {
+            preventDataLoading = true;
         }
     }
 
@@ -3084,8 +3090,8 @@ public class FilterDelegateImpl implements FilterDelegate {
         }
 
         @Override
-        public void beforeApplyDefault() {
-
+        public void preventNextDataLoading() {
+            // do nothing
         }
     }
 }

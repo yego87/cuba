@@ -85,6 +85,14 @@ public interface Filter extends HasMargin, Component.BelongToFrame, HasNamedComp
 
     /**
      * Applies the filter. Before the filter is applied, conditions correctness is checked. If invalid conditions are
+     * found (i.e. empty required conditions) then the filter will not be applied to the data source without data loading.
+     *
+     * @param notifyInvalidConditions whether a notification about invalid conditions values should be displayed
+     */
+    void applyWithoutLoadingData(boolean notifyInvalidConditions);
+
+    /**
+     * Applies the filter. Before the filter is applied, conditions correctness is checked. If invalid conditions are
      * found (i.e. empty required conditions) then the filter will not be applied.
      *
      * @param notifyInvalidConditions whether a notification about invalid conditions values should be displayed

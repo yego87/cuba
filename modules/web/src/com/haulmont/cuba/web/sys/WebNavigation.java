@@ -34,6 +34,9 @@ import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
 import com.haulmont.cuba.web.navigation.UrlTools;
 import com.vaadin.server.Page;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +47,8 @@ import java.util.stream.Collectors;
 @Scope(UIScope.NAME)
 @Component(Navigation.NAME)
 public class WebNavigation implements Navigation {
+
+    private static final Logger log = LoggerFactory.getLogger(WebNavigation.class);
 
     protected static final int MAX_NESTED_ROUTES = 2;
 
@@ -142,7 +147,7 @@ public class WebNavigation implements Navigation {
     protected String buildDialogRoute(Screen dialog) {
         PageDefinition page = getPage(dialog);
         if (page == null) {
-            return null;
+            return buildScreenRoute(getCurrentScreen());
         }
 
         String dialogRoute = page.getRoute();
@@ -152,12 +157,20 @@ public class WebNavigation implements Navigation {
 
         Screen currentScreen = getCurrentScreen();
         boolean openedInContext = currentScreen.getClass() == page.getParent();
+        if (!openedInContext) {
+            throw new IllegalStateException("Dialog is opened outside of its context");
+        }
 
-        return openedInContext ? buildScreenRoute(currentScreen) + "/" + dialogRoute
-                : dialogRoute;
+        String contextRoute = buildScreenRoute(currentScreen);
+        return StringUtils.isNotEmpty(dialogRoute) ? contextRoute + "/" + dialogRoute
+                : contextRoute;
     }
 
     protected String buildScreenRoute(Screen screen) {
+        if (screen == null) {
+            return "";
+        }
+
         Iterator<Window> breadCrumbsScreens = ((TabWindowContainer) screen.getWindow()
                 .unwrapComposition(com.vaadin.ui.Component.class)
                 .getParent())
@@ -169,15 +182,15 @@ public class WebNavigation implements Navigation {
         int depth = 0;
 
         while (breadCrumbsScreens.hasNext() && depth < MAX_NESTED_ROUTES) {
-            if (depth > 0) {
-                state.append('/');
-            }
-            depth++;
-
             Screen nestedScreen = breadCrumbsScreens.next().getFrameOwner();
             String route = formNestedScreenRoute(state.toString(), nestedScreen);
 
+            if (!state.toString().isEmpty() && !route.isEmpty()) {
+                state.append('/');
+            }
             state.append(route);
+
+            depth++;
         }
 
         return state.toString();
@@ -200,6 +213,12 @@ public class WebNavigation implements Navigation {
     }
 
     protected String buildParamsString(Screen screen, Map<String, String> urlParams) {
+        String route = getRoute(screen);
+        if (StringUtils.isEmpty(route)) {
+            log.info("There's no route for screen {}. Ignore URL params");
+            return "";
+        }
+
         Map<String, String> params = new LinkedHashMap<>();
 
         if (screen instanceof EditorScreen) {

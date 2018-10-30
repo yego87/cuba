@@ -24,6 +24,7 @@ import com.haulmont.cuba.core.app.dynamicattributes.DynamicAttributesCacheServic
 import com.haulmont.cuba.core.entity.Category;
 import com.haulmont.cuba.core.global.MessageTools;
 import com.haulmont.cuba.core.global.Metadata;
+import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.gui.WindowManager.OpenType;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.actions.BaseAction;
@@ -37,6 +38,7 @@ import javax.inject.Inject;
 import java.util.Map;
 import java.util.Set;
 
+@Page("categories")
 public class CategoryBrowser extends AbstractLookup {
 
     @Inject

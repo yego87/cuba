@@ -47,7 +47,10 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 
 @Scope(UIScope.NAME)
 @Component(UriChangeHandler.NAME)
@@ -179,7 +182,11 @@ public class UriChangeHandler {
     }
 
     protected void revertHistoryBackward() {
-        String route = findActiveScreenByState(getHistory().now())
+        Screen screen = findActiveScreenByState(getHistory().now());
+        if (screen == null) {
+            screen = getCurrentScreen();
+        }
+        String route = screen
                 .getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
@@ -224,12 +231,12 @@ public class UriChangeHandler {
             return false;
         }
 
-        Collection<Screen> breadCrumbsScreens = getScreens().getOpenedScreens().getCurrentBreadcrumbs();
-        if (breadCrumbsScreens.isEmpty()) {
-            return true;
+        Screen currentScreen = getCurrentScreen();
+        if (currentScreen == null) {
+            throw new IllegalStateException("There is no any screen in UI");
         }
 
-        String currentScreenRoute = breadCrumbsScreens.iterator().next()
+        String currentScreenRoute = currentScreen
                 .getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
@@ -298,14 +305,20 @@ public class UriChangeHandler {
     }
 
     protected Screen getCurrentScreen() {
+        Iterator<Screen> dialogs = getScreens().getOpenedScreens().getDialogScreens().iterator();
+        if (dialogs.hasNext()) {
+            return dialogs.next();
+        }
+
         Iterator<Screen> breadCrumbsScreens = getScreens()
                 .getOpenedScreens()
                 .getCurrentBreadcrumbs()
                 .iterator();
+        if (breadCrumbsScreens.hasNext()) {
+            return breadCrumbsScreens.next();
+        }
 
-        return breadCrumbsScreens.hasNext()
-                ? breadCrumbsScreens.next()
-                : getScreens().getOpenedScreens().getRootScreenOrNull();
+        return getScreens().getOpenedScreens().getRootScreenOrNull();
     }
 
     protected Screens getScreens() {

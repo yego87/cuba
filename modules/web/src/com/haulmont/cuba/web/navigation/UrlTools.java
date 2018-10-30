@@ -55,7 +55,7 @@ public class UrlTools {
             return parseParamsRoute(uriFragment);
         }
 
-        throw new RuntimeException("Failed to match URL");
+        return UriState.empty();
     }
 
     protected static UriState parseRootRoute(String uriFragment) {

@@ -28,6 +28,8 @@ import com.haulmont.cuba.web.gui.MainTabSheetMode;
 import com.haulmont.cuba.web.gui.MainTabSheetModeFactory;
 import com.haulmont.cuba.web.gui.ManagedMainTabSheetMode;
 import com.haulmont.cuba.web.gui.ManagedMainTabSheetModeFactory;
+import com.haulmont.cuba.web.gui.UrlHandlingMode;
+import com.haulmont.cuba.web.gui.UrlHandlingModeFactory;
 
 import java.util.List;
 
@@ -163,6 +165,25 @@ public interface WebConfig extends Config {
     @Property("cuba.web.mainTabCaptionLength")
     @DefaultInt(25)
     int getMainTabCaptionLength();
+
+    /**
+     * @return Whether to handle back button click in browser on server-side.
+     * @deprecated use {@link WebConfig#getUrlHandlingMode()} instead
+     */
+    @Property("cuba.web.allowHandleBrowserHistoryBack")
+    @DefaultBoolean(true)
+    @Deprecated
+    boolean getAllowHandleBrowserHistoryBack();
+
+    /**
+     * @return how URL changes should be handled
+     *
+     * @see UrlHandlingMode
+     */
+    @Property("cuba.web.urlHandlingMode")
+    @Default("NATIVE")
+    @Factory(factory = UrlHandlingModeFactory.class)
+    UrlHandlingMode getUrlHandlingMode();
 
     /**
      * @return Theme

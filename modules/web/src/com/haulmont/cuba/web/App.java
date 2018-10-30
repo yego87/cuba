@@ -47,6 +47,7 @@ import com.haulmont.cuba.security.global.UserSession;
 import com.haulmont.cuba.web.auth.WebAuthConfig;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.exception.ExceptionHandlers;
+import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.log.AppLog;
 import com.haulmont.cuba.web.security.events.SessionHeartbeatEvent;
 import com.haulmont.cuba.web.settings.WebSettingsClient;
@@ -306,7 +307,8 @@ public abstract class App {
     }
 
     protected void handleRedirect(AppUI ui, UriState uriState) {
-        if (uriState == null) {
+        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()
+                || uriState == null) {
             return;
         }
 

@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.gui.navigation;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -32,6 +33,10 @@ public class UriState {
         this.stateMark = stateMark;
         this.nestedRoute = nestedRoute;
         this.params = params;
+    }
+
+    public static UriState empty() {
+        return new UriState("", "", "", Collections.emptyMap());
     }
 
     public String getRoot() {

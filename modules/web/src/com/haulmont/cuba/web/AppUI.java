@@ -32,6 +32,7 @@ import com.haulmont.cuba.security.global.UserSession;
 import com.haulmont.cuba.web.app.UserSettingsTools;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.events.UIRefreshEvent;
+import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.security.events.AppInitializedEvent;
 import com.haulmont.cuba.web.security.events.SessionHeartbeatEvent;
@@ -119,6 +120,8 @@ public class AppUI extends CubaUI
 
     protected CubaFileDownloader fileDownloader;
 
+    protected CubaHistoryControl historyControl;
+
     protected RootWindow topLevelWindow;
 
     protected Fragments fragments;
@@ -172,6 +175,11 @@ public class AppUI extends CubaUI
 
         fileDownloader = new CubaFileDownloader();
         fileDownloader.extend(this);
+
+        if (UrlHandlingMode.BACK_ONLY == webConfig.getUrlHandlingMode()) {
+            historyControl = new CubaHistoryControl();
+            historyControl.extend(this, this);
+        }
     }
 
     protected App createApplication() {
@@ -260,7 +268,11 @@ public class AppUI extends CubaUI
         log.trace("Initializing UI {}", this);
 
         try {
-            initUriChangeHandler();
+            initUiScope();
+
+            getPage().addPopStateListener(event ->
+                    uriChangeHandler.handleUriChange());
+
             this.testMode = globalConfig.getTestMode();
             this.performanceTestMode = globalConfig.getPerformanceTestMode();
             // init error handlers
@@ -333,6 +345,9 @@ public class AppUI extends CubaUI
 
         UriChangeHandler uriChangeHandler = beanLocator.getPrototype(UriChangeHandler.NAME, this);
         setUriChangeHandler(uriChangeHandler);
+
+        getPage().addPopStateListener(event ->
+                uriChangeHandler.handleUriChange());
 
         History history = beanLocator.getPrototype(History.NAME, this);
         setHistory(history);
@@ -593,6 +608,14 @@ public class AppUI extends CubaUI
 
         reconnectDialogConfiguration.setDialogText(messages.getMainMessage("reconnectDialogText", locale));
         reconnectDialogConfiguration.setDialogTextGaveUp(messages.getMainMessage("reconnectDialogTextGaveUp", locale));
+    }
+
+    @Override
+    public void onHistoryBackPerformed() {
+        com.haulmont.cuba.gui.components.Window topLevelWindow = getTopLevelWindow();
+        if (topLevelWindow instanceof CubaHistoryControl.HistoryBackHandler) {
+            ((CubaHistoryControl.HistoryBackHandler) topLevelWindow).onHistoryBackPerformed();
+        }
     }
 
     protected AbstractComponent getTopLevelWindowComposition() {

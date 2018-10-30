@@ -32,7 +32,9 @@ import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.xml.layout.ScreenXmlLoader;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
+import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
@@ -40,6 +42,8 @@ import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -57,6 +61,8 @@ import java.util.Objects;
 public class UriChangeHandler {
 
     public static final String NAME = "cuba_UriChangeHandler";
+
+    private static final Logger log = LoggerFactory.getLogger(UriChangeHandler.class);
 
     protected AppUI ui;
 
@@ -78,6 +84,9 @@ public class UriChangeHandler {
     @Inject
     protected DataManager dataManager;
 
+    @Inject
+    protected WebConfig webConfig;
+
     public UriChangeHandler(AppUI ui) {
         this.ui = ui;
     }
@@ -85,10 +94,20 @@ public class UriChangeHandler {
     @Order(Events.LOWEST_PLATFORM_PRECEDENCE)
     @EventListener
     protected void handleUriStateChanged(UriStateChangedEvent event) {
+        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+            log.debug("UriChangeHandler is disabled for {} URL handling mode", webConfig.getUrlHandlingMode());
+            return;
+        }
+
         handleUriChange(event.getState());
     }
 
     public void handleUriChange() {
+        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+            log.debug("UriChangeHandler is disabled for {} URL handling mode", webConfig.getUrlHandlingMode());
+            return;
+        }
+
         UriState uriState = ui.getNavigation().getState();
 
         if (uriState == null) {

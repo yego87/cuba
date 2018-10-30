@@ -30,6 +30,8 @@ import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.WebConfig;
+import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
 import com.haulmont.cuba.web.navigation.UrlTools;
@@ -48,9 +50,9 @@ import java.util.stream.Collectors;
 @Component(Navigation.NAME)
 public class WebNavigation implements Navigation {
 
-    private static final Logger log = LoggerFactory.getLogger(WebNavigation.class);
-
     protected static final int MAX_NESTED_ROUTES = 2;
+
+    private static final Logger log = LoggerFactory.getLogger(WebNavigation.class);
 
     protected AppUI ui;
 
@@ -63,12 +65,20 @@ public class WebNavigation implements Navigation {
     @Inject
     protected BeanLocator beanLocator;
 
+    @Inject
+    protected WebConfig webConfig;
+
     public WebNavigation(AppUI ui) {
         this.ui = ui;
     }
 
     @Override
     public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
+        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+            return;
+        }
+
         UriState oldUriState = fireStateChanged ? getState() : null;
 
         String navigationState = buildNavState(screen, uriParams);
@@ -88,6 +98,11 @@ public class WebNavigation implements Navigation {
 
     @Override
     public void replaceState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
+        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+            return;
+        }
+
         UriState oldUriState = fireStateChanged ? getState() : null;
 
         String navigationState = buildNavState(screen, uriParams);
@@ -104,6 +119,10 @@ public class WebNavigation implements Navigation {
 
     @Override
     public UriState getState() {
+        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+            return UriState.empty();
+        }
         return UrlTools.parseState(Page.getCurrent().getUriFragment());
     }
 

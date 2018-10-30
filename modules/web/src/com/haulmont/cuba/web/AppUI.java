@@ -37,7 +37,6 @@ import com.haulmont.cuba.web.security.events.AppInitializedEvent;
 import com.haulmont.cuba.web.security.events.SessionHeartbeatEvent;
 import com.haulmont.cuba.web.sys.*;
 import com.haulmont.cuba.web.sys.WebJarResourceResolver;
-import com.haulmont.cuba.web.url.UriChangeHandler;
 import com.haulmont.cuba.web.widgets.*;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -128,6 +127,8 @@ public class AppUI extends CubaUI
     protected Notifications notifications;
     protected WebBrowserTools webBrowserTools;
     protected UriChangeHandler uriChangeHandler;
+    protected Navigation navigation;
+    protected History history;
 
     public AppUI() {
     }
@@ -230,6 +231,30 @@ public class AppUI extends CubaUI
         this.fragments = fragments;
     }
 
+    public Navigation getNavigation() {
+        return navigation;
+    }
+
+    public void setNavigation(Navigation navigation) {
+        this.navigation = navigation;
+    }
+
+    public UriChangeHandler getUriChangeHandler() {
+        return uriChangeHandler;
+    }
+
+    public void setUriChangeHandler(UriChangeHandler uriChangeHandler) {
+        this.uriChangeHandler = uriChangeHandler;
+    }
+
+    public History getHistory() {
+        return history;
+    }
+
+    public void setHistory(History history) {
+        this.history = history;
+    }
+
     @Override
     protected void init(VaadinRequest request) {
         log.trace("Initializing UI {}", this);
@@ -302,6 +327,15 @@ public class AppUI extends CubaUI
         Screens screens = new WebScreens(this);
         autowireContext(screens, applicationContext);
         setScreens(screens);
+
+        Navigation navigation = beanLocator.getPrototype(Navigation.NAME, this);
+        setNavigation(navigation);
+
+        UriChangeHandler uriChangeHandler = beanLocator.getPrototype(UriChangeHandler.NAME, this);
+        setUriChangeHandler(uriChangeHandler);
+
+        History history = beanLocator.getPrototype(History.NAME, this);
+        setHistory(history);
     }
 
     protected void initUriChangeHandler() {

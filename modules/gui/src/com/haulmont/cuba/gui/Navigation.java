@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.navigation;
+package com.haulmont.cuba.gui;
 
+import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.screen.Screen;
 
 import java.util.Collections;

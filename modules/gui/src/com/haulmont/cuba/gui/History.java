@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.history;
+package com.haulmont.cuba.gui;
 
 import com.haulmont.cuba.gui.navigation.UriState;
 

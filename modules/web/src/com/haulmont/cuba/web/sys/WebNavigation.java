@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.navigation;
+package com.haulmont.cuba.web.sys;
 
 import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
+import com.haulmont.cuba.gui.Navigation;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
-import com.haulmont.cuba.gui.history.History;
-import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
@@ -32,8 +31,8 @@ import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.gui.WebWindow;
-import com.haulmont.cuba.web.sys.TabWindowContainer;
-import com.haulmont.cuba.web.sys.VaadinSessionScope;
+import com.haulmont.cuba.web.navigation.IdToBase64Converter;
+import com.haulmont.cuba.web.navigation.UrlTools;
 import com.vaadin.server.Page;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -42,13 +41,13 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Scope(UIScope.NAME)
 @Component(Navigation.NAME)
-@Scope(VaadinSessionScope.NAME)
 public class WebNavigation implements Navigation {
 
-    protected static final String SHEBANG = "#!";
-
     protected static final int MAX_NESTED_ROUTES = 2;
+
+    protected AppUI ui;
 
     @Inject
     protected WindowConfig windowConfig;
@@ -59,10 +58,9 @@ public class WebNavigation implements Navigation {
     @Inject
     protected BeanLocator beanLocator;
 
-    @Inject
-    protected History history;
-
-    protected Screens screens;
+    public WebNavigation(AppUI ui) {
+        this.ui = ui;
+    }
 
     @Override
     public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
@@ -73,10 +71,10 @@ public class WebNavigation implements Navigation {
         screen.getScreenContext().getNavigationInfo()
                 .update(navigationState, uriParams);
 
-        Page.getCurrent().setUriFragment("!" + navigationState, false);
+        Page.getCurrent().setUriFragment(navigationState, false);
 
         UriState newUriState = getState();
-        history.push(newUriState);
+        ui.getHistory().push(newUriState);
 
         if (fireStateChanged) {
             fireStateChange(oldUriState, newUriState);
@@ -92,7 +90,7 @@ public class WebNavigation implements Navigation {
         screen.getScreenContext().getNavigationInfo()
                 .update(navigationState, uriParams);
 
-        Page.getCurrent().replaceState(SHEBANG + navigationState);
+        Page.getCurrent().replaceState("#" + navigationState);
 
         if (fireStateChanged) {
             fireStateChange(oldUriState, getState());
@@ -116,7 +114,7 @@ public class WebNavigation implements Navigation {
         if (screen.getWindow() instanceof RootWindow) {
             state.append(getRoute(screen));
         } else {
-            Screen rootScreen = getScreens().getUiState().getRootScreen();
+            Screen rootScreen = getScreens().getOpenedScreens().getRootScreen();
             state.append(getRoute(rootScreen));
 
             String stateMark = getScreenStateMark(screen);
@@ -236,16 +234,13 @@ public class WebNavigation implements Navigation {
     }
 
     protected Screen getCurrentScreen() {
-        Iterator<Screen> screens = getScreens().getUiState().getCurrentBreadcrumbs()
+        Iterator<Screen> screens = getScreens().getOpenedScreens().getCurrentBreadcrumbs()
                 .iterator();
         return screens.hasNext() ? screens.next() : null;
     }
 
     protected Screens getScreens() {
-        if (screens == null) {
-            screens = AppUI.getCurrent().getScreens();
-        }
-        return screens;
+        return ui.getScreens();
     }
 
     protected String getScreenStateMark(Screen screen) {

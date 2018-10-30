@@ -19,6 +19,7 @@ package com.haulmont.cuba.web;
 
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.Dialogs;
+import com.haulmont.cuba.gui.Navigation;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.Action;
 import com.haulmont.cuba.gui.components.DialogAction;
@@ -28,10 +29,10 @@ import com.haulmont.cuba.gui.components.actions.BaseAction;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.executors.IllegalConcurrentAccessException;
-import com.haulmont.cuba.gui.navigation.Navigation;
-import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
+import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.OpenMode;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.settings.SettingsClient;
@@ -57,6 +58,7 @@ import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -116,9 +118,6 @@ public abstract class App {
     protected MessageTools messageTools;
     @Inject
     protected SettingsClient settingsClient;
-    @Inject
-    protected Navigation navigation;
-
     @Inject
     protected Events events;
     @Inject
@@ -294,7 +293,7 @@ public abstract class App {
      * Called on each browser tab initialization.
      */
     public void createTopLevelWindow(AppUI ui) {
-        UriState requestedState = navigation.getState();
+        UriState requestedState = ui.getNavigation().getState();
 
         String topLevelWindowId = routeTopLevelWindowId();
 
@@ -303,17 +302,19 @@ public abstract class App {
         Screen screen = screens.create(topLevelWindowId, OpenMode.ROOT);
         screens.show(screen);
 
-        handleRedirect(requestedState);
+        handleRedirect(ui, requestedState);
     }
 
-    protected void handleRedirect(UriState uriState) {
+    protected void handleRedirect(AppUI ui, UriState uriState) {
         if (uriState == null) {
             return;
         }
 
+        Navigation navigation = ui.getNavigation();
+
         if (!connection.isAuthenticated()) {
             String nestedRoute = uriState.getNestedRoute();
-            if (nestedRoute == null || nestedRoute.isEmpty()) {
+            if (StringUtils.isEmpty(nestedRoute)) {
                 return;
             }
 
@@ -326,25 +327,25 @@ public abstract class App {
 
             navigation.replaceState(getTopLevelWindow().getFrameOwner(), params);
         } else {
+            String nestedRoute = uriState.getNestedRoute();
             Map<String, String> params = uriState.getParams();
-            if (params == null || params.isEmpty()) {
+
+            String redirectTarget = null;
+
+            if (StringUtils.isNotEmpty(nestedRoute)) {
+                redirectTarget = nestedRoute;
+            } else if (MapUtils.isNotEmpty(params) && params.containsKey(REDIRECT_PARAM)) {
+                redirectTarget = params.remove(REDIRECT_PARAM);
+            }
+
+            if (StringUtils.isEmpty(redirectTarget)) {
                 return;
             }
 
-            String redirectTo = params.get(REDIRECT_PARAM);
-            if (redirectTo == null || redirectTo.isEmpty()) {
-                navigation.replaceState(getTopLevelWindow().getFrameOwner());
-                return;
-            }
+            UriState currentState = navigation.getState();
+            UriState newState = new UriState(currentState.getRoot(), "", redirectTarget, params);
 
-            WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(redirectTo);
-            if (windowInfo == null) {
-                return;
-            }
-
-            Screens screens = AppUI.getCurrent().getScreens();
-            Screen screen = screens.create(windowInfo, OpenMode.NEW_TAB);
-            screens.show(screen);
+            events.publish(new UriStateChangedEvent(currentState, newState));
         }
     }
 

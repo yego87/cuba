@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.history;
+package com.haulmont.cuba.web.sys;
 
 import com.haulmont.bali.util.Preconditions;
-import com.haulmont.cuba.gui.history.History;
+import com.haulmont.cuba.gui.History;
 import com.haulmont.cuba.gui.navigation.UriState;
-import com.haulmont.cuba.web.sys.VaadinSessionScope;
+import com.haulmont.cuba.web.AppUI;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -27,13 +27,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+@Scope(UIScope.NAME)
 @Component(History.NAME)
-@Scope(VaadinSessionScope.NAME)
 public class WebHistory implements History {
+
+    protected AppUI ui;
 
     protected int now = -1;
 
     protected List<UriState> history = new LinkedList<>();
+
+    public WebHistory(AppUI ui) {
+        this.ui = ui;
+    }
 
     @Override
     public void push(UriState uriState) {

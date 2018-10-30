@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.url;
+package com.haulmont.cuba.web.sys;
 
 import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
+import com.haulmont.cuba.gui.History;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.WindowParams;
@@ -26,8 +27,6 @@ import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
-import com.haulmont.cuba.gui.history.History;
-import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.*;
@@ -37,8 +36,6 @@ import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
-import com.haulmont.cuba.web.sys.TabWindowContainer;
-import com.haulmont.cuba.web.sys.VaadinSessionScope;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
@@ -52,23 +49,16 @@ import javax.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.*;
 
+@Scope(UIScope.NAME)
 @Component(UriChangeHandler.NAME)
-@Scope(VaadinSessionScope.NAME)
 public class UriChangeHandler {
 
     public static final String NAME = "cuba_UriChangeHandler";
 
-    @Inject
-    protected Navigation navigation;
+    protected AppUI ui;
 
     @Inject
     protected WindowConfig windowConfig;
-
-    @Inject
-    protected Screens screens;
-
-    @Inject
-    protected History history;
 
     @Inject
     protected ScreenXmlLoader screenXmlLoader;
@@ -80,25 +70,33 @@ public class UriChangeHandler {
     protected Metadata metadata;
 
     @Inject
-    protected DataManager dataManager;
+    protected Messages messages;
 
     @Inject
-    protected Notifications notifications;
+    protected DataManager dataManager;
+
+    public UriChangeHandler(AppUI ui) {
+        this.ui = ui;
+    }
 
     @Order(Events.LOWEST_PLATFORM_PRECEDENCE)
     @EventListener
-    @SuppressWarnings("unused")
     protected void handleUriStateChanged(UriStateChangedEvent event) {
-        // TODO: handle?
+        handleUriChange(event.getState());
     }
 
     public void handleUriChange() {
-        UriState uriState = navigation.getState();
+        UriState uriState = ui.getNavigation().getState();
+
         if (uriState == null) {
             reloadApp();
             return;
         }
 
+        handleUriChange(uriState);
+    }
+
+    protected void handleUriChange(UriState uriState) {
         if (historyNavigation(uriState)) {
             handleHistoryNavigation(uriState);
         } else {
@@ -107,11 +105,12 @@ public class UriChangeHandler {
     }
 
     protected boolean historyNavigation(UriState uriState) {
-        return Objects.equals(uriState, history.lookBackward()) || Objects.equals(uriState, history.lookForward());
+        return Objects.equals(uriState, getHistory().lookBackward())
+                || Objects.equals(uriState, getHistory().lookForward());
     }
 
     protected void handleHistoryNavigation(UriState uriState) {
-        if (Objects.equals(uriState, history.lookBackward())) {
+        if (Objects.equals(uriState, getHistory().lookBackward())) {
             handleHistoryBackward();
         } else {
             handleHistoryForward();
@@ -119,22 +118,23 @@ public class UriChangeHandler {
     }
 
     protected void handleHistoryBackward() {
-        UriState prevState = history.lookBackward();
+        UriState prevState = getHistory().lookBackward();
         Screen prevScreen = findScreenByState(prevState);
-        if (prevScreen == null && StringUtils.isNoneEmpty(prevState.getStateMark())) {
+
+        if (prevScreen == null && StringUtils.isNotEmpty(prevState.getStateMark())) {
             revertHistoryBackward();
 
-            notifications.create()
-                    .setCaption("Unable to perform backward navigation due to closed previous screen")
-                    .setType(Notifications.NotificationType.HUMANIZED)
+            ui.getNotifications().create()
+                    .setCaption(messages.getMainMessage("navigation.unableToGoBackward"))
+                    .setType(Notifications.NotificationType.TRAY)
                     .show();
 
             return;
         }
 
-        Screen screen = findActiveScreenByState(history.now());
-        if (screen != null) {
-            screen.getWindow().getFrameOwner()
+        Screen lastOpenedScreen = findActiveScreenByState(getHistory().now());
+        if (lastOpenedScreen != null) {
+            lastOpenedScreen.getWindow().getFrameOwner()
                     .close(FrameOwner.WINDOW_CLOSE_ACTION)
                     .then(this::proceedHistoryBackward)
                     .otherwise(this::revertHistoryBackward);
@@ -144,94 +144,46 @@ public class UriChangeHandler {
     }
 
     protected void proceedHistoryBackward() {
-        UriState now = history.now();
+        History history = getHistory();
+
+        UriState nowState = history.now();
         UriState prevState = history.backward();
 
         focusScreen(findActiveScreenByState(prevState));
 
         boolean rootBackward = isRootRoute(prevState) && rootChanged(prevState);
-        String state = !rootBackward ? prevState.asRoute() : now.asRoute();
+        String state = !rootBackward ? prevState.asRoute() : nowState.asRoute();
 
         if (rootBackward) {
             reloadApp();
         } else {
-            Page.getCurrent().replaceState("#!" + state);
+            Page.getCurrent().replaceState("#" + state);
         }
     }
 
     protected void handleHistoryForward() {
-        Screen currentScreen = findActiveScreenByState(history.now());
+        Screen currentScreen = findActiveScreenByState(getHistory().now());
         if (currentScreen == null) {
             currentScreen = getCurrentScreen();
-            if (currentScreen == null) {
-                currentScreen = screens.getUiState().getRootScreen();
-            }
         }
 
         String route = currentScreen.getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
-        Page.getCurrent().setUriFragment("!" + route);
+        Page.getCurrent().setUriFragment(route);
 
-        notifications.create()
-                .setCaption("Unable to navigate forward through history")
-                .setType(Notifications.NotificationType.HUMANIZED)
+        ui.getNotifications().create()
+                .setCaption(messages.getMainMessage("navigation.unableToGoForward"))
+                .setType(Notifications.NotificationType.TRAY)
                 .show();
     }
 
-    protected void focusScreen(Screen screen) {
-        if (screen == null) {
-            return;
-        }
-
-        Window window = screen.getWindow();
-
-        WebAppWorkArea workArea = getConfiguredWorkArea();
-        if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
-            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
-            TabWindowContainer windowContainer = (TabWindowContainer) window
-                    .unwrapComposition(com.vaadin.ui.Component.class)
-                    .getParent();
-
-            String tabId = tabSheet.getTab(windowContainer);
-            if (tabId == null || tabId.isEmpty()) {
-                throw new IllegalStateException("Unable to find tab");
-            }
-
-            tabSheet.setSelectedTab(tabId);
-        }
-    }
-
     protected void revertHistoryBackward() {
-        String route = findActiveScreenByState(history.now())
+        String route = findActiveScreenByState(getHistory().now())
                 .getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
-        Page.getCurrent().setUriFragment("!" + route);
-    }
-
-    protected Screen findScreenByState(UriState uriState) {
-        String stateMark = uriState.getStateMark();
-        return screens.getUiState()
-                .getOpenedScreens()
-                .stream()
-                .filter(s -> Objects.equals(stateMark, getStateMark(s.getWindow())))
-                .findFirst()
-                .orElse(null);
-    }
-
-    protected Screen findActiveScreenByState(UriState uriState) {
-        String stateMark = uriState.getStateMark();
-        return screens.getUiState()
-                .getActiveScreens()
-                .stream()
-                .filter(s -> Objects.equals(stateMark, getStateMark(s.getWindow())))
-                .findFirst()
-                .orElse(null);
-    }
-
-    protected String getStateMark(Window window) {
-        return String.valueOf(((WebWindow) window).getStateMark());
+        Page.getCurrent().setUriFragment(route);
     }
 
     protected void handleScreenNavigation(UriState uriState) {
@@ -250,68 +202,39 @@ public class UriChangeHandler {
         }
     }
 
-    protected boolean rootChanged(UriState state) {
-        String resolvedRoute = screens.getUiState()
-                .getRootScreen()
-                .getScreenContext()
+    protected boolean rootChanged(UriState uriState) {
+        Screen rootScreen = getScreens().getOpenedScreens().getRootScreenOrNull();
+        if (rootScreen == null) {
+            return false;
+        }
+
+        String resolvedRoute = rootScreen.getScreenContext()
                 .getNavigationInfo()
                 .getResolvedRoute();
 
-        return !Objects.equals(resolvedRoute, state.getRoot());
+        return !Objects.equals(resolvedRoute, uriState.getRoot());
     }
 
     @SuppressWarnings("unused")
     protected void handleRootChange(UriState state) {
-        // TODO: implement
     }
 
-    protected boolean screenChanged(UriState state) {
-        Collection<Screen> breadCrumbsScreens = screens.getUiState().getCurrentBreadcrumbs();
+    protected boolean screenChanged(UriState uriState) {
+        if (rootState(uriState) || !rootScreenHasWorkArea()) {
+            return false;
+        }
+
+        Collection<Screen> breadCrumbsScreens = getScreens().getOpenedScreens().getCurrentBreadcrumbs();
         if (breadCrumbsScreens.isEmpty()) {
             return true;
         }
 
-        Screen currentScreen = breadCrumbsScreens.iterator().next();
-        String currentScreenRoute = currentScreen.getScreenContext()
-                .getNavigationInfo().getResolvedRoute();
+        String currentScreenRoute = breadCrumbsScreens.iterator().next()
+                .getScreenContext()
+                .getNavigationInfo()
+                .getResolvedRoute();
 
-        return !Objects.equals(currentScreenRoute, state.asRoute());
-    }
-
-    protected WebAppWorkArea getConfiguredWorkArea() {
-        Screen rootScreen = screens.getUiState().getRootScreen();
-        if (rootScreen instanceof Window.HasWorkArea) {
-            AppWorkArea workArea = ((Window.HasWorkArea) rootScreen).getWorkArea();
-            if (workArea != null) {
-                return (WebAppWorkArea) workArea;
-            }
-        }
-
-        throw new IllegalStateException("RootWindow does not have any configured work area");
-    }
-
-    protected void handleScreenChange(UriState state) {
-        String route = state.getNestedRoute();
-        WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(route);
-
-        if (windowInfo == null) {
-            throw new RuntimeException("Unable to find WindowInfo for route: " + route);
-        }
-
-        Map<String, Object> screenOptions = null;
-        if (EditorScreen.class.isAssignableFrom(windowInfo.getControllerClass())) {
-            screenOptions = createEditorScreenOptions(windowInfo, state);
-        }
-
-        Screen screen = screens.create(windowInfo, OpenMode.THIS_TAB, new MapScreenOptions(screenOptions));
-
-        if (screen instanceof EditorScreen) {
-            //noinspection unchecked
-            ((EditorScreen) screen).setEntityToEdit(
-                    (Entity) screenOptions.get(WindowParams.ITEM.name()));
-        }
-
-        screens.show(screen);
+        return !Objects.equals(currentScreenRoute, uriState.asRoute());
     }
 
     protected Map<String, Object> createEditorScreenOptions(WindowInfo windowInfo, UriState state) {
@@ -370,17 +293,119 @@ public class UriChangeHandler {
     }
 
     protected boolean isRootRoute(UriState uriState) {
-        String route = uriState.getNestedRoute();
-        return route == null || route.isEmpty();
+        return StringUtils.isEmpty(uriState.getStateMark())
+                && StringUtils.isEmpty(uriState.getNestedRoute());
     }
 
     protected Screen getCurrentScreen() {
-        Iterator<Screen> breadCrumbsScreens = screens.getUiState()
+        Iterator<Screen> breadCrumbsScreens = getScreens()
+                .getOpenedScreens()
                 .getCurrentBreadcrumbs()
                 .iterator();
 
-        Screen screen = breadCrumbsScreens.hasNext() ? breadCrumbsScreens.next() : null;
+        return breadCrumbsScreens.hasNext()
+                ? breadCrumbsScreens.next()
+                : getScreens().getOpenedScreens().getRootScreenOrNull();
+    }
 
-        return screen == null ? screens.getUiState().getRootScreen() : screen;
+    protected Screens getScreens() {
+        return ui.getScreens();
+    }
+
+    protected History getHistory() {
+        return ui.getHistory();
+    }
+
+    protected boolean rootState(UriState uriState) {
+        return StringUtils.isEmpty(uriState.getStateMark())
+                && StringUtils.isEmpty(uriState.getNestedRoute());
+    }
+
+    protected boolean rootScreenHasWorkArea() {
+        Screen rootScreen = getScreens().getOpenedScreens().getRootScreenOrNull();
+        return rootScreen instanceof Window.HasWorkArea;
+    }
+
+    protected WebAppWorkArea getConfiguredWorkArea() {
+        Screen rootScreen = getScreens().getOpenedScreens().getRootScreen();
+        if (rootScreen instanceof Window.HasWorkArea) {
+            AppWorkArea workArea = ((Window.HasWorkArea) rootScreen).getWorkArea();
+            if (workArea != null) {
+                return (WebAppWorkArea) workArea;
+            }
+        }
+
+        throw new IllegalStateException("RootWindow does not have any configured work area");
+    }
+
+    protected void handleScreenChange(UriState state) {
+        String route = state.getNestedRoute();
+        WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(route);
+
+        if (windowInfo == null) {
+            throw new RuntimeException("Unable to find WindowInfo for route: " + route);
+        }
+
+        Map<String, Object> screenOptions = null;
+        if (EditorScreen.class.isAssignableFrom(windowInfo.getControllerClass())) {
+            screenOptions = createEditorScreenOptions(windowInfo, state);
+        }
+
+        Screen screen = getScreens().create(windowInfo, OpenMode.THIS_TAB, new MapScreenOptions(screenOptions));
+
+        if (screen instanceof EditorScreen) {
+            //noinspection unchecked
+            ((EditorScreen) screen).setEntityToEdit(
+                    (Entity) screenOptions.get(WindowParams.ITEM.name()));
+        }
+
+        getScreens().show(screen);
+    }
+
+    protected String getStateMark(Window window) {
+        return String.valueOf(((WebWindow) window).getStateMark());
+    }
+
+    protected Screen findScreenByState(UriState uriState) {
+        String stateMark = uriState.getStateMark();
+        return getScreens().getOpenedScreens()
+                .getAll()
+                .stream()
+                .filter(s -> Objects.equals(stateMark, getStateMark(s.getWindow())))
+                .findFirst()
+                .orElse(null);
+    }
+
+    protected Screen findActiveScreenByState(UriState uriState) {
+        String stateMark = uriState.getStateMark();
+        return getScreens().getOpenedScreens()
+                .getActiveScreens()
+                .stream()
+                .filter(s -> Objects.equals(stateMark, getStateMark(s.getWindow())))
+                .findFirst()
+                .orElse(null);
+    }
+
+    protected void focusScreen(Screen screen) {
+        if (screen == null) {
+            return;
+        }
+
+        Window window = screen.getWindow();
+
+        WebAppWorkArea workArea = getConfiguredWorkArea();
+        if (workArea.getMode() == AppWorkArea.Mode.TABBED) {
+            TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
+            TabWindowContainer windowContainer = (TabWindowContainer) window
+                    .unwrapComposition(com.vaadin.ui.Component.class)
+                    .getParent();
+
+            String tabId = tabSheet.getTab(windowContainer);
+            if (tabId == null || tabId.isEmpty()) {
+                throw new IllegalStateException("Unable to find tab");
+            }
+
+            tabSheet.setSelectedTab(tabId);
+        }
     }
 }

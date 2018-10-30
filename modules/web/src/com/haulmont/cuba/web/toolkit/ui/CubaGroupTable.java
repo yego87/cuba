@@ -51,7 +51,6 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     protected boolean requestColumnReorderingAllowed = true;
 
     protected boolean shouldPaintWithAggregations = true;
-    protected boolean cachedAggregatedValuesRefreshed = false;
 
     /**
      * Attention: this method is copied from the parent class: {@link Table#setColumnOrder(java.lang.Object[])}
@@ -129,6 +128,7 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
         boolean hasAggregation = items instanceof AggregationContainer && isAggregatable()
                 && !((AggregationContainer) items).getAggregationPropertyIds().isEmpty();
+        boolean cacheIsEmpty = cachedAggregatedValues.isEmpty();
         boolean isAddedToCache = false;
 
         if (hasGroups() && hasAggregation) {
@@ -150,11 +150,7 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
         // if cachedAggregatedValues is empty, so rendered cells was refreshed
         // and we need to paint visible columns and actions
-        shouldPaintWithAggregations = cachedAggregatedValuesRefreshed || !isAddedToCache;
-
-        if (isAddedToCache) {
-            cachedAggregatedValuesRefreshed = false;
-        }
+        shouldPaintWithAggregations = cacheIsEmpty || !isAddedToCache;
     }
 
     @Override
@@ -728,7 +724,6 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     protected void refreshRenderedCells() {
         if (cachedAggregatedValues != null) {
             cachedAggregatedValues.clear();
-            cachedAggregatedValuesRefreshed = true;
         }
         super.refreshRenderedCells();
     }

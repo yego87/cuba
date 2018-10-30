@@ -26,6 +26,7 @@ import com.haulmont.cuba.web.toolkit.data.util.GroupTableContainerWrapper;
 import com.vaadin.data.Container;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.IndexedContainer;
+import com.vaadin.event.Action;
 import com.vaadin.server.KeyMapper;
 import com.vaadin.server.PaintException;
 import com.vaadin.server.PaintTarget;
@@ -48,6 +49,9 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     protected boolean fixedGrouping = false;
 
     protected boolean requestColumnReorderingAllowed = true;
+
+    protected boolean shouldPaintWithAggregations = true;
+    protected boolean cachedAggregatedValuesRefreshed = false;
 
     /**
      * Attention: this method is copied from the parent class: {@link Table#setColumnOrder(java.lang.Object[])}
@@ -125,9 +129,10 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
         boolean hasAggregation = items instanceof AggregationContainer && isAggregatable()
                 && !((AggregationContainer) items).getAggregationPropertyIds().isEmpty();
+        boolean isAddedToCache = false;
 
         if (hasGroups() && hasAggregation) {
-            target.startTag("groupRow");
+            target.startTag("groupRows");
             for (Object itemId : getVisibleItemIds()) {
                 if (isExpanded(itemId) && isAggregatedValuesChanged(itemId)) {
                     target.startTag("tr");
@@ -136,9 +141,33 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
                     paintUpdatesForGroupRowWithAggregation(target, itemId);
 
                     target.endTag("tr");
+
+                    isAddedToCache = true;
                 }
             }
-            target.endTag("groupRow");
+            target.endTag("groupRows");
+        }
+
+        // if cachedAggregatedValues is empty, so rendered cells was refreshed
+        // and we need to paint visible columns and actions
+        shouldPaintWithAggregations = cachedAggregatedValuesRefreshed || !isAddedToCache;
+
+        if (isAddedToCache) {
+            cachedAggregatedValuesRefreshed = false;
+        }
+    }
+
+    @Override
+    protected void paintVisibleColumns(PaintTarget target) throws PaintException {
+        if (shouldPaintWithAggregations) {
+            super.paintVisibleColumns(target);
+        }
+    }
+
+    @Override
+    protected void paintActions(PaintTarget target, Set<Action> actionSet) throws PaintException {
+        if (shouldPaintWithAggregations) {
+            super.paintActions(target, actionSet);
         }
     }
 
@@ -699,6 +728,7 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     protected void refreshRenderedCells() {
         if (cachedAggregatedValues != null) {
             cachedAggregatedValues.clear();
+            cachedAggregatedValuesRefreshed = true;
         }
         super.refreshRenderedCells();
     }

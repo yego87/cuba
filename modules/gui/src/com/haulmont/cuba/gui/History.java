@@ -18,21 +18,73 @@ package com.haulmont.cuba.gui;
 
 import com.haulmont.cuba.gui.navigation.UriState;
 
+/**
+ * This bean is intended to store and access local copy of opened screens history.
+ * <p>
+ * It is mainly used by UriChangeHandler to distinguish history transitions and navigation.
+ * <p>
+ * <b>Pay attention that manual history mutation can lead to errors.</b>
+ */
 public interface History {
 
     String NAME = "cuba_History";
 
+    /**
+     * Adds new history entry. Flushes all entries coming after now.
+     * <p>
+     * Mutates history.
+     *
+     * @param uriState new history entry
+     */
     void push(UriState uriState);
 
+    /**
+     * Performs "Back" transition through history.
+     * <p>
+     * Mutates history.
+     *
+     * @return previous history entry
+     */
     UriState backward();
 
+    /**
+     * Doesn't mutate history.
+     *
+     * @return current history entry
+     */
     UriState now();
 
+    /**
+     * Doesn't mutate history.
+     *
+     * @return previous history entry
+     */
     UriState lookBackward();
 
+    /**
+     * Doesn't mutate history.
+     *
+     * @return next history entry
+     */
     UriState lookForward();
 
+    /**
+     * Performs search for the given history entry in the past.
+     * <p>
+     * Doesn't mutate history.
+     *
+     * @param uriState history entry
+     * @return true if entry is found, false otherwise
+     */
     boolean searchBackward(UriState uriState);
 
+    /**
+     * Performs search for the given history entry in the future.
+     * <p>
+     * Doesn't mutate history.
+     *
+     * @param uriState history entry
+     * @return true if entry is found, false otherwise
+     */
     boolean searchForward(UriState uriState);
 }

@@ -465,7 +465,9 @@ public class WindowConfig {
     @Nullable
     public WindowInfo findWindowInfoByRoute(String route) {
         String screenId = routes.get(route);
-        return findWindowInfo(screenId);
+        return screenId != null
+                ? findWindowInfo(screenId)
+                : null;
     }
 
     /**

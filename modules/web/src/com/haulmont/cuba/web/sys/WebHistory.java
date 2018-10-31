@@ -60,6 +60,11 @@ public class WebHistory implements History {
 
         Preconditions.checkNotNullArgument(uriState);
 
+        UriState state = ui.getNavigation().getState();
+        if (!uriState.equals(state)) {
+            throw new IllegalStateException("New history entry doesn't match with actual state");
+        }
+
         if (uriState.equals(now())) {
             return;
         }
@@ -75,9 +80,13 @@ public class WebHistory implements History {
             return UriState.empty();
         }
 
-        checkIfCanGoBackward();
+        UriState prevState = history.get(now - 1);
+        UriState state = ui.getNavigation().getState();
+        if (now - 1 > 0 && !prevState.equals(state)) {
+            throw new IllegalStateException("Previous history entry doesn't match with actual state");
+        }
 
-        return history.get(--now);
+        return now - 1 >= 0 ? history.get(--now) : null;
     }
 
     @Override
@@ -86,14 +95,7 @@ public class WebHistory implements History {
             return UriState.empty();
         }
 
-        UriState uriState = now < 0 ? null
-                : history.get(now);
-
-        if (uriState == null && now >= 0) {
-            throw new IllegalStateException("History is broken");
-        }
-
-        return uriState;
+        return now >= 0 ? history.get(now) : null;
     }
 
     @Override
@@ -102,7 +104,7 @@ public class WebHistory implements History {
             return UriState.empty();
         }
 
-        return (now - 1) >= 0 ? history.get(now - 1) : null;
+        return now - 1 >= 0 ? history.get(now - 1) : null;
     }
 
     @Override
@@ -111,7 +113,7 @@ public class WebHistory implements History {
             return UriState.empty();
         }
 
-        return (now + 1) < history.size() ? history.get(now + 1) : null;
+        return now + 1 < history.size() ? history.get(now + 1) : null;
     }
 
     @Override
@@ -148,13 +150,8 @@ public class WebHistory implements History {
 
     protected void dropFutureEntries() {
         for (int i = now + 1; i < history.size(); i++) {
-            history.set(i, null);
-        }
-    }
-
-    protected void checkIfCanGoBackward() {
-        if (now - 1 < 0) {
-            throw new IllegalStateException("There is no past entries in history.");
+            //noinspection RedundantCast
+            history.remove((int) i);
         }
     }
 

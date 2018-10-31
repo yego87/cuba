@@ -18,13 +18,31 @@ package com.haulmont.cuba.gui.components;
 
 import com.haulmont.cuba.core.entity.Entity;
 
-import java.util.Set;
+import java.util.Collection;
 
-public interface TwinColumn<V> extends OptionsField<Set<V>, V> {
+public interface TwinColumn<V> extends OptionsField<Collection<V>, V> {
 
     String NAME = "twinColumn";
 
+    /**
+     * Gets the number of columns for the component.
+     *
+     * @see #setWidth(String)
+     * @deprecated "Columns" does not reflect the exact number of characters that will be displayed. Use
+     * {@link #getWidth()} instead.
+     */
+    @Deprecated
     int getColumns();
+
+    /**
+     * Sets the width of the component so that it displays approximately the given number of letters in each of the
+     * two selects.
+     *
+     * @param columns the number of columns to set.
+     * @deprecated "Columns" does not reflect the exact number of characters that will be displayed. Use
+     * {@link #setWidth(String)} instead.
+     */
+    @Deprecated
     void setColumns(int columns);
 
     int getRows();

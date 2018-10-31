@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.web.sys;
 
+import com.haulmont.bali.util.URLEncodeUtils;
 import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.Navigation;
@@ -32,7 +33,7 @@ import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
-import com.haulmont.cuba.web.navigation.IdToBase64Converter;
+import com.haulmont.cuba.web.navigation.Base64Converter;
 import com.haulmont.cuba.web.navigation.UrlTools;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
@@ -189,13 +190,14 @@ public class WebNavigation implements Navigation {
             return "";
         }
 
-        Iterator<Screen> breadCrumbsScreens = getScreens().getOpenedScreens().getCurrentBreadcrumbs().iterator();
+        List<Screen> screens = new ArrayList<>(getScreens().getOpenedScreens().getCurrentBreadcrumbs());
+        Collections.reverse(screens);
 
         StringBuilder state = new StringBuilder();
         int depth = 0;
 
-        while (breadCrumbsScreens.hasNext() && depth < MAX_NESTED_ROUTES) {
-            Screen nestedScreen = breadCrumbsScreens.next();
+        for (int i = 0; i < screens.size() && depth < MAX_NESTED_ROUTES; i++) {
+            Screen nestedScreen = screens.get(i);
             String route = formNestedScreenRoute(state.toString(), nestedScreen);
 
             if (!state.toString().isEmpty() && !route.isEmpty()) {
@@ -236,7 +238,7 @@ public class WebNavigation implements Navigation {
 
         if (screen instanceof EditorScreen) {
             Object entityId = ((EditorScreen) screen).getEditedEntity().getId();
-            String base64Id = IdToBase64Converter.serialize(entityId);
+            String base64Id = URLEncodeUtils.encodeUtf8(Base64Converter.serialize(entityId));
 
             params.put("id", base64Id);
         }

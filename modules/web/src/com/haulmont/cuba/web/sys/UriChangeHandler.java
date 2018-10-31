@@ -17,6 +17,7 @@
 package com.haulmont.cuba.web.sys;
 
 import com.haulmont.bali.util.ParamsMap;
+import com.haulmont.bali.util.URLEncodeUtils;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.History;
@@ -38,7 +39,7 @@ import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
-import com.haulmont.cuba.web.navigation.IdToBase64Converter;
+import com.haulmont.cuba.web.navigation.Base64Converter;
 import com.haulmont.cuba.web.navigation.NavigationException;
 import com.haulmont.cuba.web.navigation.accessfilter.NavigationAccessFilter;
 import com.haulmont.cuba.web.navigation.accessfilter.NavigationAccessFilter.AccessCheckResult;
@@ -341,9 +342,9 @@ public class UriChangeHandler {
                 .getGenericSuperclass())
                 .getActualTypeArguments()[0];
 
-        Object id = IdToBase64Converter.deserialize(
+        Object id = Base64Converter.deserialize(
                 metadata.getClassNN(entityClass).getPropertyNN("id").getJavaType(),
-                state.getParams().get("id"));
+                URLEncodeUtils.decodeUtf8(state.getParams().get("id")));
 
         LoadContext<?> ctx = new LoadContext(metadata.getClassNN(entityClass));
         ctx.setId(id);

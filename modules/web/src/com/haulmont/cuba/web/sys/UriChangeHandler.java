@@ -30,7 +30,7 @@ import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.*;
-import com.haulmont.cuba.gui.xml.layout.ScreenXmlLoader;
+import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
@@ -41,7 +41,6 @@ import com.haulmont.cuba.web.navigation.IdToBase64Converter;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
-import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -50,8 +49,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import java.lang.reflect.Field;
-import java.util.Collections;
+import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -70,12 +68,6 @@ public class UriChangeHandler {
     protected WindowConfig windowConfig;
 
     @Inject
-    protected ScreenXmlLoader screenXmlLoader;
-
-    @Inject
-    protected Scripting scripting;
-
-    @Inject
     protected Metadata metadata;
 
     @Inject
@@ -83,6 +75,9 @@ public class UriChangeHandler {
 
     @Inject
     protected DataManager dataManager;
+
+    @Inject
+    protected ViewRepository viewRepository;
 
     @Inject
     protected WebConfig webConfig;
@@ -263,40 +258,68 @@ public class UriChangeHandler {
         return !Objects.equals(currentScreenRoute, uriState.asRoute());
     }
 
+    protected void handleScreenChange(UriState uriState) {
+        // TODO: handle few opened screens
+        WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(uriState.getNestedRoute());
+        if (windowInfo == null) {
+            throw new RuntimeException("Unable to find WindowInfo for route: " + uriState.getNestedRoute());
+        }
+
+        Screen screen = !isEditor(windowInfo)
+                ? getScreens().create(windowInfo, OpenMode.NEW_TAB)
+                : createEditor(windowInfo, uriState);
+
+        getScreens().show(screen);
+    }
+
+    protected boolean isEditor(WindowInfo windowInfo) {
+        return EditorScreen.class.isAssignableFrom(windowInfo.getControllerClass());
+    }
+
+    protected Screen createEditor(WindowInfo windowInfo, UriState uriState) {
+        Map<String, Object> screenOptions = createEditorScreenOptions(windowInfo, uriState);
+
+        Screen editor;
+        if (LegacyFrame.class.isAssignableFrom(windowInfo.getControllerClass())) {
+            editor = getScreens().create(windowInfo, OpenMode.NEW_TAB, new MapScreenOptions(screenOptions));
+        } else {
+            editor = getScreens().create(windowInfo, OpenMode.NEW_TAB);
+        }
+
+        Entity entity = (Entity) screenOptions.get(WindowParams.ITEM.name());
+        //noinspection unchecked
+        ((EditorScreen<Entity>) editor).setEntityToEdit(entity);
+
+        return editor;
+    }
+
     protected Map<String, Object> createEditorScreenOptions(WindowInfo windowInfo, UriState state) {
-        Element screenTemplate = screenXmlLoader.load(windowInfo.getTemplate(), windowInfo.getId(), Collections.emptyMap());
+        //noinspection unchecked
+        Class<? extends Entity> entityClass = (Class<? extends Entity>) ((ParameterizedType) windowInfo
+                .getControllerClass()
+                .getGenericSuperclass())
+                .getActualTypeArguments()[0];
 
-        Element dsElement = screenTemplate.element("dsContext")
-                .element("datasource");
-
-        /*
-         * TODO: rewrite with reflection (see UiControllerReflectionInspector.getAddListenerMethodsNotCached)
-         * for legacy screens and with "setEntityToEdit" for new screens
-         */
-
-        String entityClassFqn = dsElement.attributeValue("class");
-        Class<?> entityClass = scripting.loadClassNN(entityClassFqn);
-        Object id = IdToBase64Converter.deserialize(findIdType(entityClass), state.getParams().get("id"));
+        Object id = IdToBase64Converter.deserialize(
+                metadata.getClassNN(entityClass).getPropertyNN("id").getJavaType(),
+                state.getParams().get("id"));
 
         LoadContext<?> ctx = new LoadContext(metadata.getClassNN(entityClass));
         ctx.setId(id);
-        ctx.setView(dsElement.attributeValue("view"));
+        ctx.setView(findSuitableView(entityClass));
 
         Entity entity = dataManager.load(ctx);
-        if (entity == null) {
-            throw new RuntimeException("Failed to load entity!");
-        }
 
         return ParamsMap.of(WindowParams.ITEM.name(), entity);
     }
 
-    protected Class findIdType(Class entityClass) {
-        for (Field field : entityClass.getDeclaredFields()) {
-            if ("id".equals(field.getName())) {
-                return field.getType();
+    protected View findSuitableView(Class<? extends Entity> entityClass) {
+        for (String viewName : viewRepository.getViewNames(entityClass)) {
+            if (viewName.endsWith(".edit")) {
+                return viewRepository.getView(entityClass, viewName);
             }
         }
-        return findIdType(entityClass.getSuperclass());
+        throw new RuntimeException("Unable to find suitable view to open editor for entity: " + entityClass.getName());
     }
 
     @SuppressWarnings("unused")
@@ -368,30 +391,6 @@ public class UriChangeHandler {
         }
 
         throw new IllegalStateException("RootWindow does not have any configured work area");
-    }
-
-    protected void handleScreenChange(UriState state) {
-        String route = state.getNestedRoute();
-        WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(route);
-
-        if (windowInfo == null) {
-            throw new RuntimeException("Unable to find WindowInfo for route: " + route);
-        }
-
-        Map<String, Object> screenOptions = null;
-        if (EditorScreen.class.isAssignableFrom(windowInfo.getControllerClass())) {
-            screenOptions = createEditorScreenOptions(windowInfo, state);
-        }
-
-        Screen screen = getScreens().create(windowInfo, OpenMode.THIS_TAB, new MapScreenOptions(screenOptions));
-
-        if (screen instanceof EditorScreen) {
-            //noinspection unchecked
-            ((EditorScreen) screen).setEntityToEdit(
-                    (Entity) screenOptions.get(WindowParams.ITEM.name()));
-        }
-
-        getScreens().show(screen);
     }
 
     protected String getStateMark(Window window) {

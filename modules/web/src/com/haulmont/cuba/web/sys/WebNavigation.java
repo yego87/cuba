@@ -221,7 +221,7 @@ public class WebNavigation implements Navigation {
         if (screen instanceof EditorScreen) {
             int slashIdx = screenRoute.indexOf('/');
             if (slashIdx > 0) {
-                String editorContext = screenRoute.substring(0, slashIdx + 1);
+                String editorContext = screenRoute.substring(0, slashIdx);
                 if (state.endsWith(editorContext)) {
                     screenRoute = screenRoute.substring(slashIdx + 1);
                 }

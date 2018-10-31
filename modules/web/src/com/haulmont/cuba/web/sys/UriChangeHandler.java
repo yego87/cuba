@@ -28,6 +28,7 @@ import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
+import com.haulmont.cuba.gui.navigation.NavigationAware;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.*;
@@ -348,31 +349,33 @@ public class UriChangeHandler {
 
         LoadContext<?> ctx = new LoadContext(metadata.getClassNN(entityClass));
         ctx.setId(id);
-        ctx.setView(findSuitableView(entityClass));
+        ctx.setView(findSuitableView(entityClass, state));
 
         Entity entity = dataManager.load(ctx);
 
         return ParamsMap.of(WindowParams.ITEM.name(), entity);
     }
 
-    protected View findSuitableView(Class<? extends Entity> entityClass) {
+    protected View findSuitableView(Class<? extends Entity> entityClass, UriState uriState) {
         for (String viewName : viewRepository.getViewNames(entityClass)) {
             if (viewName.endsWith(".edit")) {
                 return viewRepository.getView(entityClass, viewName);
             }
         }
-        throw new RuntimeException("Unable to find suitable view to open editor for entity: " + entityClass.getName());
+        throw new NavigationException("Unable to find suitable view to open editor for entity: " + entityClass.getName(), uriState);
     }
 
     @SuppressWarnings("unused")
     protected boolean paramsChanged(UriState state) {
-        // TODO: check if new root and nestedRoute are the same as current
         return false;
     }
 
     @SuppressWarnings("unused")
     protected void handleParamsChange(UriState state) {
-        // TODO: invoke urlParamsChanged screen hook
+        Screen screen = findActiveScreenByState(state);
+        if (screen instanceof NavigationAware) {
+            ((NavigationAware) screen).uriParamsChanged(state.getParams());
+        }
     }
 
     protected void reloadApp() {
@@ -474,11 +477,9 @@ public class UriChangeHandler {
                     .getParent();
 
             String tabId = tabSheet.getTab(windowContainer);
-            if (tabId == null || tabId.isEmpty()) {
-                throw new IllegalStateException("Unable to find tab");
+            if (tabId != null && !tabId.isEmpty()) {
+                tabSheet.setSelectedTab(tabId);
             }
-
-            tabSheet.setSelectedTab(tabId);
         }
     }
 }

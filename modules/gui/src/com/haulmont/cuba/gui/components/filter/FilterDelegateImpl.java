@@ -1524,13 +1524,7 @@ public class FilterDelegateImpl implements FilterDelegate {
     }
 
     @Override
-    public void applyWithoutLoadingData(boolean notifyInvalidConditions) {
-        adapter.preventNextDataLoading();
-        apply(notifyInvalidConditions);
-    }
-
-    @Override
-    public boolean apply(boolean notifyInvalidConditions) {
+    public boolean apply(Filter.FilterOptions options) {
         if (beforeFilterAppliedHandler != null) {
             if (!beforeFilterAppliedHandler.beforeFilterApplied()) return false;
         }
@@ -1538,7 +1532,7 @@ public class FilterDelegateImpl implements FilterDelegate {
             if (filterEntity != null && conditions.getRoots().size() > 0) {
                 boolean haveCorrectCondition = hasCorrectCondition();
                 if (!haveCorrectCondition) {
-                    if (!notifyInvalidConditions) {
+                    if (!options.isNotifyInvalidConditions()) {
                         windowManager.showNotification(messages.getMainMessage("filter.emptyConditions"),
                                 Frame.NotificationType.HUMANIZED);
                     }
@@ -1556,13 +1550,17 @@ public class FilterDelegateImpl implements FilterDelegate {
         if (filterEntity != null) {
             boolean haveRequiredConditions = haveFilledRequiredConditions();
             if (!haveRequiredConditions) {
-                if (!notifyInvalidConditions) {
+                if (!options.isNotifyInvalidConditions()) {
                     windowManager.showNotification(messages.getMainMessage("filter.emptyRequiredConditions"),
                             Frame.NotificationType.HUMANIZED);
                 }
                 return false;
             }
             setFilterActionsEnabled();
+        }
+
+        if (!options.isLoadData()) {
+            adapter.preventNextDataLoading();
         }
 
         applyDatasourceFilter();
@@ -1579,6 +1577,12 @@ public class FilterDelegateImpl implements FilterDelegate {
             afterFilterAppliedHandler.afterFilterApplied();
         }
         return true;
+    }
+
+    @Override
+    public boolean apply(boolean notifyInvalidConditions) {
+        return apply(Filter.FilterOptions.create()
+                .setNotifyInvalidConditions(notifyInvalidConditions));
     }
 
     protected Map<String, Object> prepareDatasourceCustomParams() {

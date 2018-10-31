@@ -208,7 +208,9 @@ public class RelatedEntitiesBean implements RelatedEntitiesAPI {
         filterEntity.setUser(userSessionSource.getUserSession().getCurrentOrSubstitutedUser());
 
         component.setFilterEntity(filterEntity);
-        component.applyWithoutLoadingData(true);
+        component.apply(Filter.FilterOptions.create()
+                .setNotifyInvalidConditions(true)
+                .setLoadData(false));
     }
 
     protected String getRelatedEntitiesFilterXml(MetaClass relatedMetaCLass, Collection<? extends Entity> selectedEntities, Filter component, MetaDataDescriptor descriptor) {

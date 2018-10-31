@@ -153,7 +153,7 @@ public class WebRelatedEntities extends WebPopupButton implements RelatedEntitie
 
     private MetaClass getMetaClass(ListComponent listComponent) {
         if (!(listComponent.getItems() instanceof EntityDataUnit)) {
-            throw new IllegalStateException("ListComponent dataSource is null or does not implement EntityDataUnit");
+            throw new IllegalStateException("ListComponent items is null or does not implement EntityDataUnit");
         }
 
         MetaClass metaClass = ((EntityDataUnit) listComponent.getItems()).getEntityMetaClass();

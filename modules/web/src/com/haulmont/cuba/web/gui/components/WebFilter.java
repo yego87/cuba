@@ -79,13 +79,14 @@ public class WebFilter extends WebAbstractComponent<com.vaadin.ui.Component> imp
     }
 
     @Override
-    public void applyWithoutLoadingData(boolean notifyInvalidConditions) {
-        delegate.applyWithoutLoadingData(notifyInvalidConditions);
+    public boolean apply(FilterOptions options) {
+        return delegate.apply(options);
     }
 
     @Override
     public boolean apply(boolean notifyInvalidConditions) {
-        return delegate.apply(notifyInvalidConditions);
+        return apply(FilterOptions.create()
+                .setNotifyInvalidConditions(notifyInvalidConditions));
     }
 
     @Override

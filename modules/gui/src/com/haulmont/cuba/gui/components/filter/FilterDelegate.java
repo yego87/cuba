@@ -72,13 +72,7 @@ public interface FilterDelegate {
 
     CollectionDatasource getDatasource();
 
-    /**
-     * Applies the filter. Before the filter is applied, conditions correctness is checked. If invalid conditions are
-     * found (i.e. empty required conditions) then the filter will not be applied to the data source without data loading.
-     *
-     * @param notifyInvalidConditions whether a notification about invalid conditions values should be displayed
-     */
-    void applyWithoutLoadingData(boolean notifyInvalidConditions);
+    boolean apply(Filter.FilterOptions options);
 
     boolean apply(boolean notifyInvalidConditions);
 

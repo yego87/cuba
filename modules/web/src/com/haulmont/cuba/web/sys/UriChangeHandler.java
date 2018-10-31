@@ -40,6 +40,8 @@ import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
 import com.haulmont.cuba.web.navigation.NavigationException;
+import com.haulmont.cuba.web.navigation.accessfilter.NavigationAccessFilter;
+import com.haulmont.cuba.web.navigation.accessfilter.NavigationAccessFilter.AccessCheckResult;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +55,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -83,6 +86,9 @@ public class UriChangeHandler {
 
     @Inject
     protected WebConfig webConfig;
+
+    @Inject
+    protected List<NavigationAccessFilter> accessFilters;
 
     public UriChangeHandler(AppUI ui) {
         this.ui = ui;
@@ -140,6 +146,19 @@ public class UriChangeHandler {
         UriState prevState = getHistory().lookBackward();
         Screen prevScreen = findScreenByState(prevState);
 
+        AccessCheckResult accessCheckResult = historyNavigationAllowed(prevState);
+        if (!accessCheckResult.isAllowed()) {
+            ui.getNotifications()
+                    .create()
+                    .setCaption(accessCheckResult.getMessage())
+                    .setType(Notifications.NotificationType.TRAY)
+                    .show();
+
+            revertHistoryBackward();
+
+            return;
+        }
+
         if (prevScreen == null && StringUtils.isNotEmpty(prevState.getStateMark())) {
             revertHistoryBackward();
 
@@ -160,6 +179,16 @@ public class UriChangeHandler {
         } else {
             proceedHistoryBackward();
         }
+    }
+
+    protected AccessCheckResult historyNavigationAllowed(UriState uriState) {
+        for (NavigationAccessFilter filter : accessFilters) {
+            AccessCheckResult result = filter.allowed(uriState);
+            if (!result.isAllowed()) {
+                return result;
+            }
+        }
+        return AccessCheckResult.allowed();
     }
 
     protected void proceedHistoryBackward() {

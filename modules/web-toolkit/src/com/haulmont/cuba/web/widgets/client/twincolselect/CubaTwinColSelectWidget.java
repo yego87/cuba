@@ -26,6 +26,7 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.vaadin.client.ui.VButton;
 import com.vaadin.client.ui.VTwinColSelect;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -149,9 +150,9 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
         super.onClick(event);
         if (addAllBtnEnabled) {
             if (event.getSource() == addAll) {
-                moveAllItems(optionsListBox, selectionsListBox);
+                addAll();
             } else if (event.getSource() == removeAll) {
-                moveAllItems(selectionsListBox, optionsListBox);
+                removeAll();
             }
         }
     }
@@ -172,6 +173,20 @@ public class CubaTwinColSelectWidget extends VTwinColSelect {
         }
         source.clear();
         return movedItems;
+    }
+
+    protected void addAll() {
+        Set<String> movedItems = moveAllItems(optionsListBox, selectionsListBox);
+
+        selectionChangeListeners.forEach(listener ->
+                listener.accept(movedItems, Collections.emptySet()));
+    }
+
+    protected void removeAll() {
+        Set<String> movedItems = moveAllItems(selectionsListBox, optionsListBox);
+
+        selectionChangeListeners.forEach(listener ->
+                listener.accept(Collections.emptySet(), movedItems));
     }
 
     public boolean isAddAllBtnEnabled() {

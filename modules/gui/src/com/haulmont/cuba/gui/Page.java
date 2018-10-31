@@ -45,7 +45,6 @@ public @interface Page {
     String VALUE_ATTRIBUTE = "value";
     String ROUTE_ATTRIBUTE = "route";
     String PARENT_ATTRIBUTE = "parent";
-    String PUBLIC_PAGE_ATTRIBUTE = "publicPage";
 
     @AliasFor(ROUTE_ATTRIBUTE)
     String value() default "";
@@ -54,6 +53,4 @@ public @interface Page {
     String route() default "";
 
     Class<? extends Screen> parent() default Screen.class;
-
-    boolean publicPage() default false;
 }

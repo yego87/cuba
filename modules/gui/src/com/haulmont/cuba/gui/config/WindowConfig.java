@@ -338,11 +338,10 @@ public class WindowConfig {
         }
 
         String pathAttr = (String) pageAnnotation.get(Page.ROUTE_ATTRIBUTE);
-        boolean publicPageAttr = (boolean) pageAnnotation.get(Page.PUBLIC_PAGE_ATTRIBUTE);
         //noinspection unchecked
         Class<? extends Screen> parentAttr = (Class<? extends Screen>) pageAnnotation.get(Page.PARENT_ATTRIBUTE);
 
-        return new UiControllerDefinition.PageDefinition(pathAttr, parentAttr, publicPageAttr);
+        return new UiControllerDefinition.PageDefinition(pathAttr, parentAttr);
     }
 
     protected void registerScreen(String id, WindowInfo windowInfo) {

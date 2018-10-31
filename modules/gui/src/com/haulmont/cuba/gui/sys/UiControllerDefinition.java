@@ -60,16 +60,14 @@ public final class UiControllerDefinition {
 
     public static class PageDefinition {
 
-        private static final String PAGE_DEF = "PageDefinition{route='%s', publicPage='%s'}";
+        private static final String PAGE_DEF = "PageDefinition{route='%s'}";
 
         private final String route;
         private final Class<? extends Screen> parent;
-        private final boolean publicPage;
 
-        public PageDefinition(String route, Class<? extends Screen> parent, boolean publicPage) {
+        public PageDefinition(String route, Class<? extends Screen> parent) {
             this.route = route;
             this.parent = parent;
-            this.publicPage = publicPage;
         }
 
         public String getRoute() {
@@ -83,13 +81,9 @@ public final class UiControllerDefinition {
             return parent;
         }
 
-        public boolean isPublicPage() {
-            return publicPage;
-        }
-
         @Override
         public String toString() {
-            return String.format(PAGE_DEF, route, publicPage);
+            return String.format(PAGE_DEF, route);
         }
     }
 }

@@ -421,7 +421,7 @@ public class WebScreens implements Screens, WindowManager {
 
         fireEvent(screen, AfterShowEvent.class, new AfterShowEvent(screen));
 
-        ui.getNavigation().pushState(screen, true);
+        ui.getNavigation().pushState(screen);
     }
 
     protected void checkNotYetOpened(Screen screen) {

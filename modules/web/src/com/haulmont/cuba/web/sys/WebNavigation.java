@@ -22,7 +22,6 @@ import com.haulmont.cuba.gui.Navigation;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
-import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.navigation.UriState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
@@ -190,18 +189,13 @@ public class WebNavigation implements Navigation {
             return "";
         }
 
-        Iterator<Window> breadCrumbsScreens = ((TabWindowContainer) screen.getWindow()
-                .unwrapComposition(com.vaadin.ui.Component.class)
-                .getParent())
-                .getBreadCrumbs()
-                .getWindows()
-                .iterator();
+        Iterator<Screen> breadCrumbsScreens = getScreens().getOpenedScreens().getCurrentBreadcrumbs().iterator();
 
         StringBuilder state = new StringBuilder();
         int depth = 0;
 
         while (breadCrumbsScreens.hasNext() && depth < MAX_NESTED_ROUTES) {
-            Screen nestedScreen = breadCrumbsScreens.next().getFrameOwner();
+            Screen nestedScreen = breadCrumbsScreens.next();
             String route = formNestedScreenRoute(state.toString(), nestedScreen);
 
             if (!state.toString().isEmpty() && !route.isEmpty()) {

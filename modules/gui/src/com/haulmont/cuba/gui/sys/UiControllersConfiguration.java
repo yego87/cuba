@@ -108,7 +108,6 @@ public class UiControllersConfiguration extends AbstractScanConfiguration {
         Class<? extends Screen> parentAttr = null;
         if (pageAnnotation != null) {
             routeAttr = (String) pageAnnotation.get(Page.ROUTE_ATTRIBUTE);
-            publicPageAttr = (boolean) pageAnnotation.get(Page.PUBLIC_PAGE_ATTRIBUTE);
             //noinspection unchecked
             parentAttr = (Class<? extends Screen>) pageAnnotation.get(Page.PARENT_ATTRIBUTE);
         }
@@ -119,7 +118,7 @@ public class UiControllersConfiguration extends AbstractScanConfiguration {
         return pageAnnotation == null
                 ? new UiControllerDefinition(controllerId, className)
                 : new UiControllerDefinition(controllerId, className,
-                        new UiControllerDefinition.PageDefinition(routeAttr, parentAttr, publicPageAttr));
+                        new UiControllerDefinition.PageDefinition(routeAttr, parentAttr));
     }
 
     protected boolean isCandidateUiController(MetadataReader metadataReader) {

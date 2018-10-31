@@ -33,11 +33,13 @@ import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
+import com.haulmont.cuba.web.app.ui.navigation.notfoundwindow.NotFoundScreen;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.navigation.IdToBase64Converter;
+import com.haulmont.cuba.web.navigation.NavigationException;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
@@ -238,6 +240,7 @@ public class UriChangeHandler {
 
     @SuppressWarnings("unused")
     protected void handleRootChange(UriState state) {
+        throw new NavigationException("Unable to handle requested state", state);
     }
 
     protected boolean screenChanged(UriState uriState) {
@@ -261,15 +264,24 @@ public class UriChangeHandler {
     protected void handleScreenChange(UriState uriState) {
         // TODO: handle few opened screens
         WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(uriState.getNestedRoute());
+
         if (windowInfo == null) {
-            throw new RuntimeException("Unable to find WindowInfo for route: " + uriState.getNestedRoute());
+            handle404(uriState);
+            return;
         }
 
         Screen screen = !isEditor(windowInfo)
-                ? getScreens().create(windowInfo, OpenMode.NEW_TAB)
+                ? getScreens().create(windowInfo.getId(), OpenMode.NEW_TAB)
                 : createEditor(windowInfo, uriState);
 
         getScreens().show(screen);
+    }
+
+    protected void handle404(UriState uriState) {
+        MapScreenOptions params = new MapScreenOptions(ParamsMap.of("requestedRoute", uriState.getNestedRoute()));
+        NotFoundScreen notFoundScreen = getScreens().create(NotFoundScreen.class, OpenMode.NEW_TAB, params);
+
+        getScreens().show(notFoundScreen);
     }
 
     protected boolean isEditor(WindowInfo windowInfo) {
@@ -281,9 +293,9 @@ public class UriChangeHandler {
 
         Screen editor;
         if (LegacyFrame.class.isAssignableFrom(windowInfo.getControllerClass())) {
-            editor = getScreens().create(windowInfo, OpenMode.NEW_TAB, new MapScreenOptions(screenOptions));
+            editor = getScreens().create(windowInfo.getId(), OpenMode.NEW_TAB, new MapScreenOptions(screenOptions));
         } else {
-            editor = getScreens().create(windowInfo, OpenMode.NEW_TAB);
+            editor = getScreens().create(windowInfo.getId(), OpenMode.NEW_TAB);
         }
 
         Entity entity = (Entity) screenOptions.get(WindowParams.ITEM.name());

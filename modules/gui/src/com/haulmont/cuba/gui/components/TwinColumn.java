@@ -17,8 +17,10 @@
 package com.haulmont.cuba.gui.components;
 
 import com.haulmont.cuba.core.entity.Entity;
+import com.haulmont.cuba.gui.components.compatibility.TwinColumnStyleProviderAdapter;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 public interface TwinColumn<V> extends OptionsField<Collection<V>, V> {
 
@@ -48,7 +50,14 @@ public interface TwinColumn<V> extends OptionsField<Collection<V>, V> {
     int getRows();
     void setRows(int rows);
 
-    void setStyleProvider(StyleProvider styleProvider);
+    /**
+     * @param styleProvider style provider
+     * @deprecated use {@link #setOptionStyleProvider(Function)} instead
+     */
+    @Deprecated
+    default void setStyleProvider(StyleProvider styleProvider) {
+        setOptionStyleProvider(new TwinColumnStyleProviderAdapter<>(styleProvider));
+    }
 
     void setAddAllBtnEnabled(boolean enabled);
     boolean isAddAllBtnEnabled();
@@ -79,7 +88,24 @@ public interface TwinColumn<V> extends OptionsField<Collection<V>, V> {
      */
     String getRightColumnCaption();
 
+    /**
+     * Sets option style provider. It defines a style for each value.
+     *
+     * @param optionStyleProvider option style provider function
+     */
+    void setOptionStyleProvider(Function<OptionStyleItem<V>, String> optionStyleProvider);
+
+    /**
+     * @return option style provider function
+     */
+    Function<OptionStyleItem<V>, String> getOptionStyleProvider();
+
+    /**
+     * @deprecated use {@link #setOptionStyleProvider(Function)}
+     */
+    @Deprecated
     interface StyleProvider {
+        @Deprecated
         String getStyleName(Entity item, Object property, boolean selected);
 
         /**
@@ -87,5 +113,28 @@ public interface TwinColumn<V> extends OptionsField<Collection<V>, V> {
          */
         @Deprecated
         String getItemIcon(Entity item, boolean selected);
+    }
+
+    /**
+     * Represents item for option style provider.
+     *
+     * @param <V> option type
+     */
+    class OptionStyleItem<V> {
+        protected V item;
+        protected boolean selected;
+
+        public OptionStyleItem(V item, boolean selected) {
+            this.item = item;
+            this.selected = selected;
+        }
+
+        public boolean isSelected() {
+            return selected;
+        }
+
+        public V getItem() {
+            return item;
+        }
     }
 }

@@ -15,46 +15,31 @@
  */
 package com.haulmont.cuba.web.widgets;
 
+import com.google.common.base.Strings;
 import com.haulmont.cuba.web.widgets.client.twincolselect.CubaTwinColSelectState;
+import com.vaadin.data.provider.DataGenerator;
 import com.vaadin.ui.TwinColSelect;
+import elemental.json.JsonObject;
+
+import java.util.function.Function;
 
 @SuppressWarnings("serial")
 public class CubaTwinColSelect<V> extends TwinColSelect<V> {
-    /*
-    private OptionStyleGenerator styleGenerator;
-    /*
 
-    /*@Override
-    protected void paintItem(PaintTarget target, Object itemId)
-            throws PaintException {
-        super.paintItem(target, itemId);
+    protected Function<CubaOptionStyleItem, String> styleProvider;
 
-        if (styleGenerator != null) {
-            String style = styleGenerator.generateStyle(this, itemId, isSelected(itemId));
-            if (!StringUtils.isEmpty(style)) {
-                target.addAttribute("style", style);
-            }
-        }
-    }*/
-
-    /*
-    public OptionStyleGenerator getStyleGenerator() {
-        return styleGenerator;
+    public CubaTwinColSelect() {
+        addDataGenerator(createDataGenerator());
     }
-    */
 
-    /*
-    public void setStyleGenerator(OptionStyleGenerator styleGenerator) {
-        this.styleGenerator = styleGenerator;
-        markAsDirty();
+    public void setOptionStyleProvider(Function<CubaOptionStyleItem, String> styleProvider) {
+        this.styleProvider = styleProvider;
+        refreshDataItems();
     }
-    */
 
-    /*
-    public interface OptionStyleGenerator {
-        String generateStyle(AbstractSelect source, Object itemId, boolean selected);
+    protected DataGenerator<V> createDataGenerator() {
+        return new TwinColumnDataGenerator();
     }
-    */
 
     public boolean isAddAllBtnEnabled() {
         return getState(false).addAllBtnEnabled;
@@ -75,4 +60,38 @@ public class CubaTwinColSelect<V> extends TwinColSelect<V> {
     protected CubaTwinColSelectState getState(boolean markAsDirty) {
         return (CubaTwinColSelectState) super.getState(markAsDirty);
     }
-}
+
+    protected void refreshDataItems() {
+        getDataProvider().refreshAll();
+    }
+
+    protected class TwinColumnDataGenerator implements DataGenerator<V> {
+
+        @Override
+        public void generateData(V item, JsonObject jsonObject) {
+            if (styleProvider != null) {
+                String style = styleProvider.apply(new CubaOptionStyleItem(isSelected(item), item));
+                if (!Strings.isNullOrEmpty(style)) {
+                    jsonObject.put("style", style);
+                }
+            }
+        }
+    }
+
+    public class CubaOptionStyleItem {
+        protected boolean selected;
+        protected V item;
+
+        public CubaOptionStyleItem(boolean selected, V item) {
+            this.selected = selected;
+            this.item = item;
+        }
+
+        public boolean isSelected() {
+            return selected;
+        }
+
+        public V getItem() {
+            return item;
+        }
+    }}

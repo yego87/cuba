@@ -37,14 +37,16 @@ import org.springframework.beans.factory.InitializingBean;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, Set<V>, Collection<V>>
         implements TwinColumn<V>, InitializingBean {
 
-    protected StyleProvider styleProvider;
     protected OptionsBinding<V> optionsBinding;
+
     protected Function<? super V, String> optionCaptionProvider;
+    protected Function<OptionStyleItem<V>, String> optionStyleProvider;
 
     protected int columns;
 
@@ -100,6 +102,20 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
 
     protected void setItemsToPresentation(Stream<V> options) {
         component.setItems(options);
+
+        // set value to Vaadin component as it removes value after setItems
+        if (getValue() != null && !getValue().isEmpty()) {
+            List<V> items = getOptions().getOptions().collect(Collectors.toList());
+
+            Set<V> values = new HashSet<>();
+            for (V value : getValue()) {
+                if (items.contains(value)) {
+                    values.add(value);
+                }
+            }
+
+            component.setValue(values);
+        }
     }
 
     @Override
@@ -163,17 +179,22 @@ public class WebTwinColumn<V> extends WebV8AbstractField<CubaTwinColSelect<V>, S
     }
 
     @Override
-    public void setStyleProvider(final StyleProvider styleProvider) {
-        this.styleProvider = styleProvider;
-        /* vaadin8
-        if (styleProvider != null) {
-            component.setStyleGenerator((source, itemId, selected) -> {
-                final Entity item = optionsDatasource.getItem(itemId);
-                return styleProvider.getStyleName(item, itemId, component.isSelected(itemId));
-            });
+    public void setOptionStyleProvider(Function<OptionStyleItem<V>, String> optionStyleProvider) {
+        this.optionStyleProvider = optionStyleProvider;
+
+        if (optionStyleProvider != null) {
+            component.setOptionStyleProvider(styleProvider ->
+                    optionStyleProvider.apply(new OptionStyleItem<>(
+                            styleProvider.getItem(), styleProvider.isSelected()))
+            );
         } else {
-            component.setStyleGenerator(null);
-        }*/
+            component.setOptionStyleProvider(null);
+        }
+    }
+
+    @Override
+    public Function<OptionStyleItem<V>, String> getOptionStyleProvider() {
+        return optionStyleProvider;
     }
 
     @Override

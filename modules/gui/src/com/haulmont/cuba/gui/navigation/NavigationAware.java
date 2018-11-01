@@ -16,29 +16,27 @@
 
 package com.haulmont.cuba.gui.navigation;
 
+import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.gui.screen.Screen;
 
 import java.util.Map;
 
 /**
- * Indicates that an annotated class is aware of URI changes and able to react on them.
+ * Enables to handle URL params changing for an annotated screen.
  * <p>
- * Annotated class must by a direct or indirect subclass of {@link Screen}.
+ * A screen should have a route specified with {@link Page} annotation and be a direct or indirect subclass
+ * of {@link Screen}.
+ * <p>
+ * @see Page
+ * @see Screen
  */
 public interface NavigationAware {
 
     /**
-     * @return whether a screen can be navigated on URI change
-     */
-    default boolean canBeNavigatedTo() {
-        return true;
-    }
-
-    /**
-     * Hook to be implemented in subclasses. Called when URI params are changed when the screen is opened.
+     * Hook to be implemented in subclasses. Called when URL params are changed when annotated screen is opened.
      *
-     * @param uriParams URI params
+     * @param urlParams URL params
      */
-    default void uriParamsChanged(Map<String, String> uriParams) {
+    default void urlParamsChanged(Map<String, String> urlParams) {
     }
 }

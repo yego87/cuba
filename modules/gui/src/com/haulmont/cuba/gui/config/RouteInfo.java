@@ -16,23 +16,19 @@
 
 package com.haulmont.cuba.gui.config;
 
-import java.util.Map;
+import com.haulmont.cuba.gui.navigation.UriState;
 
-public class NavigationInfo {
+public class RouteInfo {
 
-    protected String resolvedRoute;
-    protected Map<String, String> uriParams;
+    protected UriState uriState;
 
-    public void update(String resolvedRoute, Map<String, String> uriParams) {
-        this.resolvedRoute = resolvedRoute;
-        this.uriParams = uriParams;
+    public void update(UriState uriState) {
+        this.uriState = uriState;
     }
 
-    public String getResolvedRoute() {
-        return resolvedRoute;
-    }
-
-    public Map<String, String> getUriParams() {
-        return uriParams;
+    public UriState getResolvedState() {
+        return uriState != null
+                ? uriState
+                : UriState.empty();
     }
 }

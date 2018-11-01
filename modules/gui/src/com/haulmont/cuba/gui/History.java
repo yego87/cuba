@@ -30,13 +30,13 @@ public interface History {
     String NAME = "cuba_History";
 
     /**
-     * Adds new history entry. Flushes all entries coming after now.
+     * Adds new history entry. Flushes all entries coming after getNow.
      * <p>
      * Mutates history.
      *
      * @param uriState new history entry
      */
-    void push(UriState uriState);
+    void forward(UriState uriState);
 
     /**
      * Performs "Back" transition through history.
@@ -52,21 +52,21 @@ public interface History {
      *
      * @return current history entry
      */
-    UriState now();
+    UriState getNow();
 
     /**
      * Doesn't mutate history.
      *
      * @return previous history entry
      */
-    UriState lookBackward();
+    UriState getPrevious();
 
     /**
      * Doesn't mutate history.
      *
      * @return next history entry
      */
-    UriState lookForward();
+    UriState getNext();
 
     /**
      * Performs search for the given history entry in the past.
@@ -87,4 +87,12 @@ public interface History {
      * @return true if entry is found, false otherwise
      */
     boolean searchForward(UriState uriState);
+
+    /**
+     * Checks whether history has the given entry.
+     *
+     * @param uriState history entry
+     * @return true if history has an entry, false otherwise
+     */
+    boolean has(UriState uriState);
 }

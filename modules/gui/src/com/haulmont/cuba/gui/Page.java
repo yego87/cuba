@@ -22,18 +22,48 @@ import org.springframework.core.annotation.AliasFor;
 import java.lang.annotation.*;
 
 /**
- * Registers an annotated class as screen that corresponds the given relative path.
- * Annotated class must by a direct or indirect subclass of {@link Screen}.
+ * Registers an annotated class as corresponding to some route. It means that that screen should be opened when URL ends
+ * with specified route and that URL should be changed according to the route when the screen is opened.
  * <p>
  *
- * The {@code path} property should be a relative path coming after app context.
+ * <pre>
+ *     Example:
+ *
+ *     Screen annotated with {@code @Page("help")} corresponds to "/app/{rootRoute}/help",
+ *     where {rootRoute} equals to currently opened root screen.
+ *
+ *     This screen will be opened when URL changes from "/app/{rootRoute}" to "/app/{rootRoute}/help" and URL will be
+ *     changed in the same way when the screen is opened.
+ * </pre>
  * <p>
  *
- * <strong>Example:</strong> {@code @Page(path = "help") }
+ * Required parent screen that should be opened to form a route can be specified with "parent" property. If this
+ * property is set but parent screen isn't opened annotated screen route will not be applied.
+ * <p><br/>
+ *
+ * URL squashing can be used if the "parentPrefix" property is specified. Annotated screen route will be merged with
+ * a route configured in property value screen if a parent is currently opened.
  * <p>
  *
- * The {@code publicPage} property enables to define whether annotated screen is public and doesn't require
- * authorization or not.
+ * <pre>
+ *     Example. Let two screens exist:
+ * {@code
+ *
+ * @Page("orders")
+ * public class OrderBrowse { ... }
+ *
+ * @Page(route = "orders/edit", parentPrefix = OrderBrowse.class)
+ * public class OrderEdit { ... }
+ * }
+ *
+ *     When OrderEdit screen is opened after OrderBrowse screen resulting address will be
+ *     "app/{rootRoute/users/users/edit}.
+ *
+ *     It allows to specify clear routes for each screen and avoid repeats in URL.
+ * </pre>
+ *
+ * Annotated class must be a direct or indirect subclass of {@link Screen}.
+ * <p>
  *
  * @see Screen
  */
@@ -53,4 +83,6 @@ public @interface Page {
     String route() default "";
 
     Class<? extends Screen> parent() default Screen.class;
+
+    Class<? extends Screen> parentPrefix() default Screen.class;
 }

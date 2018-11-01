@@ -20,7 +20,6 @@ import com.haulmont.bali.util.URLEncodeUtils;
 import com.haulmont.cuba.core.global.GlobalConfig;
 import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.gui.components.*;
-import com.haulmont.cuba.gui.navigation.NavigationAware;
 import com.haulmont.cuba.security.app.UserManagementService;
 import com.haulmont.cuba.security.auth.AbstractClientCredentials;
 import com.haulmont.cuba.security.auth.Credentials;
@@ -45,7 +44,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @Page("login")
-public class AppLoginWindow extends AbstractWindow implements Window.TopLevelWindow, NavigationAware {
+public class AppLoginWindow extends AbstractWindow implements Window.TopLevelWindow {
 
     private static final Logger log = LoggerFactory.getLogger(AppLoginWindow.class);
 
@@ -350,10 +349,5 @@ public class AppLoginWindow extends AbstractWindow implements Window.TopLevelWin
             ((AbstractClientCredentials) credentials).setOverrideLocale(localesSelect.isVisibleRecursive());
         }
         connection.login(credentials);
-    }
-
-    @Override
-    public boolean canBeNavigatedTo() {
-        return !connection.isAuthenticated();
     }
 }

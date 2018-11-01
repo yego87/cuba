@@ -132,12 +132,12 @@ public class UriChangeHandler {
     }
 
     protected boolean historyNavigation(UriState uriState) {
-        return Objects.equals(uriState, getHistory().lookBackward())
-                || Objects.equals(uriState, getHistory().lookForward());
+        return Objects.equals(uriState, getHistory().getPrevious())
+                || Objects.equals(uriState, getHistory().getNext());
     }
 
     protected void handleHistoryNavigation(UriState uriState) {
-        if (Objects.equals(uriState, getHistory().lookBackward())) {
+        if (Objects.equals(uriState, getHistory().getPrevious())) {
             handleHistoryBackward();
         } else {
             handleHistoryForward();
@@ -145,7 +145,7 @@ public class UriChangeHandler {
     }
 
     protected void handleHistoryBackward() {
-        UriState prevState = getHistory().lookBackward();
+        UriState prevState = getHistory().getPrevious();
         Screen prevScreen = findScreenByState(prevState);
 
         AccessCheckResult accessCheckResult = historyNavigationAllowed(prevState);
@@ -172,7 +172,7 @@ public class UriChangeHandler {
             return;
         }
 
-        Screen lastOpenedScreen = findActiveScreenByState(getHistory().now());
+        Screen lastOpenedScreen = findActiveScreenByState(getHistory().getNow());
         if (lastOpenedScreen != null) {
             lastOpenedScreen.getWindow().getFrameOwner()
                     .close(FrameOwner.WINDOW_CLOSE_ACTION)
@@ -196,7 +196,7 @@ public class UriChangeHandler {
     protected void proceedHistoryBackward() {
         History history = getHistory();
 
-        UriState nowState = history.now();
+        UriState nowState = history.getNow();
         UriState prevState = history.backward();
 
         focusScreen(findActiveScreenByState(prevState));
@@ -212,14 +212,15 @@ public class UriChangeHandler {
     }
 
     protected void handleHistoryForward() {
-        Screen currentScreen = findActiveScreenByState(getHistory().now());
+        Screen currentScreen = findActiveScreenByState(getHistory().getNow());
         if (currentScreen == null) {
             currentScreen = getCurrentScreen();
         }
 
         String route = currentScreen.getScreenContext()
-                .getNavigationInfo()
-                .getResolvedRoute();
+                .getRouteInfo()
+                .getResolvedState()
+                .asRoute();
         Page.getCurrent().setUriFragment(route);
 
         ui.getNotifications().create()
@@ -229,14 +230,15 @@ public class UriChangeHandler {
     }
 
     protected void revertHistoryBackward() {
-        Screen screen = findActiveScreenByState(getHistory().now());
+        Screen screen = findActiveScreenByState(getHistory().getNow());
         if (screen == null) {
             screen = getCurrentScreen();
         }
         String route = screen
                 .getScreenContext()
-                .getNavigationInfo()
-                .getResolvedRoute();
+                .getRouteInfo()
+                .getResolvedState()
+                .asRoute();
         Page.getCurrent().setUriFragment(route);
     }
 
@@ -254,6 +256,23 @@ public class UriChangeHandler {
         if (paramsChanged(uriState)) {
             handleParamsChange(uriState);
         }
+
+        if (screensClosed(uriState)) {
+            handleScreensClosed();
+        }
+    }
+
+    protected boolean screensClosed(UriState uriState) {
+        return !rootState(getHistory().getNow()) && rootState(ui.getNavigation().getState());
+    }
+
+    protected void handleScreensClosed() {
+        Screen lastOpenedScreen = findActiveScreenByState(getHistory().getNow());
+        if (lastOpenedScreen != null) {
+            lastOpenedScreen.getWindow().getFrameOwner()
+                    .close(FrameOwner.WINDOW_CLOSE_ACTION)
+                    .otherwise(this::revertHistoryBackward);
+        }
     }
 
     protected boolean rootChanged(UriState uriState) {
@@ -263,8 +282,9 @@ public class UriChangeHandler {
         }
 
         String resolvedRoute = rootScreen.getScreenContext()
-                .getNavigationInfo()
-                .getResolvedRoute();
+                .getRouteInfo()
+                .getResolvedState()
+                .getRoot();
 
         return !Objects.equals(resolvedRoute, uriState.getRoot());
     }
@@ -286,8 +306,9 @@ public class UriChangeHandler {
 
         String currentScreenRoute = currentScreen
                 .getScreenContext()
-                .getNavigationInfo()
-                .getResolvedRoute();
+                .getRouteInfo()
+                .getResolvedState()
+                .getNestedRoute();
 
         return !Objects.equals(currentScreenRoute, uriState.asRoute());
     }
@@ -374,7 +395,7 @@ public class UriChangeHandler {
     protected void handleParamsChange(UriState state) {
         Screen screen = findActiveScreenByState(state);
         if (screen instanceof NavigationAware) {
-            ((NavigationAware) screen).uriParamsChanged(state.getParams());
+            ((NavigationAware) screen).urlParamsChanged(state.getParams());
         }
     }
 

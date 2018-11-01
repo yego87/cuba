@@ -20,7 +20,7 @@ import com.haulmont.cuba.gui.Dialogs;
 import com.haulmont.cuba.gui.Fragments;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
-import com.haulmont.cuba.gui.config.NavigationInfo;
+import com.haulmont.cuba.gui.config.RouteInfo;
 import com.haulmont.cuba.gui.config.WindowInfo;
 
 public interface ScreenContext {
@@ -29,7 +29,7 @@ public interface ScreenContext {
 
     WindowInfo getWindowInfo();
 
-    NavigationInfo getNavigationInfo();
+    RouteInfo getRouteInfo();
 
     Screens getScreens();
 

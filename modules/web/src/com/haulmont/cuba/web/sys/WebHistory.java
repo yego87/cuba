@@ -53,7 +53,7 @@ public class WebHistory implements History {
     }
 
     @Override
-    public void push(UriState uriState) {
+    public void forward(UriState uriState) {
         if (checkNotNativeUrlHandlingMode()) {
             return;
         }
@@ -65,7 +65,7 @@ public class WebHistory implements History {
             throw new IllegalStateException("New history entry doesn't match with actual state");
         }
 
-        if (uriState.equals(now())) {
+        if (uriState.equals(getNow())) {
             return;
         }
 
@@ -90,7 +90,7 @@ public class WebHistory implements History {
     }
 
     @Override
-    public UriState now() {
+    public UriState getNow() {
         if (checkNotNativeUrlHandlingMode()) {
             return UriState.empty();
         }
@@ -99,7 +99,7 @@ public class WebHistory implements History {
     }
 
     @Override
-    public UriState lookBackward() {
+    public UriState getPrevious() {
         if (checkNotNativeUrlHandlingMode()) {
             return UriState.empty();
         }
@@ -108,7 +108,7 @@ public class WebHistory implements History {
     }
 
     @Override
-    public UriState lookForward() {
+    public UriState getNext() {
         if (checkNotNativeUrlHandlingMode()) {
             return UriState.empty();
         }
@@ -146,6 +146,13 @@ public class WebHistory implements History {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean has(UriState uriState) {
+        Preconditions.checkNotNullArgument(uriState);
+
+        return history.contains(uriState);
     }
 
     protected void dropFutureEntries() {

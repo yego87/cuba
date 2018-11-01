@@ -79,17 +79,22 @@ public class WebNavigation implements Navigation {
             return;
         }
 
-        UriState oldUriState = fireStateChanged ? getState() : null;
+        UriState oldUriState = getState();
+        String navState = buildNavState(screen, uriParams);
 
-        String navigationState = buildNavState(screen, uriParams);
-
-        screen.getScreenContext().getNavigationInfo()
-                .update(navigationState, uriParams);
-
-        Page.getCurrent().setUriFragment(navigationState, false);
+        if (!externalNavigation(oldUriState, navState)) {
+            Page.getCurrent()
+                    .setUriFragment(navState, false);
+        } else {
+            Page.getCurrent().replaceState("#" + navState);
+        }
 
         UriState newUriState = getState();
-        ui.getHistory().push(newUriState);
+
+        screen.getScreenContext().getRouteInfo()
+                .update(newUriState);
+
+        ui.getHistory().forward(newUriState);
 
         if (fireStateChanged) {
             fireStateChange(oldUriState, newUriState);
@@ -105,15 +110,15 @@ public class WebNavigation implements Navigation {
 
         UriState oldUriState = fireStateChanged ? getState() : null;
 
-        String navigationState = buildNavState(screen, uriParams);
+        Page.getCurrent()
+                .replaceState("#" + buildNavState(screen, uriParams));
+        UriState newUriState = getState();
 
-        screen.getScreenContext().getNavigationInfo()
-                .update(navigationState, uriParams);
-
-        Page.getCurrent().replaceState("#" + navigationState);
+        screen.getScreenContext().getRouteInfo()
+                .update(newUriState);
 
         if (fireStateChanged) {
-            fireStateChange(oldUriState, getState());
+            fireStateChange(oldUriState, newUriState);
         }
     }
 
@@ -198,7 +203,7 @@ public class WebNavigation implements Navigation {
 
         for (int i = 0; i < screens.size() && depth < MAX_NESTED_ROUTES; i++) {
             Screen nestedScreen = screens.get(i);
-            String route = formNestedScreenRoute(state.toString(), nestedScreen);
+            String route = buildNestedScreenRoute(state.toString(), nestedScreen);
 
             if (!state.toString().isEmpty() && !route.isEmpty()) {
                 state.append('/');
@@ -211,7 +216,7 @@ public class WebNavigation implements Navigation {
         return state.toString();
     }
 
-    protected String formNestedScreenRoute(String state, Screen screen) {
+    protected String buildNestedScreenRoute(String state, Screen screen) {
         String screenRoute = getRoute(screen);
 
         if (screen instanceof EditorScreen) {
@@ -279,5 +284,18 @@ public class WebNavigation implements Navigation {
 
     protected String getScreenStateMark(Screen screen) {
         return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
+    }
+
+    protected boolean externalNavigation(UriState requestedState, String newRoute) {
+        if (requestedState == null) {
+            return false;
+        }
+
+        UriState newUriState = UrlTools.parseState(newRoute);
+
+        return !ui.getHistory().has(requestedState)
+                && requestedState.getRoot().equals(newUriState.getRoot())
+                && requestedState.getNestedRoute().equals(newUriState.getNestedRoute())
+                && requestedState.getParamsString().equals(newUriState.getParamsString());
     }
 }

@@ -230,7 +230,23 @@ public class CubaFoldersPane extends VerticalLayout {
         layout.addComponent(foldersPane);
         layout.setExpandRatio(foldersPane, 1);
 
+        layout.addShortcutListener(
+                new ShortcutListenerDelegate("apply" + foldersPane.getCubaId(), ShortcutAction.KeyCode.ENTER, null)
+                        .withHandler((sender, target) -> {
+                            if (sender == layout) {
+                                handleFoldersPaneShortcutAction(foldersPane);
+                            }
+                        }));
+
         return layout;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void handleFoldersPaneShortcutAction(Component foldersPane) {
+        AbstractSearchFolder folder = ((CubaTree<AbstractSearchFolder>) foldersPane).asSingleSelect().getValue();
+        if (folder != null) {
+            openFolder(folder);
+        }
     }
 
     protected void setupSearchFoldersPane(Component searchFoldersPane) {
@@ -474,18 +490,6 @@ public class CubaFoldersPane extends VerticalLayout {
         appFoldersTree.setDataProvider(createTreeDataProvider());
         appFoldersTree.setGridSelectionModel(new CubaSingleSelectionModel<>());
         appFoldersTree.setStyleGenerator(new FolderTreeStyleProvider<>());
-        appFoldersTree.addShortcutListener(
-                new ShortcutListenerDelegate("applyAppFolder", ShortcutAction.KeyCode.ENTER, null)
-                        .withHandler((sender, target) -> {
-                            if (target == appFoldersTree
-                                    // For some reason, Tree sends its composition as a target instead of itself.
-                                    || target == appFoldersTree.getCompositionRoot()) {
-                                AbstractSearchFolder folder = appFoldersTree.asSingleSelect().getValue();
-                                if (folder != null) {
-                                    openFolder(folder);
-                                }
-                            }
-                        }));
 
         appFoldersTree.addExpandListener(event -> {
             AppFolder folder = event.getExpandedItem();
@@ -529,18 +533,6 @@ public class CubaFoldersPane extends VerticalLayout {
         searchFoldersTree.setDataProvider(createTreeDataProvider());
         searchFoldersTree.setGridSelectionModel(new CubaSingleSelectionModel<>());
         searchFoldersTree.setStyleGenerator(new FolderTreeStyleProvider<>());
-        searchFoldersTree.addShortcutListener(
-                new ShortcutListenerDelegate("applySearchFolder", ShortcutAction.KeyCode.ENTER, null)
-                        .withHandler((sender, target) -> {
-                            if (target == searchFoldersTree
-                                    // For some reason, Tree sends its composition as a target instead of itself.
-                                    || target == searchFoldersTree.getCompositionRoot()) {
-                                AbstractSearchFolder folder = searchFoldersTree.asSingleSelect().getValue();
-                                if (folder != null) {
-                                    openFolder(folder);
-                                }
-                            }
-                        }));
 
         List<SearchFolder> searchFolders = foldersService.loadSearchFolders();
 

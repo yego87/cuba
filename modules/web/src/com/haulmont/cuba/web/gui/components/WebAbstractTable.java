@@ -1117,12 +1117,12 @@ public abstract class WebAbstractTable<T extends com.vaadin.v7.ui.Table & CubaEn
 
     @Override
     protected CubaButton createContextMenuButton() {
-        return new CubaButton() {
-            @Override
-            protected void beforeClickHandlerPerformed() {
-                WebAbstractTable.this.component.hideContextMenuPopup();
-            }
-        };
+        return new CubaButton();
+    }
+
+    @Override
+    protected void beforeContextMenuButtonHandlerPerformed() {
+        WebAbstractTable.this.component.hideContextMenuPopup();
     }
 
     protected void handleClickAction() {

@@ -153,8 +153,12 @@ public abstract class WebAbstractActionsHolderComponent<T extends com.vaadin.ui.
 
         action.addPropertyChangeListener(actionPropertyChangeListener);
         button.setClickHandler(event -> {
+            beforeContextMenuButtonHandlerPerformed();
             action.actionPerform(WebAbstractActionsHolderComponent.this);
         });
+    }
+
+    protected void beforeContextMenuButtonHandlerPerformed() {
     }
 
     @Inject

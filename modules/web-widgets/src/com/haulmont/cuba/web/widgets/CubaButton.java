@@ -56,7 +56,6 @@ public class CubaButton extends com.vaadin.ui.Button {
         CubaUI ui = (CubaUI) getUI();
         if (ui.isAccessibleForUser(this)) {
             if (clickHandler != null) {
-                beforeClickHandlerPerformed();
                 clickHandler.accept(null);
             } else {
                 super.fireClick();
@@ -74,7 +73,6 @@ public class CubaButton extends com.vaadin.ui.Button {
         if (ui.isAccessibleForUser(this)) {
             try {
                 if (clickHandler != null) {
-                    beforeClickHandlerPerformed();
                     clickHandler.accept(details);
                 } else {
                     super.fireClick(details);
@@ -88,9 +86,6 @@ public class CubaButton extends com.vaadin.ui.Button {
             LoggerFactory.getLogger(CubaButton.class)
                     .debug("Ignore click because button is inaccessible for user");
         }
-    }
-
-    protected void beforeClickHandlerPerformed() {
     }
 
     public Consumer<MouseEventDetails> getClickHandler() {

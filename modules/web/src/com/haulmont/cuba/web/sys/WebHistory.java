@@ -18,7 +18,7 @@ package com.haulmont.cuba.web.sys;
 
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.History;
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
@@ -44,7 +44,7 @@ public class WebHistory implements History {
     protected AppUI ui;
 
     protected int now;
-    protected List<UriState> history;
+    protected List<NavigationState> history;
 
     public WebHistory(AppUI ui) {
         this.ui = ui;
@@ -53,35 +53,35 @@ public class WebHistory implements History {
     }
 
     @Override
-    public void forward(UriState uriState) {
+    public void forward(NavigationState navigationState) {
         if (checkNotNativeUrlHandlingMode()) {
             return;
         }
 
-        Preconditions.checkNotNullArgument(uriState);
+        Preconditions.checkNotNullArgument(navigationState);
 
-        UriState state = ui.getNavigation().getState();
-        if (!uriState.equals(state)) {
+        NavigationState state = ui.getNavigation().getState();
+        if (!navigationState.equals(state)) {
             throw new IllegalStateException("New history entry doesn't match with actual state");
         }
 
-        if (uriState.equals(getNow())) {
+        if (navigationState.equals(getNow())) {
             return;
         }
 
         dropFutureEntries();
 
-        history.add(++now, uriState);
+        history.add(++now, navigationState);
     }
 
     @Override
-    public UriState backward() {
+    public NavigationState backward() {
         if (checkNotNativeUrlHandlingMode()) {
-            return UriState.empty();
+            return NavigationState.empty();
         }
 
-        UriState prevState = history.get(now - 1);
-        UriState state = ui.getNavigation().getState();
+        NavigationState prevState = history.get(now - 1);
+        NavigationState state = ui.getNavigation().getState();
         if (now - 1 > 0 && !prevState.equals(state)) {
             throw new IllegalStateException("Previous history entry doesn't match with actual state");
         }
@@ -90,42 +90,42 @@ public class WebHistory implements History {
     }
 
     @Override
-    public UriState getNow() {
+    public NavigationState getNow() {
         if (checkNotNativeUrlHandlingMode()) {
-            return UriState.empty();
+            return NavigationState.empty();
         }
 
         return now >= 0 ? history.get(now) : null;
     }
 
     @Override
-    public UriState getPrevious() {
+    public NavigationState getPrevious() {
         if (checkNotNativeUrlHandlingMode()) {
-            return UriState.empty();
+            return NavigationState.empty();
         }
 
         return now - 1 >= 0 ? history.get(now - 1) : null;
     }
 
     @Override
-    public UriState getNext() {
+    public NavigationState getNext() {
         if (checkNotNativeUrlHandlingMode()) {
-            return UriState.empty();
+            return NavigationState.empty();
         }
 
         return now + 1 < history.size() ? history.get(now + 1) : null;
     }
 
     @Override
-    public boolean searchBackward(UriState uriState) {
+    public boolean searchBackward(NavigationState navigationState) {
         if (checkNotNativeUrlHandlingMode()) {
             return false;
         }
 
-        Preconditions.checkNotNullArgument(uriState);
+        Preconditions.checkNotNullArgument(navigationState);
 
         for (int i = now - 1; i >= 0; i--) {
-            if (Objects.equals(history.get(i), uriState)) {
+            if (Objects.equals(history.get(i), navigationState)) {
                 return true;
             }
         }
@@ -133,15 +133,15 @@ public class WebHistory implements History {
     }
 
     @Override
-    public boolean searchForward(UriState uriState) {
+    public boolean searchForward(NavigationState navigationState) {
         if (checkNotNativeUrlHandlingMode()) {
             return false;
         }
 
-        Preconditions.checkNotNullArgument(uriState);
+        Preconditions.checkNotNullArgument(navigationState);
 
         for (int i = now + 1; i < history.size(); i++) {
-            if (Objects.equals(history.get(i), uriState)) {
+            if (Objects.equals(history.get(i), navigationState)) {
                 return true;
             }
         }
@@ -149,10 +149,10 @@ public class WebHistory implements History {
     }
 
     @Override
-    public boolean has(UriState uriState) {
-        Preconditions.checkNotNullArgument(uriState);
+    public boolean has(NavigationState navigationState) {
+        Preconditions.checkNotNullArgument(navigationState);
 
-        return history.contains(uriState);
+        return history.contains(navigationState);
     }
 
     protected void dropFutureEntries() {
@@ -163,7 +163,7 @@ public class WebHistory implements History {
     }
 
     protected boolean checkNotNativeUrlHandlingMode() {
-        boolean nativeMode = UrlHandlingMode.NATIVE == webConfig.getUrlHandlingMode();
+        boolean nativeMode = UrlHandlingMode.URL_ROUTES == webConfig.getUrlHandlingMode();
 
         if (!nativeMode) {
             log.debug("History bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());

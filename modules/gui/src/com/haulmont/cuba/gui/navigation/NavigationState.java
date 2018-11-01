@@ -16,27 +16,30 @@
 
 package com.haulmont.cuba.gui.navigation;
 
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class UriState {
+public class NavigationState {
 
     protected final String root;
     protected final String stateMark;
     protected final String nestedRoute;
     protected final Map<String, String> params;
 
-    public UriState(String root, String stateMark, String nestedRoute, Map<String, String> params) {
+    public NavigationState(String root, String stateMark, String nestedRoute, Map<String, String> params) {
         this.root = root;
         this.stateMark = stateMark;
         this.nestedRoute = nestedRoute;
         this.params = params;
     }
 
-    public static UriState empty() {
-        return new UriState("", "", "", Collections.emptyMap());
+    public static NavigationState empty() {
+        return new NavigationState("", "", "", Collections.emptyMap());
     }
 
     public String getRoot() {
@@ -56,7 +59,7 @@ public class UriState {
     }
 
     public String getParamsString() {
-        if (params == null || params.isEmpty()) {
+        if (MapUtils.isEmpty(params)) {
             return "";
         }
 
@@ -67,22 +70,21 @@ public class UriState {
     }
 
     public String asRoute() {
-        StringBuilder sb = new StringBuilder(root);
+        StringBuilder route = new StringBuilder(root);
 
-        if (stateMark != null && !stateMark.isEmpty()) {
-            sb.append('/').append(stateMark);
+        if (StringUtils.isNotEmpty(stateMark)) {
+            route.append('/').append(stateMark);
         }
 
-        if (nestedRoute != null && !nestedRoute.isEmpty()) {
-            sb.append('/').append(nestedRoute);
+        if (StringUtils.isNotEmpty(nestedRoute)) {
+            route.append('/').append(nestedRoute);
         }
 
-        if (params != null && !params.isEmpty()) {
-            sb.append("?")
-                    .append(getParamsString());
+        if (MapUtils.isNotEmpty(params)) {
+            route.append("?").append(getParamsString());
         }
 
-        return sb.toString();
+        return route.toString();
     }
 
     @Override
@@ -94,7 +96,7 @@ public class UriState {
             return false;
         }
 
-        UriState thatState = (UriState) that;
+        NavigationState thatState = (NavigationState) that;
         return Objects.equals(this.asRoute(), thatState.asRoute());
     }
 

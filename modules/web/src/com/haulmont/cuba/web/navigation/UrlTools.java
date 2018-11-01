@@ -16,7 +16,7 @@
 
 package com.haulmont.cuba.web.navigation;
 
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class UrlTools {
     protected static final String PARAMS_REGEX = "^(?:(?:\\w+=[a-zA-Z0-9_/+%]+)?|\\w+=[a-zA-Z0-9_/+%]+(?:&\\w+=[a-zA-Z0-9_/+%]+)+)$";
     protected static final Pattern PARAMS_PATTERN = Pattern.compile(PARAMS_REGEX);
 
-    public static UriState parseState(String uriFragment) {
+    public static NavigationState parseState(String uriFragment) {
         if (uriFragment == null || uriFragment.isEmpty()) {
             return null;
         }
@@ -55,20 +55,20 @@ public class UrlTools {
             return parseParamsRoute(uriFragment);
         }
 
-        return UriState.empty();
+        return NavigationState.empty();
     }
 
-    protected static UriState parseRootRoute(String uriFragment) {
+    protected static NavigationState parseRootRoute(String uriFragment) {
         Matcher matcher = ROOT_ROUTE_PATTERN.matcher(uriFragment);
         if (matcher.matches()) {
             String root = matcher.group(1);
-            return new UriState(root, "", "", Collections.emptyMap());
+            return new NavigationState(root, "", "", Collections.emptyMap());
         }
 
         throw new RuntimeException("Unable to parse root route");
     }
 
-    protected static UriState parseNestedRoute(String uriFragment) {
+    protected static NavigationState parseNestedRoute(String uriFragment) {
         Matcher matcher = NESTED_ROUTE_PATTERN.matcher(uriFragment);
         if (matcher.matches()) {
             String root = matcher.group(1);
@@ -83,13 +83,13 @@ public class UrlTools {
                 nestedRoute = matcher.group(3);
             }
 
-            return new UriState(root, stateMark, nestedRoute, Collections.emptyMap());
+            return new NavigationState(root, stateMark, nestedRoute, Collections.emptyMap());
         }
 
         throw new RuntimeException("Unable to parse nested route");
     }
 
-    protected static UriState parseParamsRoute(String uriFragment) {
+    protected static NavigationState parseParamsRoute(String uriFragment) {
         Matcher matcher = PARAMS_ROUTE_PATTERN.matcher(uriFragment);
         if (matcher.matches()) {
             String root = matcher.group(1);
@@ -105,7 +105,7 @@ public class UrlTools {
                 nestedRoute = matcher.group(3);
             }
 
-            return new UriState(root, stateMark, nestedRoute, extractParams(params));
+            return new NavigationState(root, stateMark, nestedRoute, extractParams(params));
         }
 
         throw new RuntimeException("Unable to parse params route");

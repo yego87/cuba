@@ -29,12 +29,14 @@ public enum UrlHandlingMode {
 
     /**
      * URL changes are not handled at all.
+     * <p>
+     * Replacement for disabled {@link WebConfig#getAllowHandleBrowserHistoryBack()}.
      */
     NONE,
     /**
      * {@link CubaHistoryControl} is used to handle changes.
      * <p>
-     * Replacement for {@link WebConfig#getAllowHandleBrowserHistoryBack()}.
+     * Replacement for enabled {@link WebConfig#getAllowHandleBrowserHistoryBack()}.
      */
     BACK_ONLY,
     /**
@@ -44,5 +46,5 @@ public enum UrlHandlingMode {
      * @see History
      * @see UriChangeHandler
      */
-    NATIVE
+    URL_ROUTES
 }

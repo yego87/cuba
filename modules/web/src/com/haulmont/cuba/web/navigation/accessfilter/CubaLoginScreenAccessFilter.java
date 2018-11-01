@@ -17,7 +17,7 @@
 package com.haulmont.cuba.web.navigation.accessfilter;
 
 import com.haulmont.cuba.core.global.Messages;
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 import com.haulmont.cuba.web.App;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -32,8 +32,8 @@ public class CubaLoginScreenAccessFilter implements NavigationAccessFilter {
     protected Messages messages;
 
     @Override
-    public AccessCheckResult allowed(UriState uriState) {
-        if (!"login".equals(uriState.getRoot())) {
+    public AccessCheckResult allowed(NavigationState navigationState) {
+        if (!"login".equals(navigationState.getRoot())) {
             return AccessCheckResult.allowed();
         }
 

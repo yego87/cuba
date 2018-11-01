@@ -16,7 +16,7 @@
 
 package com.haulmont.cuba.web.navigation.accessfilter;
 
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 
 /**
  * Marker interface for beans that manage whether some route is allowed navigate to or not.
@@ -36,12 +36,12 @@ public interface NavigationAccessFilter {
     int LOWEST_PLATFORM_PRECEDENCE = 1000;
 
     /**
-     * Checks whether requested {@code uriState} is allowed navigate to or not.
+     * Checks whether requested {@code navigationState} is allowed navigate to or not.
      *
-     * @param uriState requested state
+     * @param navigationState requested state
      * @return true if requested state can be navigated, false otherwise
      */
-    AccessCheckResult allowed(UriState uriState);
+    AccessCheckResult allowed(NavigationState navigationState);
 
     class AccessCheckResult {
 

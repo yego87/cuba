@@ -16,20 +16,20 @@
 
 package com.haulmont.cuba.web.navigation;
 
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 
 public class NavigationException extends RuntimeException {
 
     private static final long serialVersionUID = 8594370154685309669L;
 
     private String msg;
-    private UriState requestedState;
+    private NavigationState requestedState;
 
-    public NavigationException(UriState requestedState) {
+    public NavigationException(NavigationState requestedState) {
         this("", requestedState);
     }
 
-    public NavigationException(String msg, UriState requestedState) {
+    public NavigationException(String msg, NavigationState requestedState) {
         this.msg = msg;
         this.requestedState = requestedState;
     }
@@ -38,7 +38,7 @@ public class NavigationException extends RuntimeException {
         return msg;
     }
 
-    public UriState getRequestedState() {
+    public NavigationState getRequestedState() {
         return requestedState;
     }
 }

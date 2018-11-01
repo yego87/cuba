@@ -16,19 +16,19 @@
 
 package com.haulmont.cuba.gui.config;
 
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 
 public class RouteInfo {
 
-    protected UriState uriState;
+    protected NavigationState navigationState;
 
-    public void update(UriState uriState) {
-        this.uriState = uriState;
+    public void update(NavigationState navigationState) {
+        this.navigationState = navigationState;
     }
 
-    public UriState getResolvedState() {
-        return uriState != null
-                ? uriState
-                : UriState.empty();
+    public NavigationState getResolvedState() {
+        return navigationState != null
+                ? navigationState
+                : NavigationState.empty();
     }
 }

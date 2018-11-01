@@ -22,24 +22,24 @@ public class UriStateChangedEvent extends ApplicationEvent {
 
     private static final long serialVersionUID = 2542146882366256709L;
 
-    protected final UriState oldState;
-    protected final UriState state;
+    protected final NavigationState oldState;
+    protected final NavigationState state;
 
-    public UriStateChangedEvent(UriState oldState, UriState state) {
+    public UriStateChangedEvent(NavigationState oldState, NavigationState state) {
         super(state);
         this.oldState = oldState;
         this.state = state;
     }
 
-    public UriState getSource() {
-        return (UriState) super.getSource();
+    public NavigationState getSource() {
+        return (NavigationState) super.getSource();
     }
 
-    public UriState getOldState() {
+    public NavigationState getOldState() {
         return oldState;
     }
 
-    public UriState getState() {
+    public NavigationState getState() {
         return state;
     }
 }

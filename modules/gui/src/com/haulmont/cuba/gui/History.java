@@ -16,7 +16,7 @@
 
 package com.haulmont.cuba.gui;
 
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 
 /**
  * This bean is intended to store and access local copy of opened screens history.
@@ -34,9 +34,9 @@ public interface History {
      * <p>
      * Mutates history.
      *
-     * @param uriState new history entry
+     * @param navigationState new history entry
      */
-    void forward(UriState uriState);
+    void forward(NavigationState navigationState);
 
     /**
      * Performs "Back" transition through history.
@@ -45,54 +45,54 @@ public interface History {
      *
      * @return previous history entry
      */
-    UriState backward();
+    NavigationState backward();
 
     /**
      * Doesn't mutate history.
      *
      * @return current history entry
      */
-    UriState getNow();
+    NavigationState getNow();
 
     /**
      * Doesn't mutate history.
      *
      * @return previous history entry
      */
-    UriState getPrevious();
+    NavigationState getPrevious();
 
     /**
      * Doesn't mutate history.
      *
      * @return next history entry
      */
-    UriState getNext();
+    NavigationState getNext();
 
     /**
      * Performs search for the given history entry in the past.
      * <p>
      * Doesn't mutate history.
      *
-     * @param uriState history entry
+     * @param navigationState history entry
      * @return true if entry is found, false otherwise
      */
-    boolean searchBackward(UriState uriState);
+    boolean searchBackward(NavigationState navigationState);
 
     /**
      * Performs search for the given history entry in the future.
      * <p>
      * Doesn't mutate history.
      *
-     * @param uriState history entry
+     * @param navigationState history entry
      * @return true if entry is found, false otherwise
      */
-    boolean searchForward(UriState uriState);
+    boolean searchForward(NavigationState navigationState);
 
     /**
      * Checks whether history has the given entry.
      *
-     * @param uriState history entry
+     * @param navigationState history entry
      * @return true if history has an entry, false otherwise
      */
-    boolean has(UriState uriState);
+    boolean has(NavigationState navigationState);
 }

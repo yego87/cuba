@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -51,15 +52,27 @@ public final class Base64Converter {
     );
 
     public static String serialize(Object id) {
-        return Base64.getEncoder()
-                .withoutPadding()
+        return Base64.getEncoder().withoutPadding()
                 .encodeToString(getBytes(id));
     }
 
     public static Object deserialize(Class idClass, String base64) {
-        byte[] decoded = Base64.getDecoder()
-                .decode(base64);
+        byte[] decoded = Base64.getDecoder().decode(base64);
         return fromBytes(idClass, ByteBuffer.wrap(decoded));
+    }
+
+    public static Object deserialize(String base64) {
+        byte[] decoded = Base64.getDecoder().decode(base64);
+        for (Class clazz : serializers.keySet()) {
+            Object obj = fromBytes(clazz, ByteBuffer.wrap(decoded));
+            String serialized = serialize(obj);
+
+            if (Objects.equals(base64, serialized)) {
+                return obj;
+            }
+        }
+
+        return null;
     }
 
     protected static byte[] getBytes(Object id) {

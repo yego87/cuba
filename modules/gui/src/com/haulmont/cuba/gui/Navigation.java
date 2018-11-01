@@ -16,7 +16,7 @@
 
 package com.haulmont.cuba.gui;
 
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 import com.haulmont.cuba.gui.screen.Screen;
 
 import java.util.Collections;
@@ -136,5 +136,5 @@ public interface Navigation {
     /**
      * @return current state parsed from URI fragment.
      */
-    UriState getState();
+    NavigationState getState();
 }

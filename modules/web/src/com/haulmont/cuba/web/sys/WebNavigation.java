@@ -24,7 +24,7 @@ import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.config.WindowConfig;
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
@@ -74,64 +74,64 @@ public class WebNavigation implements Navigation {
 
     @Override
     public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
-        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
             log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
             return;
         }
 
-        UriState oldUriState = getState();
+        NavigationState oldNavigationState = getState();
         String navState = buildNavState(screen, uriParams);
 
-        if (!externalNavigation(oldUriState, navState)) {
+        if (!externalNavigation(oldNavigationState, navState)) {
             Page.getCurrent()
                     .setUriFragment(navState, false);
         } else {
             Page.getCurrent().replaceState("#" + navState);
         }
 
-        UriState newUriState = getState();
+        NavigationState newNavigationState = getState();
 
         screen.getScreenContext().getRouteInfo()
-                .update(newUriState);
+                .update(newNavigationState);
 
-        ui.getHistory().forward(newUriState);
+        ui.getHistory().forward(newNavigationState);
 
         if (fireStateChanged) {
-            fireStateChange(oldUriState, newUriState);
+            fireStateChange(oldNavigationState, newNavigationState);
         }
     }
 
     @Override
     public void replaceState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
-        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
             log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
             return;
         }
 
-        UriState oldUriState = fireStateChanged ? getState() : null;
+        NavigationState oldNavigationState = fireStateChanged ? getState() : null;
 
         Page.getCurrent()
                 .replaceState("#" + buildNavState(screen, uriParams));
-        UriState newUriState = getState();
+        NavigationState newNavigationState = getState();
 
         screen.getScreenContext().getRouteInfo()
-                .update(newUriState);
+                .update(newNavigationState);
 
         if (fireStateChanged) {
-            fireStateChange(oldUriState, newUriState);
+            fireStateChange(oldNavigationState, newNavigationState);
         }
     }
 
     @Override
-    public UriState getState() {
-        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()) {
+    public NavigationState getState() {
+        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
             log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
-            return UriState.empty();
+            return NavigationState.empty();
         }
         return UrlTools.parseState(Page.getCurrent().getUriFragment());
     }
 
-    protected void fireStateChange(UriState oldState, UriState newState) {
+    protected void fireStateChange(NavigationState oldState, NavigationState newState) {
         if (!Objects.equals(oldState, newState)) {
             events.publish(new UriStateChangedEvent(oldState, newState));
         }
@@ -286,16 +286,16 @@ public class WebNavigation implements Navigation {
         return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
     }
 
-    protected boolean externalNavigation(UriState requestedState, String newRoute) {
+    protected boolean externalNavigation(NavigationState requestedState, String newRoute) {
         if (requestedState == null) {
             return false;
         }
 
-        UriState newUriState = UrlTools.parseState(newRoute);
+        NavigationState newNavigationState = UrlTools.parseState(newRoute);
 
         return !ui.getHistory().has(requestedState)
-                && requestedState.getRoot().equals(newUriState.getRoot())
-                && requestedState.getNestedRoute().equals(newUriState.getNestedRoute())
-                && requestedState.getParamsString().equals(newUriState.getParamsString());
+                && requestedState.getRoot().equals(newNavigationState.getRoot())
+                && requestedState.getNestedRoute().equals(newNavigationState.getNestedRoute())
+                && requestedState.getParamsString().equals(newNavigationState.getParamsString());
     }
 }

@@ -181,7 +181,7 @@ public interface WebConfig extends Config {
      * @see UrlHandlingMode
      */
     @Property("cuba.web.urlHandlingMode")
-    @Default("NATIVE")
+    @Default("URL_ROUTES")
     @Factory(factory = UrlHandlingModeFactory.class)
     UrlHandlingMode getUrlHandlingMode();
 

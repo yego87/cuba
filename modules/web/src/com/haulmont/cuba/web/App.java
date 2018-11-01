@@ -31,7 +31,7 @@ import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.executors.IllegalConcurrentAccessException;
 import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
-import com.haulmont.cuba.gui.navigation.UriState;
+import com.haulmont.cuba.gui.navigation.NavigationState;
 import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.OpenMode;
 import com.haulmont.cuba.gui.screen.Screen;
@@ -294,7 +294,7 @@ public abstract class App {
      * Called on each browser tab initialization.
      */
     public void createTopLevelWindow(AppUI ui) {
-        UriState requestedState = ui.getNavigation().getState();
+        NavigationState requestedState = ui.getNavigation().getState();
 
         String topLevelWindowId = routeTopLevelWindowId();
 
@@ -306,16 +306,16 @@ public abstract class App {
         handleRedirect(ui, requestedState);
     }
 
-    protected void handleRedirect(AppUI ui, UriState uriState) {
-        if (UrlHandlingMode.NATIVE != webConfig.getUrlHandlingMode()
-                || uriState == null) {
+    protected void handleRedirect(AppUI ui, NavigationState navigationState) {
+        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()
+                || navigationState == null) {
             return;
         }
 
         Navigation navigation = ui.getNavigation();
 
         if (!connection.isAuthenticated()) {
-            String nestedRoute = uriState.getNestedRoute();
+            String nestedRoute = navigationState.getNestedRoute();
             if (StringUtils.isEmpty(nestedRoute)) {
                 return;
             }
@@ -323,14 +323,14 @@ public abstract class App {
             Map<String, String> params = new HashMap<>();
             params.put(REDIRECT_PARAM, nestedRoute);
 
-            if (uriState.getParams() != null) {
-                params.putAll(uriState.getParams());
+            if (navigationState.getParams() != null) {
+                params.putAll(navigationState.getParams());
             }
 
             navigation.replaceState(getTopLevelWindow().getFrameOwner(), params);
         } else {
-            String nestedRoute = uriState.getNestedRoute();
-            Map<String, String> params = uriState.getParams();
+            String nestedRoute = navigationState.getNestedRoute();
+            Map<String, String> params = navigationState.getParams();
 
             String redirectTarget = null;
 
@@ -344,8 +344,8 @@ public abstract class App {
                 return;
             }
 
-            UriState currentState = navigation.getState();
-            UriState newState = new UriState(currentState.getRoot(), "", redirectTarget, params);
+            NavigationState currentState = navigation.getState();
+            NavigationState newState = new NavigationState(currentState.getRoot(), "", redirectTarget, params);
 
             events.publish(new UriStateChangedEvent(currentState, newState));
         }

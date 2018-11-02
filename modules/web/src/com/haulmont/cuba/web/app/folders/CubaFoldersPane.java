@@ -1159,7 +1159,7 @@ public class CubaFoldersPane extends VerticalLayout {
         }
     }
 
-    protected class CommandFolderActionAdapter implements Menu.Command {
+    protected static class CommandFolderActionAdapter implements Menu.Command {
 
         protected final FolderAction action;
         protected final Supplier<Folder> selectedFolderProvider;

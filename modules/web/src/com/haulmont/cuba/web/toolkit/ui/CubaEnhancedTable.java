@@ -93,6 +93,8 @@ public interface CubaEnhancedTable extends AggregationContainer {
 
     void requestFocus(Object itemId, Object columnId);
 
+    void addAggregationEditableColumn(Object columnId);
+
     interface CellClickListener {
         void onClick(Object itemId, Object columnId);
     }

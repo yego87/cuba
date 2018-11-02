@@ -746,6 +746,10 @@ public interface Table<E extends Entity>
             this.element = element;
         }
 
+        public boolean isAggregationEditable() {
+            return aggregation != null && aggregation.isEditable();
+        }
+
         @Override
         public String toString() {
             return id == null ? super.toString() : id.toString();

@@ -910,6 +910,11 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
         super.paintContent(target);
     }
 
+    @Override
+    public void addAggregationEditableColumn(Object columnId) {
+        //todo implement
+    }
+
     public void expandAllHierarchical(List<Object> collapsedItemIds, List<Object> preOrder, List<Object> openItems) {
         if (getContainerStrategy() instanceof HierarchicalStrategy) {
             HierarchicalStrategy hierarchicalStrategy = (HierarchicalStrategy) getContainerStrategy();

@@ -17,11 +17,8 @@
 
 package com.haulmont.cuba.web.toolkit.ui.client.aggregation;
 
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.*;
 import com.google.gwt.dom.client.Style.Overflow;
-import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
@@ -31,6 +28,7 @@ import com.vaadin.client.BrowserInfo;
 import com.vaadin.client.ComputedStyle;
 import com.vaadin.client.UIDL;
 import com.vaadin.client.ui.VScrollTable;
+import com.vaadin.client.ui.VTextField;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -114,7 +112,9 @@ public class TableAggregationRow extends Panel {
 
             boolean sorted = tableWidget.getHead().getHeaderCell(colIndex).isSorted();
 
-            if (cell instanceof String) {
+            if (isEditableAggr(uidl, colIndex)) {
+                addCellWithField((String) cell, aligns[colIndex], style, sorted);
+            } else if (cell instanceof String) {
                 addCell((String) cell, aligns[colIndex], style, sorted);
             }
 
@@ -128,9 +128,45 @@ public class TableAggregationRow extends Panel {
         }
     }
 
+    //todo do without class cast
+    protected boolean isEditableAggr(UIDL uidl, int colIndex) {
+        UIDL colUidl = uidl.getChildByTagName("editableAggregationColumns");
+        Iterator iterator = colUidl.getChildIterator();
+        while (iterator.hasNext()) {
+            Object col = iterator.next();
+            if (col instanceof String) {
+                int colIdx = Integer.parseInt((String) col);
+                if (colIdx == colIndex) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Extension point for GroupTable divider column
     protected boolean addSpecificCell(String columnId, int colIndex) {
         return false;
+    }
+
+    protected void addCellWithField(String text, char align, String style, boolean sorted) {
+        final TableCellElement td = DOM.createTD().cast();
+        final DivElement container = DOM.createDiv().cast();
+        container.setClassName(tableWidget.getStylePrimaryName() + "-cell-wrapper" + " " + "widget-container");
+
+        setAlign(align, container);
+
+        VTextField vTextField = new VTextField();
+        vTextField.setText(text);
+        vTextField.getElement().addClassName("v-widget");
+        vTextField.setWidth("100%");
+
+        container.appendChild(vTextField.getElement());
+
+        td.setClassName(tableWidget.getStylePrimaryName() + "-cell-content");
+        td.addClassName(tableWidget.getStylePrimaryName() + "-aggregation-cell");
+        td.appendChild(container);
+        tr.appendChild(td);
     }
 
     protected void addCell(String text, char align, String style, boolean sorted) {

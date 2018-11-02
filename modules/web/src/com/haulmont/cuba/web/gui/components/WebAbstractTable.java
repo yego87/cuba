@@ -253,6 +253,10 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
                 component.setColumnSortable(columnId, false);
             }
         }
+
+        if (column.isAggregationEditable()) {
+            component.addAggregationEditableColumn(columnId);
+        }
     }
 
     @Override

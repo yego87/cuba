@@ -41,6 +41,7 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.Layout;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
@@ -50,6 +51,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CubaTable extends com.vaadin.ui.Table implements TableContainer, CubaEnhancedTable {
 
     protected LinkedList<Object> editableColumns;
+
+    protected List<Object> aggregationEditableColumns;
 
     /**
      * Keeps track of the ShortcutListeners added to this component, and manages the painting and handling as well.
@@ -582,7 +585,27 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
             String value = (String) aggregations.get(columnId);
             target.addText(value);
         }
+
+        target.startTag("editableAggregationColumns");
+        for (final Object columnId : visibleColumns) {
+            if (CollectionUtils.isNotEmpty(aggregationEditableColumns)
+                    && aggregationEditableColumns.contains(columnId)) {
+                int columnIdx = visibleColumns.indexOf(columnId);
+                //todo do without class cast
+                target.addText(String.valueOf(columnIdx));
+            }
+        }
+        target.endTag("editableAggregationColumns");
         target.endTag("arow");
+    }
+
+    @Override
+    public void addAggregationEditableColumn(Object columnId) {
+        if (aggregationEditableColumns == null) {
+            aggregationEditableColumns = new ArrayList<>();
+        }
+
+        aggregationEditableColumns.add(columnId);
     }
 
     @Override

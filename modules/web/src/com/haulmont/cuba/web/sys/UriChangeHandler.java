@@ -34,6 +34,7 @@ import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
 import com.haulmont.cuba.gui.util.OperationResult;
+import com.haulmont.cuba.web.App;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.app.ui.navigation.notfoundwindow.NotFoundScreen;
@@ -43,8 +44,8 @@ import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.navigation.Base64Converter;
 import com.haulmont.cuba.web.navigation.NavigationException;
-import com.haulmont.cuba.web.navigation.accessfilter.NavigationAccessFilter;
-import com.haulmont.cuba.web.navigation.accessfilter.NavigationAccessFilter.AccessCheckResult;
+import com.haulmont.cuba.web.navigation.accessfilter.NavigationFilter;
+import com.haulmont.cuba.web.navigation.accessfilter.NavigationFilter.AccessCheckResult;
 import com.haulmont.cuba.web.widgets.TabSheetBehaviour;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +59,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +94,10 @@ public class UriChangeHandler {
     protected WebConfig webConfig;
 
     @Inject
-    protected List<NavigationAccessFilter> accessFilters;
+    protected List<NavigationFilter> accessFilters;
+
+    @Inject
+    protected BeanLocator beanLocator;
 
     public UriChangeHandler(AppUI ui) {
         this.ui = ui;
@@ -116,14 +121,35 @@ public class UriChangeHandler {
             return;
         }
 
-        NavigationState navigationState = ui.getNavigation().getState();
-
-        if (navigationState == null) {
+        NavigationState requestedState = ui.getNavigation().getState();
+        if (requestedState == null) {
             reloadApp();
             return;
         }
 
-        handleUriChange(navigationState);
+        if (!App.getInstance().getConnection().isAuthenticated()) {
+            preventNotAuthenticatedNavigation(requestedState);
+            return;
+        }
+
+        handleUriChange(requestedState);
+    }
+
+    protected void preventNotAuthenticatedNavigation(NavigationState requestedState) {
+        if (Objects.equals(getHistory().getNow(), requestedState)) {
+            return;
+        }
+
+        Map<String, String> params = new HashMap<>();
+
+        String nestedRoute = requestedState.getNestedRoute();
+        if (StringUtils.isNotEmpty(nestedRoute)) {
+            RedirectHandler redirectHandler = beanLocator.getPrototype(RedirectHandler.NAME, ui);
+            redirectHandler.schedule(requestedState);
+            App.getInstance().setRedirectHandler(redirectHandler);
+        }
+
+        showNotification(messages.getMainMessage("navigation.shouldLogInFirst"));
     }
 
     protected void handleUriChange(NavigationState navigationState) {
@@ -181,8 +207,8 @@ public class UriChangeHandler {
     }
 
     protected AccessCheckResult historyNavigationAllowed(NavigationState navigationState) {
-        for (NavigationAccessFilter filter : accessFilters) {
-            AccessCheckResult result = filter.allowed(navigationState);
+        for (NavigationFilter filter : accessFilters) {
+            AccessCheckResult result = filter.allowed(getHistory().getNow(), navigationState);
             if (!result.isAllowed()) {
                 return result;
             }
@@ -285,8 +311,8 @@ public class UriChangeHandler {
     }
 
     protected void handleRootChange(NavigationState state) {
-        for (NavigationAccessFilter accessFilter : accessFilters) {
-            AccessCheckResult result = accessFilter.allowed(state);
+        for (NavigationFilter accessFilter : accessFilters) {
+            AccessCheckResult result = accessFilter.allowed(getHistory().getNow(), state);
             if (!result.isAllowed()) {
                 showNotification(result.getMessage());
                 revertNavigationState();

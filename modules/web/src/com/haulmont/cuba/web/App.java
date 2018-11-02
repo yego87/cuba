@@ -50,6 +50,7 @@ import com.haulmont.cuba.web.settings.WebSettingsClient;
 import com.haulmont.cuba.web.sys.AppCookies;
 import com.haulmont.cuba.web.sys.BackgroundTaskManager;
 import com.haulmont.cuba.web.sys.LinkHandler;
+import com.haulmont.cuba.web.sys.RedirectHandler;
 import com.haulmont.cuba.web.sys.WebScreens;
 import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.server.VaadinSession;
@@ -120,6 +121,8 @@ public abstract class App {
     protected AppCookies cookies;
 
     protected LinkHandler linkHandler;
+
+    protected RedirectHandler redirectHandler;
 
     protected BackgroundTaskManager backgroundTaskManager = new BackgroundTaskManager();
 
@@ -596,5 +599,16 @@ public abstract class App {
 
         Connection connection = getConnection();
         connection.logout();
+    }
+
+    /**
+     * INTERNAL.
+     *
+     * Sets redirect handler that will be triggered on log in.
+     *
+     * @param redirectHandler redirect handler
+     */
+    public void setRedirectHandler(RedirectHandler redirectHandler) {
+        this.redirectHandler = redirectHandler;
     }
 }

@@ -67,6 +67,7 @@ import com.haulmont.cuba.web.gui.components.WebTabWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
 import com.haulmont.cuba.web.widgets.*;
+import com.vaadin.server.Page;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Layout;
 import org.apache.commons.lang3.StringUtils;
@@ -508,25 +509,33 @@ public class WebScreens implements Screens, WindowManager {
 
         fireEvent(screen, AfterDetachEvent.class, new AfterDetachEvent(screen));
 
-        afterRemoveWindow();
+        afterScreenRemove(screen);
     }
 
-    protected void afterRemoveWindow() {
-        WebAppWorkArea workArea = getConfiguredWorkArea();
-
-        if (workArea.getMode() == Mode.SINGLE) {
-            // TODO: implement
+    protected void afterScreenRemove(Screen screen) {
+        if (screen.getWindow() instanceof RootWindow) {
             return;
         }
 
-        TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
-        TabWindowContainer windowContainer = (TabWindowContainer) tabSheet.getSelectedTab();
+        Screen currentScreen = null;
 
-        Screen currentScreen = windowContainer == null
-                ? ui.getTopLevelWindow().getFrameOwner()
-                : windowContainer.getBreadCrumbs().getCurrentWindow().getFrameOwner();
+        Iterator<Screen> currentBreadCrumbs = getOpenedScreens()
+                .getCurrentBreadcrumbs()
+                .iterator();
+        if (currentBreadCrumbs.hasNext()) {
+            currentScreen = currentBreadCrumbs.next();
+        }
+        if (currentScreen == null) {
+            currentScreen = getOpenedScreens().getRootScreenOrNull();
+        }
 
-        ui.getNavigation().replaceState(currentScreen);
+        if (currentScreen != null) {
+            String currentScreenRoute = currentScreen.getScreenContext()
+                    .getRouteInfo()
+                    .getResolvedState()
+                    .asRoute();
+            Page.getCurrent().replaceState("#" + currentScreenRoute);
+        }
     }
 
     protected void removeThisTabWindow(Screen screen) {

@@ -18,10 +18,12 @@ package com.haulmont.cuba.gui;
 
 import com.haulmont.cuba.gui.navigation.NavigationState;
 
+import javax.annotation.Nullable;
+
 /**
  * This bean is intended to store and access local copy of opened screens history.
  * <p>
- * It is mainly used by UriChangeHandler to distinguish history transitions and navigation.
+ * It is mainly used by UriChangeHandler to distinguish history and navigation transitions.
  * <p>
  * <b>Pay attention that manual history mutation can lead to errors.</b>
  */
@@ -30,9 +32,7 @@ public interface History {
     String NAME = "cuba_History";
 
     /**
-     * Adds new history entry. Flushes all entries coming after getNow.
-     * <p>
-     * Mutates history.
+     * Adds new history entry. Flushes all entries coming after current entry.
      *
      * @param navigationState new history entry
      */
@@ -40,38 +40,32 @@ public interface History {
 
     /**
      * Performs "Back" transition through history.
-     * <p>
-     * Mutates history.
      *
      * @return previous history entry
      */
+    @Nullable
     NavigationState backward();
 
     /**
-     * Doesn't mutate history.
-     *
      * @return current history entry
      */
+    @Nullable
     NavigationState getNow();
 
     /**
-     * Doesn't mutate history.
-     *
      * @return previous history entry
      */
+    @Nullable
     NavigationState getPrevious();
 
     /**
-     * Doesn't mutate history.
-     *
      * @return next history entry
      */
+    @Nullable
     NavigationState getNext();
 
     /**
      * Performs search for the given history entry in the past.
-     * <p>
-     * Doesn't mutate history.
      *
      * @param navigationState history entry
      * @return true if entry is found, false otherwise
@@ -80,8 +74,6 @@ public interface History {
 
     /**
      * Performs search for the given history entry in the future.
-     * <p>
-     * Doesn't mutate history.
      *
      * @param navigationState history entry
      * @return true if entry is found, false otherwise

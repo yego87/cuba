@@ -25,15 +25,15 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 
 @Component
-@Order(NavigationAccessFilter.LOWEST_PLATFORM_PRECEDENCE)
-public class CubaLoginScreenAccessFilter implements NavigationAccessFilter {
+@Order(NavigationFilter.LOWEST_PLATFORM_PRECEDENCE)
+public class CubaLoginScreenFilter implements NavigationFilter {
 
     @Inject
     protected Messages messages;
 
     @Override
-    public AccessCheckResult allowed(NavigationState navigationState) {
-        if (!"login".equals(navigationState.getRoot())) {
+    public AccessCheckResult allowed(NavigationState fromState, NavigationState toState) {
+        if (!"login".equals(toState.getRoot())) {
             return AccessCheckResult.allowed();
         }
 

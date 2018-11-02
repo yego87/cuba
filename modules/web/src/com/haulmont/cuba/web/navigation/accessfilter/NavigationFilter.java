@@ -21,7 +21,7 @@ import com.haulmont.cuba.gui.navigation.NavigationState;
 /**
  * Marker interface for beans that manage whether some route is allowed navigate to or not.
  */
-public interface NavigationAccessFilter {
+public interface NavigationFilter {
 
     /**
      * Defines the highest precedence for {@link org.springframework.core.Ordered} or
@@ -36,12 +36,13 @@ public interface NavigationAccessFilter {
     int LOWEST_PLATFORM_PRECEDENCE = 1000;
 
     /**
-     * Checks whether requested {@code navigationState} is allowed navigate to or not.
+     * Checks whether {@code fromState} to {@code toState} transition is allowed or not.
      *
-     * @param navigationState requested state
+     * @param fromState from state
+     * @param toState   to state
      * @return true if requested state can be navigated, false otherwise
      */
-    AccessCheckResult allowed(NavigationState navigationState);
+    AccessCheckResult allowed(NavigationState fromState, NavigationState toState);
 
     class AccessCheckResult {
 

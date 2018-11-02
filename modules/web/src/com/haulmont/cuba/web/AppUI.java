@@ -21,6 +21,7 @@ import com.haulmont.cuba.client.ClientUserSession;
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.*;
 import com.haulmont.cuba.gui.components.RootWindow;
+import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.events.sys.UiEventsMulticaster;
 import com.haulmont.cuba.gui.exception.UiExceptionHandler;
 import com.haulmont.cuba.gui.navigation.NavigationState;
@@ -245,10 +246,6 @@ public class AppUI extends CubaUI
         this.navigation = navigation;
     }
 
-    public UriChangeHandler getUriChangeHandler() {
-        return uriChangeHandler;
-    }
-
     public void setUriChangeHandler(UriChangeHandler uriChangeHandler) {
         this.uriChangeHandler = uriChangeHandler;
     }
@@ -265,14 +262,9 @@ public class AppUI extends CubaUI
     protected void init(VaadinRequest request) {
         log.trace("Initializing UI {}", this);
 
-        NavigationState requestedState;
+        NavigationState requestedState = getNavigation().getState();
 
         try {
-            initUiScope();
-
-            getPage().addPopStateListener(event ->
-                    uriChangeHandler.handleUriChange());
-
             this.testMode = globalConfig.getTestMode();
             this.performanceTestMode = globalConfig.getPerformanceTestMode();
             // init error handlers
@@ -315,7 +307,7 @@ public class AppUI extends CubaUI
             return;
         }
 
-        processRequest(request, requestedState);
+        processExternalLink(request, requestedState);
     }
 
     @Inject
@@ -340,24 +332,20 @@ public class AppUI extends CubaUI
         autowireContext(screens, applicationContext);
         setScreens(screens);
 
-        Navigation navigation = beanLocator.getPrototype(Navigation.NAME, this);
+        Navigation navigation = new WebNavigation(this);
+        autowireContext(navigation, applicationContext);
         setNavigation(navigation);
 
-        UriChangeHandler uriChangeHandler = beanLocator.getPrototype(UriChangeHandler.NAME, this);
+        UriChangeHandler uriChangeHandler = new UriChangeHandler(this);
+        autowireContext(uriChangeHandler, applicationContext);
         setUriChangeHandler(uriChangeHandler);
 
         getPage().addPopStateListener(event ->
                 uriChangeHandler.handleUriChange());
 
-        History history = beanLocator.getPrototype(History.NAME, this);
+        History history = new WebHistory(this);
+        autowireContext(history, applicationContext);
         setHistory(history);
-    }
-
-    protected void initUriChangeHandler() {
-        uriChangeHandler = beanLocator.getPrototype(UriChangeHandler.NAME);
-
-        getPage().addPopStateListener(event ->
-                uriChangeHandler.handleUriChange(event.getUri()));
     }
 
     protected void autowireContext(Object instance, ApplicationContext applicationContext) {
@@ -490,7 +478,7 @@ public class AppUI extends CubaUI
     @Override
     public void handleRequest(VaadinRequest request) {
         // on refresh page call
-        processRequest(request, getNavigation().getState());
+        processExternalLink(request, getNavigation().getState());
     }
 
     /**
@@ -556,11 +544,11 @@ public class AppUI extends CubaUI
         }
     }
 
-    public void processRequest(VaadinRequest request, NavigationState requestedState) {
+    public void processExternalLink(VaadinRequest request, NavigationState requestedState) {
         if (isLinkHandlerRequest(request)) {
             processLinkHandlerRequest(request);
         } else {
-            processGenericRequest(requestedState);
+            processRequest(requestedState);
         }
     }
 
@@ -595,7 +583,7 @@ public class AppUI extends CubaUI
         }
     }
 
-    protected void processGenericRequest(NavigationState navigationState) {
+    protected void processRequest(NavigationState navigationState) {
         if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode() || navigationState == null) {
             return;
         }
@@ -635,7 +623,7 @@ public class AppUI extends CubaUI
 
     @Override
     public void onHistoryBackPerformed() {
-        com.haulmont.cuba.gui.components.Window topLevelWindow = getTopLevelWindow();
+        Window topLevelWindow = getTopLevelWindow();
         if (topLevelWindow instanceof CubaHistoryControl.HistoryBackHandler) {
             ((CubaHistoryControl.HistoryBackHandler) topLevelWindow).onHistoryBackPerformed();
         }

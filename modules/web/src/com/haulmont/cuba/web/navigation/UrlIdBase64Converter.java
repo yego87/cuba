@@ -17,15 +17,15 @@
 package com.haulmont.cuba.web.navigation;
 
 import com.google.common.collect.ImmutableMap;
+import com.haulmont.bali.util.URLEncodeUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
-public final class Base64Converter {
+public final class UrlIdBase64Converter {
 
     @SuppressWarnings("CodeBlock2Expr")
     protected static final Map<Class, Function<Object, ByteBuffer>> serializers = ImmutableMap.of(
@@ -52,27 +52,14 @@ public final class Base64Converter {
     );
 
     public static String serialize(Object id) {
-        return Base64.getEncoder().withoutPadding()
+        String encoded = Base64.getEncoder().withoutPadding()
                 .encodeToString(getBytes(id));
+        return URLEncodeUtils.encodeUtf8(encoded);
     }
 
     public static Object deserialize(Class idClass, String base64) {
-        byte[] decoded = Base64.getDecoder().decode(base64);
+        byte[] decoded = Base64.getDecoder().decode(URLEncodeUtils.decodeUtf8(base64));
         return fromBytes(idClass, ByteBuffer.wrap(decoded));
-    }
-
-    public static Object deserialize(String base64) {
-        byte[] decoded = Base64.getDecoder().decode(base64);
-        for (Class clazz : serializers.keySet()) {
-            Object obj = fromBytes(clazz, ByteBuffer.wrap(decoded));
-            String serialized = serialize(obj);
-
-            if (Objects.equals(base64, serialized)) {
-                return obj;
-            }
-        }
-
-        return null;
     }
 
     protected static byte[] getBytes(Object id) {

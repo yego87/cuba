@@ -41,4 +41,9 @@ public class NavigationException extends RuntimeException {
     public NavigationState getRequestedState() {
         return requestedState;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + msg + ", " + requestedState;
+    }
 }

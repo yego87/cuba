@@ -530,7 +530,7 @@ public class WebScreens implements Screens, WindowManager {
         }
 
         if (currentScreen != null) {
-            String currentScreenRoute = currentScreen.getScreenContext()
+            String currentScreenRoute = getScreenContext(currentScreen)
                     .getRouteInfo()
                     .getResolvedState()
                     .asRoute();
@@ -1148,9 +1148,9 @@ public class WebScreens implements Screens, WindowManager {
         if (parent instanceof ComponentContainer) {
             ComponentContainer container = (ComponentContainer) parent;
             for (com.haulmont.cuba.gui.components.Component c : container.getComponents()) {
-                if (c instanceof Disposable) {
-                    Disposable disposable =
-                            (Disposable) c;
+                if (c instanceof com.haulmont.cuba.gui.components.Component.Disposable) {
+                    com.haulmont.cuba.gui.components.Component.Disposable disposable =
+                            (com.haulmont.cuba.gui.components.Component.Disposable) c;
                     if (!disposable.isDisposed()) {
                         disposable.dispose();
                     }

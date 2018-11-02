@@ -16,6 +16,7 @@
 
 package com.haulmont.cuba.gui.navigation;
 
+import com.haulmont.bali.util.Preconditions;
 import org.springframework.context.ApplicationEvent;
 
 public class UriStateChangedEvent extends ApplicationEvent {
@@ -27,6 +28,10 @@ public class UriStateChangedEvent extends ApplicationEvent {
 
     public UriStateChangedEvent(NavigationState oldState, NavigationState state) {
         super(state);
+
+        Preconditions.checkNotNullArgument(oldState);
+        Preconditions.checkNotNullArgument(state);
+
         this.oldState = oldState;
         this.state = state;
     }

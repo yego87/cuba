@@ -24,16 +24,12 @@ import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Scope(UIScope.NAME)
-@Component(History.NAME)
 public class WebHistory implements History {
 
     private static final Logger log = LoggerFactory.getLogger(WebHistory.class);

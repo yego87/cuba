@@ -16,7 +16,6 @@
 
 package com.haulmont.cuba.web.sys;
 
-import com.haulmont.bali.util.URLEncodeUtils;
 import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.Navigation;
@@ -33,21 +32,19 @@ import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
-import com.haulmont.cuba.web.navigation.Base64Converter;
+import com.haulmont.cuba.web.navigation.UrlIdBase64Converter;
 import com.haulmont.cuba.web.navigation.UrlTools;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Scope(UIScope.NAME)
-@Component(Navigation.NAME)
+import static com.haulmont.cuba.gui.screen.UiControllerUtils.getScreenContext;
+
 public class WebNavigation implements Navigation {
 
     protected static final int MAX_NESTED_ROUTES = 2;
@@ -91,7 +88,7 @@ public class WebNavigation implements Navigation {
 
         NavigationState newNavigationState = getState();
 
-        screen.getScreenContext().getRouteInfo()
+        getScreenContext(screen).getRouteInfo()
                 .update(newNavigationState);
 
         ui.getHistory().forward(newNavigationState);
@@ -114,7 +111,7 @@ public class WebNavigation implements Navigation {
                 .replaceState("#" + buildNavState(screen, uriParams));
         NavigationState newNavigationState = getState();
 
-        screen.getScreenContext().getRouteInfo()
+        getScreenContext(screen).getRouteInfo()
                 .update(newNavigationState);
 
         if (fireStateChanged) {
@@ -243,7 +240,7 @@ public class WebNavigation implements Navigation {
 
         if (screen instanceof EditorScreen) {
             Object entityId = ((EditorScreen) screen).getEditedEntity().getId();
-            String base64Id = URLEncodeUtils.encodeUtf8(Base64Converter.serialize(entityId));
+            String base64Id = UrlIdBase64Converter.serialize(entityId);
 
             params.put("id", base64Id);
         }
@@ -267,7 +264,7 @@ public class WebNavigation implements Navigation {
 
     protected PageDefinition getPage(Screen screen) {
         if (screen != null) {
-            return screen.getScreenContext().getWindowInfo().getPageDefinition();
+            return getScreenContext(screen).getWindowInfo().getPageDefinition();
         }
         return null;
     }

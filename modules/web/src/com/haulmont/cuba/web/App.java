@@ -19,7 +19,6 @@ package com.haulmont.cuba.web;
 
 import com.haulmont.cuba.core.global.*;
 import com.haulmont.cuba.gui.Dialogs;
-import com.haulmont.cuba.gui.Navigation;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.Action;
 import com.haulmont.cuba.gui.components.DialogAction;
@@ -31,8 +30,6 @@ import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.executors.IllegalConcurrentAccessException;
 import com.haulmont.cuba.gui.icons.CubaIcon;
 import com.haulmont.cuba.gui.icons.Icons;
-import com.haulmont.cuba.gui.navigation.NavigationState;
-import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.OpenMode;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.settings.SettingsClient;
@@ -47,7 +44,6 @@ import com.haulmont.cuba.security.global.UserSession;
 import com.haulmont.cuba.web.auth.WebAuthConfig;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.exception.ExceptionHandlers;
-import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.log.AppLog;
 import com.haulmont.cuba.web.security.events.SessionHeartbeatEvent;
 import com.haulmont.cuba.web.settings.WebSettingsClient;
@@ -59,7 +55,6 @@ import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -85,8 +80,6 @@ public abstract class App {
     public static final String APP_THEME_COOKIE_PREFIX = "APP_THEME_NAME_";
 
     public static final String COOKIE_LOCALE = "LAST_LOCALE";
-
-    protected static final String REDIRECT_PARAM = "redirectTo";
 
     private static final Logger log = LoggerFactory.getLogger(App.class);
 
@@ -294,61 +287,12 @@ public abstract class App {
      * Called on each browser tab initialization.
      */
     public void createTopLevelWindow(AppUI ui) {
-        NavigationState requestedState = ui.getNavigation().getState();
-
         String topLevelWindowId = routeTopLevelWindowId();
 
         Screens screens = ui.getScreens();
 
         Screen screen = screens.create(topLevelWindowId, OpenMode.ROOT);
         screens.show(screen);
-
-        handleRedirect(ui, requestedState);
-    }
-
-    protected void handleRedirect(AppUI ui, NavigationState navigationState) {
-        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()
-                || navigationState == null) {
-            return;
-        }
-
-        Navigation navigation = ui.getNavigation();
-
-        if (!connection.isAuthenticated()) {
-            String nestedRoute = navigationState.getNestedRoute();
-            if (StringUtils.isEmpty(nestedRoute)) {
-                return;
-            }
-
-            Map<String, String> params = new HashMap<>();
-            params.put(REDIRECT_PARAM, nestedRoute);
-
-            if (navigationState.getParams() != null) {
-                params.putAll(navigationState.getParams());
-            }
-
-            navigation.replaceState(getTopLevelWindow().getFrameOwner(), params);
-        } else {
-            String nestedRoute = navigationState.getNestedRoute();
-            Map<String, String> params = navigationState.getParams();
-
-            String redirectTarget = null;
-
-            if (StringUtils.isNotEmpty(nestedRoute)) {
-                redirectTarget = nestedRoute;
-            } else if (MapUtils.isNotEmpty(params) && params.containsKey(REDIRECT_PARAM)) {
-                redirectTarget = params.remove(REDIRECT_PARAM);
-            }
-
-            if (StringUtils.isEmpty(redirectTarget)) {
-                return;
-            }
-
-            NavigationState currentState = navigation.getState();
-            NavigationState newState = new NavigationState(currentState.getRoot(), "", redirectTarget, params);
-
-            events.publish(new UriStateChangedEvent(currentState, newState));
-        }
     }
 
     protected abstract String routeTopLevelWindowId();

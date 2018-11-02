@@ -23,6 +23,8 @@ import com.haulmont.cuba.gui.*;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.events.sys.UiEventsMulticaster;
 import com.haulmont.cuba.gui.exception.UiExceptionHandler;
+import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.gui.theme.ThemeConstantsRepository;
 import com.haulmont.cuba.security.app.UserSessionService;
@@ -41,12 +43,11 @@ import com.haulmont.cuba.web.sys.WebJarResourceResolver;
 import com.haulmont.cuba.web.widgets.*;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
-import com.vaadin.server.ErrorHandler;
-import com.vaadin.server.Extension;
-import com.vaadin.server.Resource;
-import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.*;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.*;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,8 @@ public class AppUI extends CubaUI
 
     public static final String LAST_REQUEST_ACTION_ATTR = "lastRequestAction";
     public static final String LAST_REQUEST_PARAMS_ATTR = "lastRequestParams";
+
+    protected static final String REDIRECT_PARAM = "redirectTo";
 
     private static final Logger log = LoggerFactory.getLogger(AppUI.class);
 
@@ -267,6 +270,8 @@ public class AppUI extends CubaUI
     protected void init(VaadinRequest request) {
         log.trace("Initializing UI {}", this);
 
+        NavigationState requestedState;
+
         try {
             initUiScope();
 
@@ -315,7 +320,7 @@ public class AppUI extends CubaUI
             return;
         }
 
-        processRequest(request);
+        processRequest(request, requestedState);
     }
 
     @Inject
@@ -490,7 +495,7 @@ public class AppUI extends CubaUI
     @Override
     public void handleRequest(VaadinRequest request) {
         // on refresh page call
-        processRequest(request);
+        processRequest(request, getNavigation().getState());
     }
 
     /**
@@ -556,32 +561,88 @@ public class AppUI extends CubaUI
         }
     }
 
-    public void processRequest(VaadinRequest request) {
-        // TODO: implement
-        /*WrappedSession wrappedSession = request.getWrappedSession();
+    public void processRequest(VaadinRequest request, NavigationState requestedState) {
+        if (isLinkHandlerRequest(request)) {
+            processLinkHandlerRequest(request);
+        } else {
+            processGenericRequest(requestedState);
+        }
+    }
+
+    protected boolean isLinkHandlerRequest(VaadinRequest request) {
+        WrappedSession wrappedSession = request.getWrappedSession();
         if (wrappedSession == null) {
-            return;
+            return false;
         }
 
         String action = (String) wrappedSession.getAttribute(LAST_REQUEST_ACTION_ATTR);
 
-        if (webConfig.getLinkHandlerActions().contains(action)) {
-            //noinspection unchecked
-            Map<String, String> params =
-                    (Map<String, String>) wrappedSession.getAttribute(LAST_REQUEST_PARAMS_ATTR);
-            params = params != null ? params : Collections.emptyMap();
+        return webConfig.getLinkHandlerActions().contains(action);
+    }
 
-            try {
-                LinkHandler linkHandler = beanLocator.getPrototype(LinkHandler.NAME, app, action, params);
-                if (app.connection.isConnected() && linkHandler.canHandleLink()) {
-                    linkHandler.handle();
-                } else {
-                    app.linkHandler = linkHandler;
-                }
-            } catch (Exception e) {
-                error(new com.vaadin.server.ErrorEvent(e));
+    protected void processLinkHandlerRequest(VaadinRequest request) {
+        WrappedSession wrappedSession = request.getWrappedSession();
+        //noinspection unchecked
+        Map<String, String> params =
+                (Map<String, String>) wrappedSession.getAttribute(LAST_REQUEST_PARAMS_ATTR);
+        params = params != null ? params : Collections.emptyMap();
+
+        try {
+            String action = (String) wrappedSession.getAttribute(LAST_REQUEST_ACTION_ATTR);
+            LinkHandler linkHandler = AppBeans.getPrototype(LinkHandler.NAME, app, action, params);
+            if (app.connection.isConnected() && linkHandler.canHandleLink()) {
+                linkHandler.handle();
+            } else {
+                app.linkHandler = linkHandler;
             }
-        }*/
+        } catch (Exception e) {
+            error(new com.vaadin.server.ErrorEvent(e));
+        }
+    }
+
+    protected void processGenericRequest(NavigationState navigationState) {
+        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode() || navigationState == null) {
+            return;
+        }
+
+        if (!app.getConnection().isAuthenticated()) {
+            String nestedRoute = navigationState.getNestedRoute();
+            if (StringUtils.isEmpty(nestedRoute)) {
+                return;
+            }
+
+            Map<String, String> params = new HashMap<>();
+            params.put(REDIRECT_PARAM, nestedRoute);
+
+            if (navigationState.getParams() != null) {
+                params.putAll(navigationState.getParams());
+            }
+
+            RootWindow rootWindow = getTopLevelWindow();
+            if (rootWindow != null) {
+                navigation.replaceState(rootWindow.getFrameOwner(), params);
+            }
+        } else {
+            String nestedRoute = navigationState.getNestedRoute();
+            Map<String, String> params = navigationState.getParams();
+
+            String redirectTarget = null;
+
+            if (StringUtils.isNotEmpty(nestedRoute)) {
+                redirectTarget = nestedRoute;
+            } else if (MapUtils.isNotEmpty(params) && params.containsKey(REDIRECT_PARAM)) {
+                redirectTarget = params.remove(REDIRECT_PARAM);
+            }
+
+            if (StringUtils.isEmpty(redirectTarget)) {
+                return;
+            }
+
+            NavigationState currentState = navigation.getState();
+            NavigationState newState = new NavigationState(currentState.getRoot(), "", redirectTarget, params);
+
+            events.publish(new UriStateChangedEvent(currentState, newState));
+        }
     }
 
     @Override

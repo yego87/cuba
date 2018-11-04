@@ -93,6 +93,11 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
                     }
                 }
             }
+
+            @Override
+            public void onAggregationTotalInputChange(String columnKey, String value) {
+                //todo implement
+            }
         });
     }
 

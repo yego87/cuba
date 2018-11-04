@@ -93,6 +93,12 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
                     }
                 }
             }
+
+            @Override
+            public void onAggregationTotalInputChange(String columnKey, String value) {
+                Object columnId = columnIdMap.get(columnKey);
+
+            }
         });
     }
 

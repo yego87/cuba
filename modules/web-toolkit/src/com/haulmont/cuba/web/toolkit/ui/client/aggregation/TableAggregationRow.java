@@ -20,6 +20,7 @@ package com.haulmont.cuba.web.toolkit.ui.client.aggregation;
 import com.google.gwt.dom.client.*;
 import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import com.haulmont.cuba.web.toolkit.ui.client.Tools;
@@ -28,10 +29,9 @@ import com.vaadin.client.BrowserInfo;
 import com.vaadin.client.ComputedStyle;
 import com.vaadin.client.UIDL;
 import com.vaadin.client.ui.VScrollTable;
-import com.vaadin.client.ui.VTextField;
 
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 /**
  * Special aggregation row for {@link com.haulmont.cuba.web.toolkit.ui.client.table.CubaScrollTableWidget} and
@@ -45,6 +45,9 @@ public class TableAggregationRow extends Panel {
     protected Element tr;
 
     protected TableWidget tableWidget;
+
+    protected BiConsumer<Integer, String> totalAggregationInputHandler;
+    protected Map<InputElement, Integer> inputsMap = new HashMap<>();
 
     public TableAggregationRow(TableWidget tableWidget) {
         this.tableWidget = tableWidget;
@@ -82,6 +85,10 @@ public class TableAggregationRow extends Panel {
 
             tr.setClassName(tableWidget.getStylePrimaryName() + "-arow-row");
 
+            if (!inputsMap.isEmpty()) {
+                inputsMap.clear();
+            }
+
             addCellsFromUIDL(uidl);
 
             tBody.appendChild(tr);
@@ -113,7 +120,7 @@ public class TableAggregationRow extends Panel {
             boolean sorted = tableWidget.getHead().getHeaderCell(colIndex).isSorted();
 
             if (isEditableAggr(uidl, colIndex)) {
-                addCellWithField((String) cell, aligns[colIndex], style, sorted);
+                addCellWithField((String) cell, aligns[colIndex], style, sorted, colIndex);
             } else if (cell instanceof String) {
                 addCell((String) cell, aligns[colIndex], style, sorted);
             }
@@ -149,19 +156,23 @@ public class TableAggregationRow extends Panel {
         return false;
     }
 
-    protected void addCellWithField(String text, char align, String style, boolean sorted) {
+    protected void addCellWithField(String text, char align, String style, boolean sorted, int colIndex) {
         final TableCellElement td = DOM.createTD().cast();
         final DivElement container = DOM.createDiv().cast();
         container.setClassName(tableWidget.getStylePrimaryName() + "-cell-wrapper" + " " + "widget-container");
 
         setAlign(align, container);
 
-        VTextField vTextField = new VTextField();
-        vTextField.setText(text);
-        vTextField.getElement().addClassName("v-widget");
-        vTextField.setWidth("100%");
+        InputElement inputElement = DOM.createInputText().cast();
+        inputElement.setValue(text);
+        inputElement.addClassName("v-textfield v-widget");
+        Style elemStyle = inputElement.getStyle();
+        elemStyle.setWidth(100, Style.Unit.PCT);
 
-        container.appendChild(vTextField.getElement());
+        container.appendChild(inputElement);
+        inputsMap.put(inputElement, colIndex);
+
+        DOM.sinkEvents(inputElement, Event.ONCHANGE);
 
         td.setClassName(tableWidget.getStylePrimaryName() + "-cell-content");
         td.addClassName(tableWidget.getStylePrimaryName() + "-aggregation-cell");
@@ -258,5 +269,33 @@ public class TableAggregationRow extends Panel {
         ComputedStyle cs = new ComputedStyle(cell);
 
         return cs.getWidth() + cs.getPaddingWidth() + cs.getBorderWidth();
+    }
+
+    public void setTotalAggregationInputHandler(BiConsumer<Integer, String> totalAggregationInputHandler) {
+        this.totalAggregationInputHandler = totalAggregationInputHandler;
+    }
+
+    protected Integer getColumnIndex(Element input) {
+        for (InputElement element : inputsMap.keySet()) {
+            if (element.isOrHasChild(input)) {
+                return inputsMap.get(element);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void onBrowserEvent(Event event) {
+        super.onBrowserEvent(event);
+
+        final int type = DOM.eventGetType(event);
+        if (type == Event.ONCHANGE && totalAggregationInputHandler != null) {
+            Element element = Element.as(event.getEventTarget());
+            Integer columnIndex = getColumnIndex(element);
+            if (columnIndex != null) {
+                InputElement input = element.cast();
+                totalAggregationInputHandler.accept(columnIndex, input.getValue());
+            }
+        }
     }
 }

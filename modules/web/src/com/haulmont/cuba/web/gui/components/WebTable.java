@@ -32,6 +32,7 @@ import com.haulmont.cuba.web.toolkit.ui.CubaTable;
 import com.vaadin.server.Resource;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class WebTable<E extends Entity> extends WebAbstractTable<CubaTable, E> {
 
@@ -60,6 +61,20 @@ public class WebTable<E extends Entity> extends WebAbstractTable<CubaTable, E> {
     protected void initComponent(CubaTable component) {
         super.initComponent(component);
         setSortable(true);
+    }
+
+    @Override
+    public void setAggregationDistributionProvider(Consumer<AggregationDistributionEvent> distributionProvider) {
+        super.setAggregationDistributionProvider(distributionProvider);
+
+        component.setAggregationDistributionProvider(event -> {
+            //noinspection unchecked
+            AggregationDistributionEvent aggregationDistributionEvent =
+                    new AggregationDistributionEvent(this, event.getColumnId(), event.getValue(),
+                            getDatasource().getItems(), event.isTotalAggregation());
+
+            distributionProvider.accept(aggregationDistributionEvent);
+        });
     }
 
     @Override

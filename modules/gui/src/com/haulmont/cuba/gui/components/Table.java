@@ -27,8 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.EventObject;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public interface Table<E extends Entity>
         extends
@@ -437,6 +440,18 @@ public interface Table<E extends Entity>
          */
         void onClick(Entity item, String columnId);
     }
+
+    /**
+     *
+     * @param distributionProvider
+     */
+    void setAggregationDistributionProvider(Consumer<AggregationDistributionEvent> distributionProvider);
+
+    /**
+     *
+     * @return
+     */
+    Consumer<AggregationDistributionEvent> getAggregationDistributionProvider();
 
     /**
      * Show popup inside of Table, relative to last cell click event.<br>
@@ -914,6 +929,42 @@ public interface Table<E extends Entity>
         @Override
         public <X> X unwrapComposition(Class<X> internalCompositionClass) {
             return null;
+        }
+    }
+
+    /**
+     *
+     */
+    class AggregationDistributionEvent extends EventObject {
+        protected Object columnId;
+        protected Object value;
+        protected Collection<Entity> scope;
+        protected boolean isTotalAggregation;
+
+        public AggregationDistributionEvent(Table table, Object columnId, Object value, Collection<Entity> scope,
+                                            boolean isTotalAggregation) {
+            super(table);
+
+            this.columnId = columnId;
+            this.value = value;
+            this.scope = scope;
+            this.isTotalAggregation = isTotalAggregation;
+        }
+
+        public Object getColumnId() {
+            return columnId;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public Collection<Entity> getScope() {
+            return scope;
+        }
+
+        public boolean isTotalAggregation() {
+            return isTotalAggregation;
         }
     }
 }

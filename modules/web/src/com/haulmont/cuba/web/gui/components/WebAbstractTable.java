@@ -87,6 +87,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 
@@ -152,6 +153,8 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
     protected boolean ignoreUnfetchedAttributes = false;
 
     protected IconResolver iconResolver = AppBeans.get(IconResolver.class);
+
+    protected Consumer<AggregationDistributionEvent> distributionProvider;
 
     public WebAbstractTable() {
         Configuration configuration = AppBeans.get(Configuration.NAME);
@@ -2863,6 +2866,16 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
 
     }
 
+    @Override
+    public void setAggregationDistributionProvider(Consumer<AggregationDistributionEvent> distributionProvider) {
+        this.distributionProvider = distributionProvider;
+    }
+
+    @Override
+    public Consumer<AggregationDistributionEvent> getAggregationDistributionProvider() {
+        return distributionProvider;
+    }
+
     protected class StyleGeneratorAdapter implements com.vaadin.ui.Table.CellStyleGenerator {
         protected boolean exceptionHandled = false;
 
@@ -3113,6 +3126,30 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
             }
 
             super.stateChanged(e);
+        }
+    }
+
+    public static class TotalAggregationInputValueChange {
+        protected Object columnId;
+        protected String value;
+        protected boolean isTotalAggregation;
+
+        public TotalAggregationInputValueChange(Object columnId, String value, boolean isTotalAggregation) {
+            this.columnId = columnId;
+            this.value = value;
+            this.isTotalAggregation = isTotalAggregation;
+        }
+
+        public Object getColumnId() {
+            return columnId;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public boolean isTotalAggregation() {
+            return isTotalAggregation;
         }
     }
 }

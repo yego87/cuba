@@ -20,6 +20,7 @@ package com.haulmont.cuba.web.toolkit.ui;
 import com.google.common.collect.Iterables;
 import com.haulmont.cuba.gui.components.Table;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.gui.components.WebAbstractTable.TotalAggregationInputValueChange;
 import com.haulmont.cuba.web.gui.components.presentations.TablePresentations;
 import com.haulmont.cuba.web.gui.data.PropertyValueStringify;
 import com.haulmont.cuba.web.toolkit.ShortcutActionManager;
@@ -45,6 +46,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -78,6 +80,8 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
     protected Object focusItem;
     protected Runnable beforePaintListener;
 
+    protected Consumer<TotalAggregationInputValueChange> aggregationDistributionProvider;
+
     public CubaTable() {
         registerRpc(new CubaTableServerRpc() {
             @Override
@@ -98,6 +102,11 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
             public void onAggregationTotalInputChange(String columnKey, String value) {
                 Object columnId = columnIdMap.get(columnKey);
 
+                if (aggregationDistributionProvider != null) {
+                    TotalAggregationInputValueChange event =
+                            new TotalAggregationInputValueChange(columnId, value, true);
+                    aggregationDistributionProvider.accept(event);
+                }
             }
         });
     }
@@ -612,6 +621,16 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
         }
 
         aggregationEditableColumns.add(columnId);
+    }
+
+    @Override
+    public void setAggregationDistributionProvider(Consumer<TotalAggregationInputValueChange> distributionProvider) {
+        this.aggregationDistributionProvider = distributionProvider;
+    }
+
+    @Override
+    public Consumer<TotalAggregationInputValueChange> getAggregationDistributionProvider() {
+        return aggregationDistributionProvider;
     }
 
     @Override

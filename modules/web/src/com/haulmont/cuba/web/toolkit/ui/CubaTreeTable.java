@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.haulmont.cuba.gui.components.Table;
 import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.gui.components.WebAbstractTable.TotalAggregationInputValueChange;
 import com.haulmont.cuba.web.gui.components.presentations.TablePresentations;
 import com.haulmont.cuba.web.gui.data.PropertyValueStringify;
 import com.haulmont.cuba.web.toolkit.ShortcutActionManager;
@@ -48,6 +49,7 @@ import com.vaadin.ui.Layout;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -918,6 +920,17 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
     @Override
     public void addAggregationEditableColumn(Object columnId) {
         //todo implement
+    }
+
+    @Override
+    public void setAggregationDistributionProvider(Consumer<TotalAggregationInputValueChange> distributionProvider) {
+        //todo implement
+    }
+
+    @Override
+    public Consumer<TotalAggregationInputValueChange> getAggregationDistributionProvider() {
+        //todo implement
+        return null;
     }
 
     public void expandAllHierarchical(List<Object> collapsedItemIds, List<Object> preOrder, List<Object> openItems) {

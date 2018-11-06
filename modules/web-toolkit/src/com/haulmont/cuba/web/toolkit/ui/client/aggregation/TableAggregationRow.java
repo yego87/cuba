@@ -47,7 +47,7 @@ public class TableAggregationRow extends Panel {
     protected TableWidget tableWidget;
 
     protected BiConsumer<Integer, String> totalAggregationInputHandler;
-    protected Map<InputElement, Integer> inputsMap = new HashMap<>();
+    protected List<AggregationInputFieldInfo> inputsList;
 
     public TableAggregationRow(TableWidget tableWidget) {
         this.tableWidget = tableWidget;
@@ -85,8 +85,8 @@ public class TableAggregationRow extends Panel {
 
             tr.setClassName(tableWidget.getStylePrimaryName() + "-arow-row");
 
-            if (!inputsMap.isEmpty()) {
-                inputsMap.clear();
+            if (inputsList != null && !inputsList.isEmpty()) {
+                inputsList.clear();
             }
 
             addCellsFromUIDL(uidl);
@@ -97,6 +97,15 @@ public class TableAggregationRow extends Panel {
         }
 
         initialized = getElement().hasChildNodes();
+    }
+
+    public void rollbackInputFieldValue(int columnIndex) {
+        for (AggregationInputFieldInfo info : inputsList) {
+            if (info.getColumnIndex() == columnIndex) {
+                info.getInputElement().setValue(info.oldValue);
+                break;
+            }
+        }
     }
 
     protected void addCellsFromUIDL(UIDL uidl) {
@@ -170,7 +179,11 @@ public class TableAggregationRow extends Panel {
         elemStyle.setWidth(100, Style.Unit.PCT);
 
         container.appendChild(inputElement);
-        inputsMap.put(inputElement, colIndex);
+
+        if (inputsList == null) {
+            inputsList = new ArrayList<>();
+        }
+        inputsList.add(new AggregationInputFieldInfo(text, colIndex, inputElement));
 
         DOM.sinkEvents(inputElement, Event.ONCHANGE);
 
@@ -276,9 +289,9 @@ public class TableAggregationRow extends Panel {
     }
 
     protected Integer getColumnIndex(Element input) {
-        for (InputElement element : inputsMap.keySet()) {
-            if (element.isOrHasChild(input)) {
-                return inputsMap.get(element);
+        for (AggregationInputFieldInfo info : inputsList) {
+            if (info.getInputElement().isOrHasChild(input)) {
+                return info.getColumnIndex();
             }
         }
         return null;

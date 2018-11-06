@@ -73,6 +73,11 @@ public class CubaTreeTableConnector extends TreeTableConnector {
             public void requestFocus(String itemKey, String columnKey) {
                 getWidget().requestFocus(itemKey, columnKey);
             }
+
+            @Override
+            public void rollbackAggregationInputFieldValue(int columnIndex) {
+                // todo implement
+            }
         });
     }
 

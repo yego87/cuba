@@ -20,10 +20,7 @@ import com.haulmont.bali.util.Dom4j;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.chile.core.datatypes.Datatype;
 import com.haulmont.chile.core.datatypes.Datatypes;
-import com.haulmont.chile.core.model.Instance;
-import com.haulmont.chile.core.model.MetaClass;
-import com.haulmont.chile.core.model.MetaProperty;
-import com.haulmont.chile.core.model.MetaPropertyPath;
+import com.haulmont.chile.core.model.*;
 import com.haulmont.cuba.client.ClientConfig;
 import com.haulmont.cuba.client.sys.PersistenceManagerClient;
 import com.haulmont.cuba.core.app.PersistenceManagerService;
@@ -86,8 +83,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.*;
-import java.util.function.Consumer;
 
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 
@@ -154,7 +151,7 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
 
     protected IconResolver iconResolver = AppBeans.get(IconResolver.class);
 
-    protected Consumer<AggregationDistributionEvent> distributionProvider;
+    protected AggregationDistributionProvider distributionProvider;
 
     public WebAbstractTable() {
         Configuration configuration = AppBeans.get(Configuration.NAME);
@@ -2867,12 +2864,12 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
     }
 
     @Override
-    public void setAggregationDistributionProvider(Consumer<AggregationDistributionEvent> distributionProvider) {
+    public void setAggregationDistributionProvider(AggregationDistributionProvider distributionProvider) {
         this.distributionProvider = distributionProvider;
     }
 
     @Override
-    public Consumer<AggregationDistributionEvent> getAggregationDistributionProvider() {
+    public AggregationDistributionProvider getAggregationDistributionProvider() {
         return distributionProvider;
     }
 
@@ -3127,6 +3124,59 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
 
             super.stateChanged(e);
         }
+    }
+
+    protected Object getParsedAggregationValue(String value, Object columnId) throws ParseException {
+        Object parsedValue = value;
+
+        for (Column column : getColumns()) {
+            if (column.getId() != columnId) {
+                continue;
+            }
+
+            AggregationInfo aggregationInfo = column.getAggregation();
+            if (aggregationInfo == null || aggregationInfo.getFormatter() != null) {
+                return parsedValue;
+            }
+
+            MetaPropertyPath propertyPath = aggregationInfo.getPropertyPath();
+            Class resultClass;
+            Range range = propertyPath != null ? propertyPath.getRange() : null;
+            if (range != null && range.isDatatype()) {
+                if (aggregationInfo.getType() == AggregationInfo.Type.COUNT) {
+                    return parsedValue;
+                }
+
+                if (aggregationInfo.getStrategy() == null) {
+                    Class rangeJavaClass = propertyPath.getRangeJavaClass();
+                    Aggregation aggregation = Aggregations.get(rangeJavaClass);
+                    resultClass = aggregation.getResultClass();
+                } else {
+                    resultClass = aggregationInfo.getStrategy().getResultClass();
+                }
+
+            } else if (aggregationInfo.getStrategy() == null) {
+                return parsedValue;
+            } else {
+                resultClass = aggregationInfo.getStrategy().getResultClass();
+            }
+
+            UserSessionSource userSessionSource = AppBeans.get(UserSessionSource.NAME);
+            Locale locale = userSessionSource.getLocale();
+            parsedValue = Datatypes.getNN(resultClass).parse(value, locale);
+
+            break;
+        }
+        return parsedValue;
+    }
+
+    protected void showParseErrorNotification() {
+        Messages messages = AppBeans.get(Messages.NAME);
+
+        getFrame().showNotification(
+                messages.getMainMessage("validationFail.caption"),
+                messages.getMainMessage("validationFail"),
+                Frame.NotificationType.TRAY);
     }
 
     public static class TotalAggregationInputValueChange {

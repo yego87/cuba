@@ -46,7 +46,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -80,7 +80,7 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
     protected Object focusItem;
     protected Runnable beforePaintListener;
 
-    protected Consumer<TotalAggregationInputValueChange> aggregationDistributionProvider;
+    protected Function<TotalAggregationInputValueChange, Boolean> aggregationDistributionProvider;
 
     public CubaTable() {
         registerRpc(new CubaTableServerRpc() {
@@ -99,13 +99,15 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
             }
 
             @Override
-            public void onAggregationTotalInputChange(String columnKey, String value) {
+            public void onAggregationTotalInputChange(int columnIndex, String columnKey, String value) {
                 Object columnId = columnIdMap.get(columnKey);
 
                 if (aggregationDistributionProvider != null) {
                     TotalAggregationInputValueChange event =
                             new TotalAggregationInputValueChange(columnId, value, true);
-                    aggregationDistributionProvider.accept(event);
+                    if (!aggregationDistributionProvider.apply(event)) {
+                        rollbackAggregationInputFieldValue(columnIndex);
+                    }
                 }
             }
         });
@@ -624,12 +626,12 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
     }
 
     @Override
-    public void setAggregationDistributionProvider(Consumer<TotalAggregationInputValueChange> distributionProvider) {
+    public void setAggregationDistributionProvider(Function<TotalAggregationInputValueChange, Boolean> distributionProvider) {
         this.aggregationDistributionProvider = distributionProvider;
     }
 
     @Override
-    public Consumer<TotalAggregationInputValueChange> getAggregationDistributionProvider() {
+    public Function<TotalAggregationInputValueChange, Boolean> getAggregationDistributionProvider() {
         return aggregationDistributionProvider;
     }
 
@@ -874,5 +876,9 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
         }
 
         super.paintContent(target);
+    }
+
+    protected void rollbackAggregationInputFieldValue(int columnIndex) {
+        getRpcProxy(CubaTableClientRpc.class).rollbackAggregationInputFieldValue(columnIndex);
     }
 }

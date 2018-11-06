@@ -69,6 +69,13 @@ public class CubaScrollTableConnector extends TableConnector {
             public void requestFocus(String itemKey, String columnKey) {
                 getWidget().requestFocus(itemKey, columnKey);
             }
+
+            @Override
+            public void rollbackAggregationInputFieldValue(int columnIndex) {
+                if (getWidget()._delegate.aggregationRow != null) {
+                    getWidget()._delegate.aggregationRow.rollbackInputFieldValue(columnIndex);
+                }
+            }
         });
     }
 
@@ -258,7 +265,7 @@ public class CubaScrollTableConnector extends TableConnector {
         });
         getWidget()._delegate.totalAggregationInputHandler = (columnIndex, value) -> {
             String columnKey = getWidget().tHead.getHeaderCell(columnIndex).getColKey();
-            getRpcProxy(CubaTableServerRpc.class).onAggregationTotalInputChange(columnKey, value);
+            getRpcProxy(CubaTableServerRpc.class).onAggregationTotalInputChange(columnIndex, columnKey, value);
         };
     }
 

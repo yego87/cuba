@@ -160,7 +160,7 @@ public abstract class DesktopAbstractTable<C extends JXTable, E extends Entity>
 
     protected List<LookupSelectionChangeListener> lookupSelectionChangeListeners = new ArrayList<>();
 
-    protected Consumer<AggregationDistributionEvent> distributionProvider; // stub
+    protected AggregationDistributionProvider distributionProvider; // stub
 
     protected DesktopAbstractTable() {
         shortcutsDelegate.setAllowEnterShortcut(false);
@@ -2659,12 +2659,12 @@ public abstract class DesktopAbstractTable<C extends JXTable, E extends Entity>
     }
 
     @Override
-    public void setAggregationDistributionProvider(Consumer<AggregationDistributionEvent> distributionProvider) {
+    public void setAggregationDistributionProvider(AggregationDistributionProvider distributionProvider) {
         this.distributionProvider = distributionProvider;
     }
 
     @Override
-    public Consumer<AggregationDistributionEvent> getAggregationDistributionProvider() {
+    public AggregationDistributionProvider getAggregationDistributionProvider() {
         return distributionProvider;
     }
 }

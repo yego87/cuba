@@ -31,8 +31,8 @@ import com.haulmont.cuba.web.toolkit.data.TableContainer;
 import com.haulmont.cuba.web.toolkit.ui.CubaTable;
 import com.vaadin.server.Resource;
 
+import java.text.ParseException;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class WebTable<E extends Entity> extends WebAbstractTable<CubaTable, E> {
 
@@ -64,16 +64,24 @@ public class WebTable<E extends Entity> extends WebAbstractTable<CubaTable, E> {
     }
 
     @Override
-    public void setAggregationDistributionProvider(Consumer<AggregationDistributionEvent> distributionProvider) {
+    public void setAggregationDistributionProvider(AggregationDistributionProvider distributionProvider) {
         super.setAggregationDistributionProvider(distributionProvider);
 
         component.setAggregationDistributionProvider(event -> {
-            //noinspection unchecked
-            AggregationDistributionEvent aggregationDistributionEvent =
-                    new AggregationDistributionEvent(this, event.getColumnId(), event.getValue(),
-                            getDatasource().getItems(), event.isTotalAggregation());
-
-            distributionProvider.accept(aggregationDistributionEvent);
+            String value = event.getValue();
+            Object columnId = event.getColumnId();
+            try {
+                Object parsedValue = getParsedAggregationValue(value, columnId);
+                //noinspection unchecked
+                AggregationDistributionContext aggregationDistributionEvent =
+                        new AggregationDistributionContext(columnId, parsedValue, getDatasource().getItems(),
+                                event.isTotalAggregation());
+                distributionProvider.onDistribution(aggregationDistributionEvent);
+            } catch (ParseException e) {
+                showParseErrorNotification();
+                return false; // rollback to previous value
+            }
+            return true;
         });
     }
 

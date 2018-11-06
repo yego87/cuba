@@ -49,7 +49,7 @@ import com.vaadin.ui.Layout;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -97,7 +97,7 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
             }
 
             @Override
-            public void onAggregationTotalInputChange(String columnKey, String value) {
+            public void onAggregationTotalInputChange(int columnIndex, String columnKey, String value) {
                 //todo implement
             }
         });
@@ -923,12 +923,12 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
     }
 
     @Override
-    public void setAggregationDistributionProvider(Consumer<TotalAggregationInputValueChange> distributionProvider) {
+    public void setAggregationDistributionProvider(Function<TotalAggregationInputValueChange, Boolean> distributionProvider) {
         //todo implement
     }
 
     @Override
-    public Consumer<TotalAggregationInputValueChange> getAggregationDistributionProvider() {
+    public Function<TotalAggregationInputValueChange, Boolean> getAggregationDistributionProvider() {
         //todo implement
         return null;
     }

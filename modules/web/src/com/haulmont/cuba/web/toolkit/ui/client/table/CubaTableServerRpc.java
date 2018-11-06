@@ -23,5 +23,5 @@ public interface CubaTableServerRpc extends ServerRpc {
 
     void onClick(String columnKey, String rowKey);
 
-    void onAggregationTotalInputChange(String columnKey, String value);
+    void onAggregationTotalInputChange(int columnIndex, String columnKey, String value);
 }

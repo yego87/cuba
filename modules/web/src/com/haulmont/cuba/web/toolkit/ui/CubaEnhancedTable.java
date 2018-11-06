@@ -24,7 +24,7 @@ import com.haulmont.cuba.web.toolkit.data.AggregationContainer;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Layout;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Interface to generalize additional functionality in {@link CubaTable}, {@link CubaGroupTable} and {@link CubaTreeTable}
@@ -98,8 +98,8 @@ public interface CubaEnhancedTable extends AggregationContainer {
 
     void addAggregationEditableColumn(Object columnId);
 
-    void setAggregationDistributionProvider(Consumer<TotalAggregationInputValueChange> distributionProvider);
-    Consumer<TotalAggregationInputValueChange> getAggregationDistributionProvider();
+    void setAggregationDistributionProvider(Function<TotalAggregationInputValueChange, Boolean> distributionProvider);
+    Function<TotalAggregationInputValueChange, Boolean> getAggregationDistributionProvider();
 
     interface CellClickListener {
         void onClick(Object itemId, Object columnId);

@@ -29,8 +29,6 @@ import javax.annotation.Nullable;
  */
 public interface History {
 
-    String NAME = "cuba_History";
-
     /**
      * Adds new history entry. Flushes all entries coming after current entry.
      *

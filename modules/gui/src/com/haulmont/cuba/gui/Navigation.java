@@ -31,8 +31,6 @@ import java.util.Map;
  */
 public interface Navigation {
 
-    String NAME = "cuba_Navigation";
-
     /**
      * Pushes the state corresponding to the given {@code screen}.
      * <p>
@@ -41,19 +39,7 @@ public interface Navigation {
      * @param screen screen that is used to build new navigation state
      */
     default void pushState(Screen screen) {
-        pushState(screen, false);
-    }
-
-    /**
-     * Pushes the state corresponding to the given {@code screen} and fires state changed event.
-     * <p>
-     * Creates new entry in browser history.
-     *
-     * @param screen           screen that is used to build new navigation state
-     * @param fireStateChanged whether state changed event should be fired
-     */
-    default void pushState(Screen screen, boolean fireStateChanged) {
-        pushState(screen, Collections.emptyMap(), fireStateChanged);
+        pushState(screen, Collections.emptyMap());
     }
 
     /**
@@ -66,22 +52,7 @@ public interface Navigation {
      * @param screen    screen that is used to build new navigation state
      * @param uriParams URI params map
      */
-    default void pushState(Screen screen, Map<String, String> uriParams) {
-        pushState(screen, uriParams, false);
-    }
-
-    /**
-     * Pushes the state corresponding to the given {@code screen} and fires state changed event.
-     * <p>
-     * The given {@code uriParams} will be reflected in URI as GET request params.
-     * <p>
-     * Creates new entry in browser history.
-     *
-     * @param screen           screen that is used to build new navigation state
-     * @param uriParams        URI params map
-     * @param fireStateChanged whether state changed event should be fired
-     */
-    void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged);
+    void pushState(Screen screen, Map<String, String> uriParams);
 
     /**
      * Replaces current state by the state corresponding to the given {@code screen}.
@@ -91,19 +62,7 @@ public interface Navigation {
      * @param screen screen that is used to build new navigation state
      */
     default void replaceState(Screen screen) {
-        replaceState(screen, false);
-    }
-
-    /**
-     * Replaces current state by the state corresponding to the given {@code screen}.
-     * <p>
-     * Doesn't create new entry in browser history.
-     *
-     * @param screen           screen that is used to build new navigation state
-     * @param fireStateChanged whether state changed event should be fired
-     */
-    default void replaceState(Screen screen, boolean fireStateChanged) {
-        replaceState(screen, Collections.emptyMap(), fireStateChanged);
+        replaceState(screen, Collections.emptyMap());
     }
 
     /**
@@ -116,22 +75,7 @@ public interface Navigation {
      * @param screen    screen that is used to build new navigation state
      * @param uriParams URI params map
      */
-    default void replaceState(Screen screen, Map<String, String> uriParams) {
-        replaceState(screen, uriParams, false);
-    }
-
-    /**
-     * Replaces current state by the state corresponding to the given {@code screen} and fires state changed event.
-     * <p>
-     * The given {@code uriParams} will be reflected in URI as GET request params.
-     * <p>
-     * Doesn't create new entry in browser history.
-     *
-     * @param screen           screen that is used to build new navigation state
-     * @param uriParams        URI params map
-     * @param fireStateChanged whether state changed event should be fired
-     */
-    void replaceState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged);
+    void replaceState(Screen screen, Map<String, String> uriParams);
 
     /**
      * @return current state parsed from URI fragment.

@@ -16,16 +16,17 @@
 
 package com.haulmont.cuba.web.sys;
 
-import com.haulmont.bali.util.*;
+import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.navigation.NavigationState;
-import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
-import com.haulmont.cuba.web.*;
-import com.haulmont.cuba.web.gui.*;
+import com.haulmont.cuba.web.AppUI;
+import com.haulmont.cuba.web.WebConfig;
+import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -115,7 +116,7 @@ public class RedirectHandler {
         NavigationState currentState = ui.getNavigation().getState();
         NavigationState newState = new NavigationState(currentState.getRoot(), "", redirectTarget, params);
 
-        events.publish(new UriStateChangedEvent(currentState, newState));
+        ui.getUrlChangeHandler().handleUrlChangeInternal(newState);
 
         redirect = null;
     }

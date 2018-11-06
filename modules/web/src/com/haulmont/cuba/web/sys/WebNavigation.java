@@ -16,15 +16,11 @@
 
 package com.haulmont.cuba.web.sys;
 
-import com.haulmont.cuba.core.global.BeanLocator;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.Navigation;
-import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
-import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.navigation.NavigationState;
-import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
@@ -35,6 +31,7 @@ import com.haulmont.cuba.web.gui.WebWindow;
 import com.haulmont.cuba.web.navigation.UrlIdBase64Converter;
 import com.haulmont.cuba.web.navigation.UrlTools;
 import com.vaadin.server.Page;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +40,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 import static com.haulmont.cuba.gui.screen.UiControllerUtils.getScreenContext;
 
 public class WebNavigation implements Navigation {
@@ -51,87 +49,66 @@ public class WebNavigation implements Navigation {
 
     private static final Logger log = LoggerFactory.getLogger(WebNavigation.class);
 
-    protected AppUI ui;
-
-    @Inject
-    protected WindowConfig windowConfig;
-
     @Inject
     protected Events events;
 
     @Inject
-    protected BeanLocator beanLocator;
-
-    @Inject
     protected WebConfig webConfig;
+
+    protected AppUI ui;
 
     public WebNavigation(AppUI ui) {
         this.ui = ui;
     }
 
     @Override
-    public void pushState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
-        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
-            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+    public void pushState(Screen screen, Map<String, String> urlParams) {
+        if (notSuitableUrlHandlingMode()) {
             return;
         }
 
-        NavigationState oldNavigationState = getState();
-        String navState = buildNavState(screen, uriParams);
+        checkNotNullArgument(screen);
+        checkNotNullArgument(urlParams);
 
-        if (!externalNavigation(oldNavigationState, navState)) {
-            Page.getCurrent()
-                    .setUriFragment(navState, false);
-        } else {
-            Page.getCurrent().replaceState("#" + navState);
-        }
-
-        NavigationState newNavigationState = getState();
-
-        getScreenContext(screen).getRouteInfo()
-                .update(newNavigationState);
-
-        ui.getHistory().forward(newNavigationState);
-
-        if (fireStateChanged) {
-            fireStateChange(oldNavigationState, newNavigationState);
-        }
+        changeStateInternal(screen, urlParams, true);
     }
 
     @Override
-    public void replaceState(Screen screen, Map<String, String> uriParams, boolean fireStateChanged) {
-        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
-            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+        public void replaceState(Screen screen, Map<String, String> urlParams) {
+        if (notSuitableUrlHandlingMode()) {
             return;
         }
 
-        NavigationState oldNavigationState = fireStateChanged ? getState() : null;
+        checkNotNullArgument(screen);
+        checkNotNullArgument(urlParams);
 
-        Page.getCurrent()
-                .replaceState("#" + buildNavState(screen, uriParams));
-        NavigationState newNavigationState = getState();
+        changeStateInternal(screen, urlParams, false);
+    }
 
-        getScreenContext(screen).getRouteInfo()
-                .update(newNavigationState);
+    protected void changeStateInternal(Screen screen, Map<String, String> urlParams, boolean pushState) {
+        NavigationState oldNavState = getState();
+        String newState = buildNavState(screen, urlParams);
 
-        if (fireStateChanged) {
-            fireStateChange(oldNavigationState, newNavigationState);
+        if (pushState && !externalNavigation(oldNavState, newState)) {
+            Page.getCurrent().setUriFragment(newState, false);
+        } else {
+            Page.getCurrent().replaceState("#" + newState);
+        }
+
+        NavigationState newNavState = getState();
+        getScreenContext(screen).getRouteInfo().update(newNavState);
+
+        if (pushState) {
+            ui.getHistory().forward(newNavState);
         }
     }
 
     @Override
     public NavigationState getState() {
-        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
-            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+        if (notSuitableUrlHandlingMode()) {
             return NavigationState.empty();
         }
         return UrlTools.parseState(Page.getCurrent().getUriFragment());
-    }
-
-    protected void fireStateChange(NavigationState oldState, NavigationState newState) {
-        if (!Objects.equals(oldState, newState)) {
-            events.publish(new UriStateChangedEvent(oldState, newState));
-        }
     }
 
     protected String buildNavState(Screen screen, Map<String, String> urlParams) {
@@ -140,10 +117,10 @@ public class WebNavigation implements Navigation {
         if (screen.getWindow() instanceof RootWindow) {
             state.append(getRoute(screen));
         } else {
-            Screen rootScreen = getScreens().getOpenedScreens().getRootScreen();
+            Screen rootScreen = ui.getScreens().getOpenedScreens().getRootScreen();
             state.append(getRoute(rootScreen));
 
-            String stateMark = getScreenStateMark(screen);
+            String stateMark = getStateMark(screen);
             state.append('/').append(stateMark);
 
             String nestedRoute = buildNestedRoute(screen);
@@ -161,14 +138,14 @@ public class WebNavigation implements Navigation {
         if (screen.getWindow() instanceof DialogWindow) {
             return buildDialogRoute(screen);
         } else {
-            return buildScreenRoute(screen);
+            return buildCurrentScreenRoute();
         }
     }
 
     protected String buildDialogRoute(Screen dialog) {
         PageDefinition page = getPage(dialog);
         if (page == null) {
-            return buildScreenRoute(getCurrentScreen());
+            return buildCurrentScreenRoute();
         }
 
         String dialogRoute = page.getRoute();
@@ -182,56 +159,50 @@ public class WebNavigation implements Navigation {
             throw new IllegalStateException("Dialog is opened outside of its context");
         }
 
-        String contextRoute = buildScreenRoute(currentScreen);
+        String contextRoute = buildCurrentScreenRoute();
         return StringUtils.isNotEmpty(dialogRoute) ? contextRoute + "/" + dialogRoute
                 : contextRoute;
     }
 
-    protected String buildScreenRoute(Screen screen) {
-        if (screen == null) {
-            return "";
-        }
-
-        List<Screen> screens = new ArrayList<>(getScreens().getOpenedScreens().getCurrentBreadcrumbs());
+    protected String buildCurrentScreenRoute() {
+        List<Screen> screens = new ArrayList<>(ui.getScreens().getOpenedScreens().getCurrentBreadcrumbs());
         Collections.reverse(screens);
 
         StringBuilder state = new StringBuilder();
-        int depth = 0;
 
-        for (int i = 0; i < screens.size() && depth < MAX_NESTED_ROUTES; i++) {
-            Screen nestedScreen = screens.get(i);
-            String route = buildNestedScreenRoute(state.toString(), nestedScreen);
-
-            if (!state.toString().isEmpty() && !route.isEmpty()) {
+        for (int i = 0; i < screens.size() && i < MAX_NESTED_ROUTES; i++) {
+            String route = buildRoutePart(state.toString(), screens.get(i));
+            if (StringUtils.isNotEmpty(state) && StringUtils.isNotEmpty(route)) {
                 state.append('/');
             }
             state.append(route);
-
-            depth++;
         }
 
         return state.toString();
     }
 
-    protected String buildNestedScreenRoute(String state, Screen screen) {
+    // TODO: rewrite with parent prefix
+    protected String buildRoutePart(String state, Screen screen) {
         String screenRoute = getRoute(screen);
+        if (!(screen instanceof EditorScreen))
+            return screenRoute;
 
-        if (screen instanceof EditorScreen) {
-            int slashIdx = screenRoute.indexOf('/');
-            if (slashIdx > 0) {
-                String editorContext = screenRoute.substring(0, slashIdx);
-                if (state.endsWith(editorContext)) {
-                    screenRoute = screenRoute.substring(slashIdx + 1);
-                }
-            }
+        int slashIdx = screenRoute.indexOf('/');
+        if (slashIdx <= 0) {
+            return screenRoute;
         }
 
-        return screenRoute;
+        String editorContext = screenRoute.substring(0, slashIdx);
+        if (!state.endsWith(editorContext)) {
+            return screenRoute;
+        }
+
+        return screenRoute.substring(slashIdx + 1);
     }
 
     protected String buildParamsString(Screen screen, Map<String, String> urlParams) {
         String route = getRoute(screen);
-        if (StringUtils.isEmpty(route)) {
+        if (StringUtils.isEmpty(route) && MapUtils.isNotEmpty(urlParams)) {
             log.info("There's no route for screen {}. Ignore URL params");
             return "";
         }
@@ -270,16 +241,12 @@ public class WebNavigation implements Navigation {
     }
 
     protected Screen getCurrentScreen() {
-        Iterator<Screen> screens = getScreens().getOpenedScreens().getCurrentBreadcrumbs()
+        Iterator<Screen> screens = ui.getScreens().getOpenedScreens().getCurrentBreadcrumbs()
                 .iterator();
         return screens.hasNext() ? screens.next() : null;
     }
 
-    protected Screens getScreens() {
-        return ui.getScreens();
-    }
-
-    protected String getScreenStateMark(Screen screen) {
+    protected String getStateMark(Screen screen) {
         return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
     }
 
@@ -287,12 +254,18 @@ public class WebNavigation implements Navigation {
         if (requestedState == null) {
             return false;
         }
-
         NavigationState newNavigationState = UrlTools.parseState(newRoute);
-
         return !ui.getHistory().has(requestedState)
-                && requestedState.getRoot().equals(newNavigationState.getRoot())
-                && requestedState.getNestedRoute().equals(newNavigationState.getNestedRoute())
-                && requestedState.getParamsString().equals(newNavigationState.getParamsString());
+                && Objects.equals(requestedState.getRoot(), newNavigationState.getRoot())
+                && Objects.equals(requestedState.getNestedRoute(), newNavigationState.getNestedRoute())
+                && Objects.equals(requestedState.getParamsString(), newNavigationState.getParamsString());
+    }
+
+    protected boolean notSuitableUrlHandlingMode() {
+        if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
+            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+            return true;
+        }
+        return false;
     }
 }

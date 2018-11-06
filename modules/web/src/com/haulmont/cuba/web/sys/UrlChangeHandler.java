@@ -26,7 +26,6 @@ import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.navigation.NavigationAware;
 import com.haulmont.cuba.gui.navigation.NavigationState;
-import com.haulmont.cuba.gui.navigation.UriStateChangedEvent;
 import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
 import com.haulmont.cuba.gui.util.OperationResult;
@@ -47,8 +46,6 @@ import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
 
 import javax.inject.Inject;
 import java.lang.reflect.ParameterizedType;
@@ -57,13 +54,9 @@ import java.util.*;
 
 import static com.haulmont.cuba.gui.screen.UiControllerUtils.getScreenContext;
 
-public class UriChangeHandler {
+public class UrlChangeHandler {
 
-    public static final String NAME = "cuba_UriChangeHandler";
-
-    private static final Logger log = LoggerFactory.getLogger(UriChangeHandler.class);
-
-    protected AppUI ui;
+    private static final Logger log = LoggerFactory.getLogger(UrlChangeHandler.class);
 
     @Inject
     protected WindowConfig windowConfig;
@@ -92,18 +85,10 @@ public class UriChangeHandler {
     @Inject
     protected Security security;
 
-    public UriChangeHandler(AppUI ui) {
-        this.ui = ui;
-    }
+    protected AppUI ui;
 
-    @SuppressWarnings("unused")
-    @Order(Events.LOWEST_PLATFORM_PRECEDENCE)
-    @EventListener
-    protected void handleUriStateChanged(UriStateChangedEvent event) {
-        if (notSuitableUrlHandlingMode()) {
-            return;
-        }
-        handleUriChange(event.getState());
+    public UrlChangeHandler(AppUI ui) {
+        this.ui = ui;
     }
 
     public void handleUriChange() {
@@ -521,8 +506,6 @@ public class UriChangeHandler {
             return;
         }
 
-        Map<String, String> params = new HashMap<>();
-
         String nestedRoute = requestedState.getNestedRoute();
         if (StringUtils.isNotEmpty(nestedRoute)) {
             RedirectHandler redirectHandler = beanLocator.getPrototype(RedirectHandler.NAME, ui);
@@ -536,7 +519,7 @@ public class UriChangeHandler {
     protected boolean notSuitableUrlHandlingMode() {
         boolean notSuitableMode = UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode();
         if (notSuitableMode) {
-            log.debug("UriChangeHandler is disabled for {} URL handling mode", webConfig.getUrlHandlingMode());
+            log.debug("UrlChangeHandler is disabled for {} URL handling mode", webConfig.getUrlHandlingMode());
             return true;
         }
         return false;
@@ -562,5 +545,18 @@ public class UriChangeHandler {
 
     protected History getHistory() {
         return ui.getHistory();
+    }
+
+    /**
+     * INTERNAL.
+     * Used by {@link RedirectHandler}.
+     *
+     * @param navigationState new navigation state
+     */
+    public void handleUrlChangeInternal(NavigationState navigationState) {
+        if (notSuitableUrlHandlingMode()) {
+            return;
+        }
+        handleUriChange(navigationState);
     }
 }

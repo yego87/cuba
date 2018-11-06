@@ -128,7 +128,7 @@ public class AppUI extends CubaUI
     protected Dialogs dialogs;
     protected Notifications notifications;
     protected WebBrowserTools webBrowserTools;
-    protected UriChangeHandler uriChangeHandler;
+    protected UrlChangeHandler urlChangeHandler;
     protected Navigation navigation;
     protected History history;
 
@@ -246,8 +246,12 @@ public class AppUI extends CubaUI
         this.navigation = navigation;
     }
 
-    public void setUriChangeHandler(UriChangeHandler uriChangeHandler) {
-        this.uriChangeHandler = uriChangeHandler;
+    public UrlChangeHandler getUrlChangeHandler() {
+        return urlChangeHandler;
+    }
+
+    public void setUrlChangeHandler(UrlChangeHandler urlChangeHandler) {
+        this.urlChangeHandler = urlChangeHandler;
     }
 
     public History getHistory() {
@@ -336,12 +340,12 @@ public class AppUI extends CubaUI
         autowireContext(navigation, applicationContext);
         setNavigation(navigation);
 
-        UriChangeHandler uriChangeHandler = new UriChangeHandler(this);
-        autowireContext(uriChangeHandler, applicationContext);
-        setUriChangeHandler(uriChangeHandler);
+        UrlChangeHandler urlChangeHandler = new UrlChangeHandler(this);
+        autowireContext(urlChangeHandler, applicationContext);
+        setUrlChangeHandler(urlChangeHandler);
 
         getPage().addPopStateListener(event ->
-                uriChangeHandler.handleUriChange());
+                urlChangeHandler.handleUriChange());
 
         History history = new WebHistory(this);
         autowireContext(history, applicationContext);
@@ -592,6 +596,8 @@ public class AppUI extends CubaUI
             RedirectHandler redirectHandler = beanLocator.getPrototype(RedirectHandler.NAME, this);
             redirectHandler.schedule(navigationState);
             app.redirectHandler = redirectHandler;
+        } else {
+            urlChangeHandler.handleUrlChangeInternal(navigationState);
         }
     }
 

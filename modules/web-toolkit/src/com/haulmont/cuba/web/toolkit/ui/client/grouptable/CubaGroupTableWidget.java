@@ -259,10 +259,13 @@ public class CubaGroupTableWidget extends CubaScrollTableWidget {
     @Override
     protected TableAggregationRow createAggregationRow() {
         return new TableAggregationRow(this) {
+            protected boolean isDividerAdded = false;
+
             @Override
             protected boolean addSpecificCell(String columnId, int colIndex) {
                 if (GROUP_DIVIDER_COLUMN_KEY.equals(columnId)) {
                     addCell("", aligns[colIndex], CLASSNAME + "-group-divider", false);
+                    isDividerAdded = true;
                     return true;
                 }
                 if (showRowHeaders && colIndex == 0) {
@@ -273,6 +276,14 @@ public class CubaGroupTableWidget extends CubaScrollTableWidget {
                 }
 
                 return super.addSpecificCell(columnId, colIndex);
+            }
+
+            @Override
+            protected boolean isEditableAggr(UIDL uidl, int colIndex) {
+                // we shouldn't create cell with field if it is group column so send -1,
+                // otherwise send decrement colIndex because server's indexes does not take into account
+                // divider cell
+                return super.isEditableAggr(uidl, isDividerAdded ? --colIndex : -1);
             }
         };
     }
@@ -527,6 +538,7 @@ public class CubaGroupTableWidget extends CubaScrollTableWidget {
                             }
 
                             boolean sorted = tHead.getHeaderCell(currentColIndex).isSorted();
+                            // todo try to create cell with field here
                             if (cell instanceof String) {
                                 addCell(uidl, cell.toString(), aligns[currentColIndex], style,
                                         isRenderHtmlInCells(), sorted, description);

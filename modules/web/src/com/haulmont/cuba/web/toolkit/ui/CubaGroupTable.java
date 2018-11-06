@@ -412,6 +412,8 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
                 if (hasAggregation) {
                     paintGroupAggregation(target, itemId,
                             ((AggregationContainer) items).aggregate(new GroupAggregationContext(this, itemId)));
+
+                    addEditableAggregationColumns(target);
                 }
             }
         }

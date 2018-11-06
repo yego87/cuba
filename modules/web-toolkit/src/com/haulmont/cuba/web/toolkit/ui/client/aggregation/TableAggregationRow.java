@@ -147,6 +147,9 @@ public class TableAggregationRow extends Panel {
     //todo do without class cast
     protected boolean isEditableAggr(UIDL uidl, int colIndex) {
         UIDL colUidl = uidl.getChildByTagName("editableAggregationColumns");
+        if (colUidl == null) {
+            return false;
+        }
         Iterator iterator = colUidl.getChildIterator();
         while (iterator.hasNext()) {
             Object col = iterator.next();

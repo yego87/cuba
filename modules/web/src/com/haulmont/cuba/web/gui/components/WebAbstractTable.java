@@ -2866,6 +2866,25 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
     @Override
     public void setAggregationDistributionProvider(AggregationDistributionProvider distributionProvider) {
         this.distributionProvider = distributionProvider;
+
+        component.setAggregationDistributionProvider(context -> {
+            if (distributionProvider != null) {
+                String value = context.getValue();
+                Object columnId = context.getColumnId();
+                try {
+                    Object parsedValue = getParsedAggregationValue(value, columnId);
+                    //noinspection unchecked
+                    AggregationDistributionContext aggregationDistributionEvent =
+                            new AggregationDistributionContext(columnId, parsedValue, getDatasource().getItems(),
+                                    context.isTotalAggregation());
+                    distributionProvider.onDistribution(aggregationDistributionEvent);
+                } catch (ParseException e) {
+                    showParseErrorNotification();
+                    return false; // rollback to previous value
+                }
+            }
+            return true;
+        });
     }
 
     @Override

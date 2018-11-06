@@ -100,9 +100,9 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
 
             @Override
             public void onAggregationTotalInputChange(int columnIndex, String columnKey, String value) {
-                Object columnId = columnIdMap.get(columnKey);
-
                 if (aggregationDistributionProvider != null) {
+                    Object columnId = columnIdMap.get(columnKey);
+
                     TotalAggregationInputValueChange event =
                             new TotalAggregationInputValueChange(columnId, value, true);
                     if (!aggregationDistributionProvider.apply(event)) {

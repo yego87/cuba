@@ -31,7 +31,6 @@ import com.haulmont.cuba.web.toolkit.data.TableContainer;
 import com.haulmont.cuba.web.toolkit.ui.CubaTable;
 import com.vaadin.server.Resource;
 
-import java.text.ParseException;
 import java.util.*;
 
 public class WebTable<E extends Entity> extends WebAbstractTable<CubaTable, E> {
@@ -61,28 +60,6 @@ public class WebTable<E extends Entity> extends WebAbstractTable<CubaTable, E> {
     protected void initComponent(CubaTable component) {
         super.initComponent(component);
         setSortable(true);
-    }
-
-    @Override
-    public void setAggregationDistributionProvider(AggregationDistributionProvider distributionProvider) {
-        super.setAggregationDistributionProvider(distributionProvider);
-
-        component.setAggregationDistributionProvider(event -> {
-            String value = event.getValue();
-            Object columnId = event.getColumnId();
-            try {
-                Object parsedValue = getParsedAggregationValue(value, columnId);
-                //noinspection unchecked
-                AggregationDistributionContext aggregationDistributionEvent =
-                        new AggregationDistributionContext(columnId, parsedValue, getDatasource().getItems(),
-                                event.isTotalAggregation());
-                distributionProvider.onDistribution(aggregationDistributionEvent);
-            } catch (ParseException e) {
-                showParseErrorNotification();
-                return false; // rollback to previous value
-            }
-            return true;
-        });
     }
 
     @Override

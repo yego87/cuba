@@ -76,7 +76,7 @@ public class CubaTreeTableConnector extends TreeTableConnector {
 
             @Override
             public void rollbackAggregationInputFieldValue(int columnIndex) {
-                // todo implement
+                getWidget()._delegate.aggregationRow.rollbackInputFieldValue(columnIndex);
             }
         });
     }
@@ -276,6 +276,10 @@ public class CubaTreeTableConnector extends TreeTableConnector {
                 }
             }
         });
+        getWidget()._delegate.totalAggregationInputHandler = (columnIndex, value) -> {
+            String columnKey = getWidget().tHead.getHeaderCell(columnIndex).getColKey();
+            getRpcProxy(CubaTableServerRpc.class).onAggregationTotalInputChange(columnIndex, columnKey, value);
+        };
     }
 
     @Override

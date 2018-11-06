@@ -46,6 +46,7 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.Layout;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
@@ -56,6 +57,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableContainer, CubaEnhancedTable {
 
     protected LinkedList<Object> editableColumns = null;
+
+    protected List<Object> aggregationEditableColumns;
 
     /**
      * Keeps track of the ShortcutListeners added to this component, and manages the painting and handling as well.
@@ -81,6 +84,8 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
     protected Object focusItem;
     protected Runnable beforePaintListener;
 
+    protected Function<TotalAggregationInputValueChange, Boolean> aggregationDistributionProvider;
+
     public CubaTreeTable() {
         registerRpc(new CubaTableServerRpc() {
             @Override
@@ -98,7 +103,15 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
 
             @Override
             public void onAggregationTotalInputChange(int columnIndex, String columnKey, String value) {
-                //todo implement
+                if (aggregationDistributionProvider != null) {
+                    Object columnId = columnIdMap.get(columnKey);
+
+                    TotalAggregationInputValueChange event =
+                            new TotalAggregationInputValueChange(columnId, value, true);
+                    if (!aggregationDistributionProvider.apply(event)) {
+                        rollbackAggregationInputFieldValue(columnIndex);
+                    }
+                }
             }
         });
     }
@@ -674,6 +687,17 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
             String value = (String) aggregations.get(columnId);
             target.addText(value);
         }
+
+        target.startTag("editableAggregationColumns");
+        for (final Object columnId : visibleColumns) {
+            if (CollectionUtils.isNotEmpty(aggregationEditableColumns)
+                    && aggregationEditableColumns.contains(columnId)) {
+                int columnIdx = visibleColumns.indexOf(columnId);
+                //todo do without class cast
+                target.addText(String.valueOf(columnIdx));
+            }
+        }
+        target.endTag("editableAggregationColumns");
         target.endTag("arow");
     }
 
@@ -919,18 +943,25 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
 
     @Override
     public void addAggregationEditableColumn(Object columnId) {
-        //todo implement
+        if (aggregationEditableColumns == null) {
+            aggregationEditableColumns = new ArrayList<>();
+        }
+
+        aggregationEditableColumns.add(columnId);
     }
 
     @Override
     public void setAggregationDistributionProvider(Function<TotalAggregationInputValueChange, Boolean> distributionProvider) {
-        //todo implement
+        this.aggregationDistributionProvider = distributionProvider;
     }
 
     @Override
     public Function<TotalAggregationInputValueChange, Boolean> getAggregationDistributionProvider() {
-        //todo implement
-        return null;
+        return aggregationDistributionProvider;
+    }
+
+    protected void rollbackAggregationInputFieldValue(int columnIndex) {
+        getRpcProxy(CubaTableClientRpc.class).rollbackAggregationInputFieldValue(columnIndex);
     }
 
     public void expandAllHierarchical(List<Object> collapsedItemIds, List<Object> preOrder, List<Object> openItems) {

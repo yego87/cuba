@@ -99,7 +99,7 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
             }
 
             @Override
-            public void onAggregationTotalInputChange(int columnIndex, String columnKey, String value) {
+            public void onAggregationTotalInputChange(String columnKey, String value) {
                 if (aggregationDistributionProvider != null) {
                     Object columnId = columnIdMap.get(columnKey);
 
@@ -112,8 +112,8 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
             }
 
             @Override
-            public void onAggregationGroupInputChange(int columnIndex, String columnKey, String groupKey, String value) {
-                handleAggregationGroupInputChange(columnIndex, columnKey, groupKey, value);
+            public void onAggregationGroupInputChange(String columnKey, String groupKey, String value) {
+                handleAggregationGroupInputChange(columnKey, groupKey, value);
             }
         });
     }
@@ -617,9 +617,7 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
         for (final Object columnId : visibleColumns) {
             if (CollectionUtils.isNotEmpty(aggregationEditableColumns)
                     && aggregationEditableColumns.contains(columnId)) {
-                int columnIdx = visibleColumns.indexOf(columnId);
-                //todo do without class cast
-                target.addText(String.valueOf(columnIdx));
+                target.addText(columnIdMap.key(columnId));
             }
         }
         target.endTag("editableAggregationColumns");
@@ -645,7 +643,7 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
     }
 
     // used by CubaGroupTable
-    protected void handleAggregationGroupInputChange(int columnIndex, String columnKey, String groupKey, String value) {
+    protected void handleAggregationGroupInputChange(String columnKey, String groupKey, String value) {
     }
 
     @Override

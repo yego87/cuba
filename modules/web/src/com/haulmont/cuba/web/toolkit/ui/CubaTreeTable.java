@@ -102,20 +102,20 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
             }
 
             @Override
-            public void onAggregationTotalInputChange(int columnIndex, String columnKey, String value) {
+            public void onAggregationTotalInputChange(String columnKey, String value) {
                 if (aggregationDistributionProvider != null) {
                     Object columnId = columnIdMap.get(columnKey);
 
                     AggregationInputValueChangeContext event =
                             new AggregationInputValueChangeContext(columnId, value, true);
                     if (!aggregationDistributionProvider.apply(event)) {
-                        rollbackAggregationInputFieldValue(columnIndex);
+                        markAsDirty();
                     }
                 }
             }
 
             @Override
-            public void onAggregationGroupInputChange(int columnIndex, String columnKey, String groupKey, String value) {
+            public void onAggregationGroupInputChange(String columnKey, String groupKey, String value) {
                 // is used by CubaGroupTable
             }
         });
@@ -697,9 +697,7 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
         for (final Object columnId : visibleColumns) {
             if (CollectionUtils.isNotEmpty(aggregationEditableColumns)
                     && aggregationEditableColumns.contains(columnId)) {
-                int columnIdx = visibleColumns.indexOf(columnId);
-                //todo do without class cast
-                target.addText(String.valueOf(columnIdx));
+                target.addText(columnIdMap.key(columnId));
             }
         }
         target.endTag("editableAggregationColumns");
@@ -963,10 +961,6 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
     @Override
     public Function<AggregationInputValueChangeContext, Boolean> getAggregationDistributionProvider() {
         return aggregationDistributionProvider;
-    }
-
-    protected void rollbackAggregationInputFieldValue(int columnIndex) {
-        getRpcProxy(CubaTableClientRpc.class).rollbackAggregationInputFieldValue(columnIndex);
     }
 
     public void expandAllHierarchical(List<Object> collapsedItemIds, List<Object> preOrder, List<Object> openItems) {

@@ -135,20 +135,17 @@ public class TableAggregationRow extends Panel {
         }
     }
 
-    //todo do without class cast
     protected boolean isAggregationEditable(UIDL uidl, int colIndex) {
         UIDL colUidl = uidl.getChildByTagName("editableAggregationColumns");
         if (colUidl == null) {
             return false;
         }
+        String colKey = tableWidget.getColKeyByIndex(colIndex);
         Iterator iterator = colUidl.getChildIterator();
         while (iterator.hasNext()) {
-            Object col = iterator.next();
-            if (col instanceof String) {
-                int colIdx = Integer.parseInt((String) col);
-                if (colIdx == colIndex) {
-                    return true;
-                }
+            Object uidlKey = iterator.next();
+            if (uidlKey.equals(colKey)) {
+                return true;
             }
         }
         return false;
@@ -177,7 +174,7 @@ public class TableAggregationRow extends Panel {
         if (inputsList == null) {
             inputsList = new ArrayList<>();
         }
-        inputsList.add(new AggregationInputFieldInfo(text, colIndex, inputElement));
+        inputsList.add(new AggregationInputFieldInfo(text, tableWidget.getColKeyByIndex(colIndex), inputElement));
 
         DOM.sinkEvents(inputElement, Event.ONCHANGE);
 
@@ -282,10 +279,10 @@ public class TableAggregationRow extends Panel {
         this.totalAggregationInputHandler = totalAggregationInputHandler;
     }
 
-    protected Integer getColumnIndex(Element input) {
+    protected String getColumnKeyByInput(Element input) {
         for (AggregationInputFieldInfo info : inputsList) {
             if (info.getInputElement().isOrHasChild(input)) {
-                return info.getColumnIndex();
+                return info.getColumnKey();
             }
         }
         return null;
@@ -298,10 +295,10 @@ public class TableAggregationRow extends Panel {
         final int type = DOM.eventGetType(event);
         if (type == Event.ONCHANGE && totalAggregationInputHandler != null) {
             Element element = Element.as(event.getEventTarget());
-            Integer columnIndex = getColumnIndex(element);
-            if (columnIndex != null) {
+            String columnKey = getColumnKeyByInput(element);
+            if (columnKey != null) {
                 InputElement input = element.cast();
-                totalAggregationInputHandler.onInputChange(columnIndex, input.getValue());
+                totalAggregationInputHandler.onInputChange(columnKey, input.getValue());
             }
         }
     }

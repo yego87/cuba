@@ -710,7 +710,7 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     }
 
     @Override
-    protected void handleAggregationGroupInputChange(int columnIndex, String columnKey, String groupKey, String value) {
+    protected void handleAggregationGroupInputChange(String columnKey, String groupKey, String value) {
         if (aggregationDistributionProvider != null) {
             Object columnId = columnIdMap.get(columnKey);
 

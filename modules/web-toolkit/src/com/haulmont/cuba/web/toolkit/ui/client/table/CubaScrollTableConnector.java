@@ -256,9 +256,8 @@ public class CubaScrollTableConnector extends TableConnector {
                 }
             }
         });
-        getWidget()._delegate.totalAggregationInputHandler = (columnIndex, value) -> {
-            String columnKey = getWidget().tHead.getHeaderCell(columnIndex).getColKey();
-            getRpcProxy(CubaTableServerRpc.class).onAggregationTotalInputChange(columnIndex, columnKey, value);
+        getWidget()._delegate.totalAggregationInputHandler = (columnKey, value) -> {
+            getRpcProxy(CubaTableServerRpc.class).onAggregationTotalInputChange(columnKey, value);
         };
     }
 

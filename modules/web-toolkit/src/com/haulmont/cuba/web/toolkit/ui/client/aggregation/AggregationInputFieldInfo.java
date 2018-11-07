@@ -21,13 +21,13 @@ import com.google.gwt.dom.client.InputElement;
 public class AggregationInputFieldInfo {
 
     protected String oldValue;
-    protected int columnIndex;
+    protected String columnKey;
     protected InputElement inputElement;
 
-    public AggregationInputFieldInfo(String oldValue, int columnIndex, InputElement inputElement) {
+    public AggregationInputFieldInfo(String oldValue, String columnKey, InputElement inputElement) {
         this.oldValue = oldValue;
         this.inputElement = inputElement;
-        this.columnIndex = columnIndex;
+        this.columnKey = columnKey;
     }
 
     public String getOldValue() {
@@ -46,11 +46,11 @@ public class AggregationInputFieldInfo {
         this.inputElement = inputElement;
     }
 
-    public int getColumnIndex() {
-        return columnIndex;
+    public String getColumnKey() {
+        return columnKey;
     }
 
-    public void setColumnIndex(int columnIndex) {
-        this.columnIndex = columnIndex;
+    public void setColumnKey(String columnKey) {
+        this.columnKey = columnKey;
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui;
+package com.haulmont.cuba.gui.sys.navigation;
 
 import com.haulmont.cuba.gui.navigation.NavigationState;
 

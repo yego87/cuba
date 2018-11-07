@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.sys;
+package com.haulmont.cuba.web.sys.navigation;
 
 import com.haulmont.cuba.core.global.Events;
-import com.haulmont.cuba.gui.Navigation;
+import com.haulmont.cuba.gui.sys.navigation.Navigation;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.navigation.NavigationState;
@@ -28,8 +28,6 @@ import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
-import com.haulmont.cuba.web.navigation.UrlIdBase64Converter;
-import com.haulmont.cuba.web.navigation.UrlTools;
 import com.vaadin.server.Page;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -211,7 +209,7 @@ public class WebNavigation implements Navigation {
 
         if (screen instanceof EditorScreen) {
             Object entityId = ((EditorScreen) screen).getEditedEntity().getId();
-            String base64Id = UrlIdBase64Converter.serialize(entityId);
+            String base64Id = UrlTools.serializeIdT(entityId);
 
             params.put("id", base64Id);
         }

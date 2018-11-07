@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.navigation;
+package com.haulmont.cuba.web.sys.navigation;
 
+import com.google.common.collect.ImmutableMap;
+import com.haulmont.bali.util.URLEncodeUtils;
 import com.haulmont.cuba.gui.navigation.NavigationState;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +39,41 @@ public class UrlTools {
 
     protected static final String PARAMS_REGEX = "^(?:(?:\\w+=[a-zA-Z0-9_/+%]+)?|\\w+=[a-zA-Z0-9_/+%]+(?:&\\w+=[a-zA-Z0-9_/+%]+)+)$";
     protected static final Pattern PARAMS_PATTERN = Pattern.compile(PARAMS_REGEX);
+
+    @SuppressWarnings("CodeBlock2Expr")
+    protected static final Map<Class, Function<Object, ByteBuffer>> serializers = ImmutableMap.of(
+            String.class, obj -> {
+                return ByteBuffer.wrap(((String) obj).getBytes());
+            },
+            Integer.class, obj -> {
+                return ByteBuffer.allocate(4).putInt((int) obj);
+            },
+            Long.class, obj -> {
+                return ByteBuffer.allocate(Long.BYTES).putLong((Long) obj);
+            },
+            UUID.class, obj -> {
+                return ByteBuffer.allocate(Long.BYTES * 2)
+                        .putLong(((UUID) obj).getMostSignificantBits())
+                        .putLong(((UUID) obj).getLeastSignificantBits());
+            });
+
+    protected static final Map<Class, Function<ByteBuffer, Object>> deserializers = ImmutableMap.of(
+            String.class, bb -> new String(bb.array()),
+            Integer.class, ByteBuffer::getInt,
+            Long.class, ByteBuffer::getLong,
+            UUID.class, bb -> new UUID(bb.getLong(), bb.getLong())
+    );
+
+    public static String serializeIdT(Object id) {
+        String encoded = Base64.getEncoder().withoutPadding()
+                .encodeToString(getBytes(id));
+        return URLEncodeUtils.encodeUtf8(encoded);
+    }
+
+    public static Object deserializeId(Class idClass, String base64) {
+        byte[] decoded = Base64.getDecoder().decode(URLEncodeUtils.decodeUtf8(base64));
+        return fromBytes(idClass, ByteBuffer.wrap(decoded));
+    }
 
     public static NavigationState parseState(String uriFragment) {
         if (uriFragment == null || uriFragment.isEmpty()) {
@@ -125,5 +162,13 @@ public class UrlTools {
         }
 
         return paramsMap;
+    }
+
+    protected static byte[] getBytes(Object id) {
+        return serializers.get(id.getClass()).apply(id).array();
+    }
+
+    protected static Object fromBytes(Class idClass, ByteBuffer byteBuffer) {
+        return deserializers.get(idClass).apply(byteBuffer);
     }
 }

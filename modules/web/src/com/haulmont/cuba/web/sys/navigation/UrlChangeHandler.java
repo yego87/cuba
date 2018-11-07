@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.sys;
+package com.haulmont.cuba.web.sys.navigation;
 
 import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.core.global.*;
-import com.haulmont.cuba.gui.*;
+import com.haulmont.cuba.gui.Notifications;
+import com.haulmont.cuba.gui.Screens;
+import com.haulmont.cuba.gui.WindowParams;
+import com.haulmont.cuba.gui.components.CloseOriginType;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
@@ -28,6 +31,7 @@ import com.haulmont.cuba.gui.navigation.NavigationAware;
 import com.haulmont.cuba.gui.navigation.NavigationState;
 import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
+import com.haulmont.cuba.gui.sys.navigation.History;
 import com.haulmont.cuba.gui.util.OperationResult;
 import com.haulmont.cuba.security.entity.EntityOp;
 import com.haulmont.cuba.security.entity.PermissionType;
@@ -38,10 +42,9 @@ import com.haulmont.cuba.web.app.ui.navigation.notfoundwindow.NotFoundScreen;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
-import com.haulmont.cuba.web.navigation.NavigationException;
-import com.haulmont.cuba.web.navigation.UrlIdBase64Converter;
-import com.haulmont.cuba.web.navigation.accessfilter.NavigationFilter;
-import com.haulmont.cuba.web.navigation.accessfilter.NavigationFilter.AccessCheckResult;
+import com.haulmont.cuba.web.sys.RedirectHandler;
+import com.haulmont.cuba.web.sys.navigation.accessfilter.NavigationFilter;
+import com.haulmont.cuba.web.sys.navigation.accessfilter.NavigationFilter.AccessCheckResult;
 import com.vaadin.server.Page;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -71,9 +74,6 @@ public class UrlChangeHandler {
     protected DataManager dataManager;
 
     @Inject
-    protected ViewRepository viewRepository;
-
-    @Inject
     protected WebConfig webConfig;
 
     @Inject
@@ -96,7 +96,7 @@ public class UrlChangeHandler {
             return;
         }
 
-        NavigationState requestedState = getNavigation().getState();
+        NavigationState requestedState = ui.getNavigation().getState();
         if (requestedState == null) {
             log.debug("Unable to handle requested state: \"{}\"", Page.getCurrent().getUriFragment());
             reloadApp();
@@ -111,21 +111,20 @@ public class UrlChangeHandler {
         handleUriChange(requestedState);
     }
 
-    protected void handleUriChange(NavigationState navigationState) {
-        if (historyNavigation(navigationState)) {
-            handleHistoryNavigation(navigationState);
+    protected void handleUriChange(NavigationState requestedState) {
+        if (historyNavigation(requestedState)) {
+            handleHistoryNavigation(requestedState);
         } else {
-            handleScreenNavigation(navigationState);
+            handleScreenNavigation(requestedState);
         }
     }
 
-    protected boolean historyNavigation(NavigationState state) {
-        return Objects.equals(state, getHistory().getPrevious())
-                || Objects.equals(state, getHistory().getNext());
+    protected boolean historyNavigation(NavigationState requestedState) {
+        return Objects.equals(requestedState, getHistory().getPrevious()) || Objects.equals(requestedState, getHistory().getNext());
     }
 
-    protected void handleHistoryNavigation(NavigationState navigationState) {
-        if (Objects.equals(navigationState, getHistory().getPrevious())) {
+    protected void handleHistoryNavigation(NavigationState requestedState) {
+        if (Objects.equals(requestedState, getHistory().getPrevious())) {
             handleHistoryBackward();
         } else {
             handleHistoryForward();
@@ -134,8 +133,6 @@ public class UrlChangeHandler {
 
     protected void handleHistoryBackward() {
         NavigationState prevState = getHistory().getPrevious();
-        Screen prevScreen = findScreenByState(getScreens().getOpenedScreens().getAll(), prevState);
-
         AccessCheckResult accessCheckResult = navigationAllowed(prevState);
         if (!accessCheckResult.isAllowed()) {
             showNotification(accessCheckResult.getMessage());
@@ -143,6 +140,7 @@ public class UrlChangeHandler {
             return;
         }
 
+        Screen prevScreen = findScreenByState(prevState);
         //noinspection ConstantConditions
         if (prevScreen == null && StringUtils.isNotEmpty(prevState.getStateMark())) {
             revertNavigationState();
@@ -167,22 +165,10 @@ public class UrlChangeHandler {
     }
 
     protected void proceedHistoryBackward() {
-        History history = getHistory();
-
-        NavigationState nowState = history.getNow();
-        NavigationState prevState = history.backward();
-
+        NavigationState prevState = getHistory().backward();
         selectScreen(findActiveScreenByState(prevState));
-
-        boolean rootBackward = rootState(prevState) && rootChanged(prevState);
         //noinspection ConstantConditions
-        String state = !rootBackward ? prevState.asRoute() : nowState.asRoute();
-
-        if (rootBackward) {
-            reloadApp();
-        } else {
-            Page.getCurrent().replaceState("#" + state);
-        }
+        Page.getCurrent().replaceState("#" + prevState.asRoute());
     }
 
     protected void handleHistoryForward() {
@@ -191,109 +177,86 @@ public class UrlChangeHandler {
             currentScreen = getAnyCurrentScreen();
         }
 
-        String route = getScreenContext(currentScreen)
-                .getRouteInfo()
-                .getResolvedState()
-                .asRoute();
-        Page.getCurrent().setUriFragment(route);
+        String route = getResolvedState(currentScreen).asRoute();
 
+        Page.getCurrent().setUriFragment(route);
         showNotification(messages.getMainMessage("navigation.unableToGoForward"));
     }
 
-    protected void handleScreenNavigation(NavigationState navigationState) {
-        if (rootChanged(navigationState)) {
-            handleRootChange(navigationState);
+    protected void handleScreenNavigation(NavigationState requestedState) {
+        if (handleRootChange(requestedState)) {
             return;
         }
-
-        if (screenChanged(navigationState)) {
-            handleScreenChange(navigationState);
+        if (handleScreenChange(requestedState)) {
             return;
         }
-
-        if (paramsChanged(navigationState)) {
-            handleParamsChange(navigationState);
+        if (handleParamsChanged(requestedState)) {
+            return;
         }
-
-        if (screensClosed()) {
-            handleScreensClosed();
+        if (handleCurrentRootNavigated(requestedState)) {
+            return;
         }
+        revertNavigationState();
+        log.info("Unable to handle screen navigation for requested state: {}", requestedState);
     }
 
-    protected boolean screensClosed() {
-        return !rootState(getHistory().getNow())
-                && rootState(getNavigation().getState());
-    }
-
-    protected void handleScreensClosed() {
-        Screen lastOpenedScreen = findActiveScreenByState(getHistory().getNow());
-        if (lastOpenedScreen != null) {
-            lastOpenedScreen.getWindow().getFrameOwner()
-                    .close(FrameOwner.WINDOW_CLOSE_ACTION)
-                    .otherwise(this::revertNavigationState);
-        }
-    }
-
-    protected boolean rootChanged(NavigationState navigationState) {
-        Screen rootScreen = getScreens().getOpenedScreens().getRootScreenOrNull();
-        if (rootScreen == null) {
+    protected boolean handleCurrentRootNavigated(NavigationState requestedState) {
+        if (!currentRootNavigated(requestedState)) {
             return false;
         }
 
-        String resolvedRoute = getScreenContext(rootScreen)
-                .getRouteInfo()
-                .getResolvedState()
-                .getRoot();
+        for (Screens.WindowStack windowStack : getOpenedScreens().getWorkAreaStacks()) {
+            boolean closed = closeWindowStack(windowStack);
+            if (!closed) {
+                revertNavigationState();
+                return false;
+            }
+        }
 
-        return !Objects.equals(resolvedRoute, navigationState.getRoot());
+        return true;
     }
 
-    protected void handleRootChange(NavigationState state) {
-        AccessCheckResult result = navigationAllowed(state);
+    protected boolean currentRootNavigated(NavigationState requestedState) {
+        return !rootState(getHistory().getNow()) && rootState(requestedState);
+    }
+
+    protected boolean handleRootChange(NavigationState requestedState) {
+        if (!rootChanged(requestedState)) {
+            return false;
+        }
+
+        AccessCheckResult result = navigationAllowed(requestedState);
         if (!result.isAllowed()) {
             showNotification(result.getMessage());
             revertNavigationState();
-            return;
+            return true;
         }
 
         showNotification(messages.getMainMessage("navigation.rootChangeIsNotSupported"));
         revertNavigationState();
+
+        return true;
     }
 
-    protected boolean screenChanged(NavigationState requestedState) {
-        if (rootState(requestedState) || !rootScreenHasWorkArea()) {
+    protected boolean rootChanged(NavigationState requestedState) {
+        Screen rootScreen = getOpenedScreens().getRootScreenOrNull();
+        if (rootScreen == null) {
+            return false;
+        }
+        return !Objects.equals(getResolvedState(rootScreen).getRoot(), requestedState.getRoot());
+    }
+
+    protected boolean handleScreenChange(NavigationState requestedState) {
+        if (!screenChanged(requestedState)) {
             return false;
         }
 
-        Screen currentScreen = findActiveScreenByState(getHistory().getNow());
-
-        if (currentScreen == null) {
-            Iterator<Screen> screensIterator = getScreens().getOpenedScreens().getCurrentBreadcrumbs().iterator();
-            currentScreen = screensIterator.hasNext() ? screensIterator.next() : null;
-        }
-
-        if (currentScreen == null) {
-            return true;
-        }
-
-        NavigationState currentState = getScreenContext(currentScreen)
-                .getRouteInfo()
-                .getResolvedState();
-
-        if (!Objects.equals(currentState.getStateMark(), requestedState.getStateMark())) {
-            return true;
-        }
-
-        return !Objects.equals(currentState.getNestedRoute(), requestedState.getNestedRoute());
-    }
-
-    protected void handleScreenChange(NavigationState navigationState) {
         // TODO: handle few opened screens
-        WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(navigationState.getNestedRoute());
+        WindowInfo windowInfo = windowConfig.findWindowInfoByRoute(requestedState.getNestedRoute());
 
         if (windowInfo == null) {
-            handle404(navigationState);
-            return;
+            handle404(requestedState);
+            return false;
         }
 
         boolean screenPermitted = security.isScreenPermitted(windowInfo.getId());
@@ -305,32 +268,42 @@ public class UrlChangeHandler {
         Screen screen;
 
         if (isEditor(windowInfo)) {
-            screen = createEditor(windowInfo, navigationState);
+            screen = createEditor(windowInfo, requestedState);
             if (screen == null) {
                 revertNavigationState();
                 showNotification(messages.getMainMessage("navigation.failedToOpenEditor"));
-                return;
+                return false;
             }
         } else {
             screen = getScreens().create(windowInfo.getId(), OpenMode.NEW_TAB);
         }
 
         getScreens().show(screen);
+
+        return true;
     }
 
-    protected void handle404(NavigationState navigationState) {
-        MapScreenOptions params = new MapScreenOptions(ParamsMap.of("requestedRoute", navigationState.getNestedRoute()));
-        NotFoundScreen notFoundScreen = getScreens().create(NotFoundScreen.class, OpenMode.NEW_TAB, params);
+    protected boolean screenChanged(NavigationState requestedState) {
+        Screen currentScreen = findActiveScreenByState(getHistory().getNow());
+        if (currentScreen == null) {
+            Iterator<Screen> screensIterator = getOpenedScreens().getCurrentBreadcrumbs().iterator();
+            currentScreen = screensIterator.hasNext() ? screensIterator.next() : null;
+        }
+        if (currentScreen == null) {
+            return true;
+        }
 
-        getScreens().show(notFoundScreen);
+        NavigationState currentState = getResolvedState(currentScreen);
+        return !Objects.equals(currentState.getStateMark(), requestedState.getStateMark())
+                || !Objects.equals(currentState.getNestedRoute(), requestedState.getNestedRoute());
     }
 
     protected boolean isEditor(WindowInfo windowInfo) {
         return EditorScreen.class.isAssignableFrom(windowInfo.getControllerClass());
     }
 
-    protected Screen createEditor(WindowInfo windowInfo, NavigationState navigationState) {
-        Map<String, Object> screenOptions = createEditorScreenOptions(windowInfo, navigationState);
+    protected Screen createEditor(WindowInfo windowInfo, NavigationState requestedState) {
+        Map<String, Object> screenOptions = createEditorScreenOptions(windowInfo, requestedState);
         if (screenOptions.isEmpty()) {
             return null;
         }
@@ -349,14 +322,14 @@ public class UrlChangeHandler {
         return editor;
     }
 
-    protected Map<String, Object> createEditorScreenOptions(WindowInfo windowInfo, NavigationState state) {
+    protected Map<String, Object> createEditorScreenOptions(WindowInfo windowInfo, NavigationState requestedState) {
         Type screenSuperclass = windowInfo.getControllerClass().getGenericSuperclass();
 
         if (!(screenSuperclass instanceof ParameterizedType)) {
             return Collections.emptyMap();
         }
 
-        String idParam = state.getParams().get("id");
+        String idParam = requestedState.getParams().get("id");
         if (StringUtils.isEmpty(idParam)) {
             return Collections.emptyMap();
         }
@@ -371,14 +344,12 @@ public class UrlChangeHandler {
             throw new AccessDeniedException(PermissionType.ENTITY_OP, EntityOp.READ, entityClass.getSimpleName());
         }
 
-        Class<?> idType = metaClass
-                .getPropertyNN("id")
-                .getJavaType();
-        Object id = UrlIdBase64Converter.deserialize(idType, idParam);
+        Class<?> idType = metaClass.getPropertyNN("id").getJavaType();
+        Object id = UrlTools.deserializeId(idType, idParam);
 
         LoadContext<?> ctx = new LoadContext(metaClass);
         ctx.setId(id);
-        ctx.setView(findSuitableView(entityClass, state));
+        ctx.setView(View.MINIMAL);
 
         Entity entity = dataManager.load(ctx);
         if (entity == null) {
@@ -388,84 +359,66 @@ public class UrlChangeHandler {
         return ParamsMap.of(WindowParams.ITEM.name(), entity);
     }
 
-    protected View findSuitableView(Class<? extends Entity> entityClass, NavigationState navigationState) {
-        for (String viewName : viewRepository.getViewNames(entityClass)) {
-            if (viewName.endsWith(".edit")) {
-                return viewRepository.getView(entityClass, viewName);
-            }
+    protected boolean handleParamsChanged(NavigationState requestedState) {
+        if (!paramsChanged(requestedState)) {
+            return false;
         }
-        throw new NavigationException("Unable to find suitable view to open editor for entity: " + entityClass.getName(),
-                navigationState);
-    }
 
-    protected boolean paramsChanged(NavigationState state) {
-        String currentParams = getScreenContext(getAnyCurrentScreen())
-                .getRouteInfo()
-                .getResolvedState().getParamsString();
-
-        String requestedParams = state.getParamsString();
-
-        return !Objects.equals(currentParams, requestedParams);
-    }
-
-    protected void handleParamsChange(NavigationState state) {
-        Screen screen = findActiveScreenByState(state);
+        Screen screen = findActiveScreenByState(requestedState);
         if (screen instanceof NavigationAware) {
-            ((NavigationAware) screen).urlParamsChanged(state.getParams());
+            ((NavigationAware) screen).urlParamsChanged(requestedState.getParams());
         }
+
+        return true;
+    }
+
+    protected boolean paramsChanged(NavigationState requestedState) {
+        String currentParams = getResolvedState(getAnyCurrentScreen()).getParamsString();
+        return !Objects.equals(currentParams, requestedState.getParamsString());
     }
 
     protected void reloadApp() {
-        AppUI ui = AppUI.getCurrent();
-        if (ui != null) {
-            String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
-            ui.getPage().open(url, "_self");
-        }
+        String url = ControllerUtils.getLocationWithoutParams() + "?restartApp";
+        ui.getPage().open(url, "_self");
     }
 
     protected Screen getAnyCurrentScreen() {
-        Iterator<Screen> dialogsIterator = getScreens()
-                .getOpenedScreens()
-                .getDialogScreens()
-                .iterator();
+        Iterator<Screen> dialogsIterator = getOpenedScreens().getDialogScreens().iterator();
         if (dialogsIterator.hasNext()) {
             return dialogsIterator.next();
         }
 
-        Iterator<Screen> screensIterator = getScreens()
-                .getOpenedScreens()
-                .getCurrentBreadcrumbs()
-                .iterator();
+        Iterator<Screen> screensIterator = getOpenedScreens().getCurrentBreadcrumbs().iterator();
         if (screensIterator.hasNext()) {
             return screensIterator.next();
         }
 
-        return getScreens().getOpenedScreens().getRootScreenOrNull();
+        return getOpenedScreens().getRootScreenOrNull();
     }
 
-    protected boolean rootState(NavigationState navigationState) {
-        return StringUtils.isEmpty(navigationState.getStateMark())
-                && StringUtils.isEmpty(navigationState.getNestedRoute());
+    protected boolean rootState(NavigationState requestedState) {
+        return StringUtils.isEmpty(requestedState.getStateMark()) && StringUtils.isEmpty(requestedState.getNestedRoute());
     }
 
     protected boolean rootScreenHasWorkArea() {
-        Screen rootScreen = getScreens().getOpenedScreens().getRootScreenOrNull();
-        return rootScreen instanceof Window.HasWorkArea;
+        return getOpenedScreens().getRootScreenOrNull() instanceof Window.HasWorkArea;
     }
 
     protected String getStateMark(Screen screen) {
-        WebWindow window = (WebWindow) screen.getWindow();
-        return String.valueOf(window.getStateMark());
+        return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
     }
 
-    protected Screen findActiveScreenByState(NavigationState navigationState) {
-        Collection<Screen> activeScreens = getScreens().getOpenedScreens().getActiveScreens();
-        return findScreenByState(activeScreens, navigationState);
+    protected Screen findActiveScreenByState(NavigationState requestedState) {
+        return findScreenByState(getOpenedScreens().getActiveScreens(), requestedState);
     }
 
-    protected Screen findScreenByState(Collection<Screen> screens, NavigationState state) {
+    protected Screen findScreenByState(NavigationState requestedState) {
+        return findScreenByState(getOpenedScreens().getAll(), requestedState);
+    }
+
+    protected Screen findScreenByState(Collection<Screen> screens, NavigationState requestedState) {
         return screens.stream()
-                .filter(s -> Objects.equals(state.getStateMark(), getStateMark(s)))
+                .filter(s -> Objects.equals(requestedState.getStateMark(), getStateMark(s)))
                 .findFirst().orElse(null);
     }
 
@@ -473,7 +426,7 @@ public class UrlChangeHandler {
         if (screen == null) {
             return;
         }
-        for (Screens.WindowStack windowStack : getScreens().getOpenedScreens().getWorkAreaStacks()) {
+        for (Screens.WindowStack windowStack : getOpenedScreens().getWorkAreaStacks()) {
             Iterator<Screen> breadCrumbs = windowStack.getBreadcrumbs().iterator();
             if (breadCrumbs.hasNext() && breadCrumbs.next() == screen) {
                 windowStack.select();
@@ -494,10 +447,7 @@ public class UrlChangeHandler {
         if (screen == null) {
             screen = getAnyCurrentScreen();
         }
-        String route = getScreenContext(screen)
-                .getRouteInfo()
-                .getResolvedState()
-                .asRoute();
+        String route = getResolvedState(screen).asRoute();
         Page.getCurrent().setUriFragment(route);
     }
 
@@ -517,17 +467,16 @@ public class UrlChangeHandler {
     }
 
     protected boolean notSuitableUrlHandlingMode() {
-        boolean notSuitableMode = UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode();
-        if (notSuitableMode) {
-            log.debug("UrlChangeHandler is disabled for {} URL handling mode", webConfig.getUrlHandlingMode());
-            return true;
+        if (UrlHandlingMode.URL_ROUTES == webConfig.getUrlHandlingMode()) {
+            return false;
         }
-        return false;
+        log.debug("UrlChangeHandler is disabled for {} URL handling mode", webConfig.getUrlHandlingMode());
+        return true;
     }
 
-    protected AccessCheckResult navigationAllowed(NavigationState navigationState) {
+    protected AccessCheckResult navigationAllowed(NavigationState requestedState) {
         for (NavigationFilter filter : accessFilters) {
-            AccessCheckResult result = filter.allowed(getHistory().getNow(), navigationState);
+            AccessCheckResult result = filter.allowed(getHistory().getNow(), requestedState);
             if (!result.isAllowed()) {
                 return result;
             }
@@ -535,28 +484,74 @@ public class UrlChangeHandler {
         return AccessCheckResult.allowed();
     }
 
-    protected Navigation getNavigation() {
-        return ui.getNavigation();
-    }
-
     protected Screens getScreens() {
         return ui.getScreens();
+    }
+
+    protected Screens.OpenedScreens getOpenedScreens() {
+        return getScreens().getOpenedScreens();
     }
 
     protected History getHistory() {
         return ui.getHistory();
     }
 
+    // Copied from WebAppWorkArea
+    protected boolean closeWindowStack(Screens.WindowStack windowStack) {
+        boolean closed = true;
+
+        for (Screen screen : windowStack.getBreadcrumbs()) {
+            if (isWindowClosePrevented(screen.getWindow(), CloseOriginType.CLOSE_BUTTON)) {
+                closed = false;
+
+                // focus tab
+                windowStack.select();
+
+                break;
+            }
+
+            OperationResult closeResult = screen.close(FrameOwner.WINDOW_CLOSE_ACTION);
+            if (closeResult.getStatus() != OperationResult.Status.SUCCESS) {
+                closed = false;
+
+                // focus tab
+                windowStack.select();
+
+                break;
+            }
+        }
+        return closed;
+    }
+
+    // Copied from WebAppWorkArea
+    protected boolean isWindowClosePrevented(Window window, Window.CloseOrigin closeOrigin) {
+        Window.BeforeCloseEvent event = new Window.BeforeCloseEvent(window, closeOrigin);
+        ((WebWindow) window).fireBeforeClose(event);
+
+        return event.isClosePrevented();
+    }
+
+    protected NavigationState getResolvedState(Screen screen) {
+        return getScreenContext(screen).getRouteInfo().getResolvedState();
+    }
+
+    protected void handle404(NavigationState requestedState) {
+        MapScreenOptions params = new MapScreenOptions(ParamsMap.of("requestedRoute", requestedState.getNestedRoute()));
+        NotFoundScreen notFoundScreen = getScreens().create(NotFoundScreen.class, OpenMode.NEW_TAB, params);
+
+        getScreens().show(notFoundScreen);
+    }
+
     /**
      * INTERNAL.
      * Used by {@link RedirectHandler}.
      *
-     * @param navigationState new navigation state
+     * @param requestedState new navigation requestedState
      */
-    public void handleUrlChangeInternal(NavigationState navigationState) {
+    public void handleUrlChangeInternal(NavigationState requestedState) {
         if (notSuitableUrlHandlingMode()) {
             return;
         }
-        handleUriChange(navigationState);
+        handleUriChange(requestedState);
     }
 }

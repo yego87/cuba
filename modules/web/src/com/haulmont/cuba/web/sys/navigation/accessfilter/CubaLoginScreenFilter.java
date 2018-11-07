@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.navigation.accessfilter;
+package com.haulmont.cuba.web.sys.navigation.accessfilter;
 
 import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.gui.navigation.NavigationState;

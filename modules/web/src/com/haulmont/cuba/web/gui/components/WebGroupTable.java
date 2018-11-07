@@ -40,6 +40,7 @@ import com.haulmont.cuba.web.gui.data.SortableCollectionDsWrapper;
 import com.haulmont.cuba.web.toolkit.data.AggregationContainer;
 import com.haulmont.cuba.web.toolkit.data.GroupTableContainer;
 import com.haulmont.cuba.web.toolkit.ui.CubaGroupTable;
+import com.haulmont.cuba.web.toolkit.ui.CubaGroupTable.GroupAggregationInputValueChangeContext;
 import com.vaadin.data.Item;
 import com.vaadin.server.Resource;
 import org.apache.commons.collections4.CollectionUtils;
@@ -49,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -897,6 +899,39 @@ public class WebGroupTable<E extends Entity> extends WebAbstractTable<CubaGroupT
                 ((CollectionDatasource.Sortable) datasource).resetSortOrder();
             }
         }
+    }
+
+    @Override
+    public void setAggregationDistributionProvider(AggregationDistributionProvider distributionProvider) {
+        this.distributionProvider = distributionProvider;
+
+        component.setAggregationDistributionProvider(context -> {
+            if (distributionProvider != null) {
+                String value = context.getValue();
+                Object columnId = context.getColumnId();
+                try {
+                    Object parsedValue = getParsedAggregationValue(value, columnId);
+
+                    Collection<Entity> scope = Collections.emptyList();
+                    if (context instanceof GroupAggregationInputValueChangeContext) {
+                        Object groupId = ((GroupAggregationInputValueChangeContext) context).getGroupInfo();
+                        if (groupId instanceof GroupInfo) {
+                            //noinspection unchecked
+                            scope = getDatasource().getChildItems((GroupInfo) groupId);
+                        }
+                    }
+
+                    //noinspection unchecked
+                    AggregationDistributionContext aggregationDistributionEvent =
+                            new AggregationDistributionContext(columnId, parsedValue, scope, context.isTotalAggregation());
+                    distributionProvider.onDistribution(aggregationDistributionEvent);
+                } catch (ParseException e) {
+                    showParseErrorNotification();
+                    return false; // rollback to previous value
+                }
+            }
+            return true;
+        });
     }
 
     protected class AggregatableGroupPropertyValueFormatter extends DefaultGroupPropertyValueFormatter {

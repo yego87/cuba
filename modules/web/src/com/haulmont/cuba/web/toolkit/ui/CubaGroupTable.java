@@ -19,6 +19,7 @@ package com.haulmont.cuba.web.toolkit.ui;
 
 import com.haulmont.chile.core.model.MetaPropertyPath;
 import com.haulmont.cuba.gui.data.GroupInfo;
+import com.haulmont.cuba.web.gui.components.WebAbstractTable.AggregationInputValueChangeContext;
 import com.haulmont.cuba.web.gui.data.PropertyValueStringify;
 import com.haulmont.cuba.web.toolkit.data.AggregationContainer;
 import com.haulmont.cuba.web.toolkit.data.GroupTableContainer;
@@ -709,6 +710,26 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
     }
 
     @Override
+    protected void handleAggregationGroupInputChange(int columnIndex, String columnKey, String groupKey, String value) {
+        if (aggregationDistributionProvider != null) {
+            Object columnId = columnIdMap.get(columnKey);
+
+            Object groupColumnId = groupIdMap.get(groupKey);
+
+            GroupAggregationInputValueChangeContext context
+                    = new GroupAggregationInputValueChangeContext(columnId, value, false, groupColumnId);
+            if (!aggregationDistributionProvider.apply(context)) {
+                rollbackAggregationInputFieldValue(columnIndex);
+            }
+        }
+    }
+
+    @Override
+    protected void rollbackAggregationInputFieldValue(int columnIndex) {
+
+    }
+
+    @Override
     protected void updateClickableColumnKeys() {
         if (cellClickListeners != null) {
             Collection<?> groupProperties = getGroupProperties();
@@ -755,6 +776,20 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
 
         public Object getGroupId() {
             return groupId;
+        }
+    }
+
+    public static class GroupAggregationInputValueChangeContext extends AggregationInputValueChangeContext {
+        protected Object groupInfo;
+
+        public GroupAggregationInputValueChangeContext(Object columnId, String value, boolean isTotalAggregation,
+                                                       Object groupInfo) {
+            super(columnId, value, isTotalAggregation);
+            this.groupInfo = groupInfo;
+        }
+
+        public Object getGroupInfo() {
+            return groupInfo;
         }
     }
 }

@@ -3198,12 +3198,12 @@ public abstract class WebAbstractTable<T extends com.vaadin.ui.Table & CubaEnhan
                 Frame.NotificationType.TRAY);
     }
 
-    public static class TotalAggregationInputValueChange {
+    public static class AggregationInputValueChangeContext {
         protected Object columnId;
         protected String value;
         protected boolean isTotalAggregation;
 
-        public TotalAggregationInputValueChange(Object columnId, String value, boolean isTotalAggregation) {
+        public AggregationInputValueChangeContext(Object columnId, String value, boolean isTotalAggregation) {
             this.columnId = columnId;
             this.value = value;
             this.isTotalAggregation = isTotalAggregation;

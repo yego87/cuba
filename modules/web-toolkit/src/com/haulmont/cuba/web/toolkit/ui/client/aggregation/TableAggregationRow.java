@@ -25,13 +25,13 @@ import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import com.haulmont.cuba.web.toolkit.ui.client.Tools;
 import com.haulmont.cuba.web.toolkit.ui.client.tableshared.TableWidget;
+import com.haulmont.cuba.web.toolkit.ui.client.tableshared.TotalAggregationInputListener;
 import com.vaadin.client.BrowserInfo;
 import com.vaadin.client.ComputedStyle;
 import com.vaadin.client.UIDL;
 import com.vaadin.client.ui.VScrollTable;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 
 /**
  * Special aggregation row for {@link com.haulmont.cuba.web.toolkit.ui.client.table.CubaScrollTableWidget} and
@@ -46,7 +46,7 @@ public class TableAggregationRow extends Panel {
 
     protected TableWidget tableWidget;
 
-    protected BiConsumer<Integer, String> totalAggregationInputHandler;
+    protected TotalAggregationInputListener totalAggregationInputHandler;
     protected List<AggregationInputFieldInfo> inputsList;
 
     public TableAggregationRow(TableWidget tableWidget) {
@@ -128,8 +128,8 @@ public class TableAggregationRow extends Panel {
 
             boolean sorted = tableWidget.getHead().getHeaderCell(colIndex).isSorted();
 
-            if (isEditableAggr(uidl, colIndex)) {
-                addCellWithField((String) cell, aligns[colIndex], style, sorted, colIndex);
+            if (isAggregationEditable(uidl, colIndex)) {
+                addCellWithField((String) cell, aligns[colIndex], colIndex);
             } else if (cell instanceof String) {
                 addCell((String) cell, aligns[colIndex], style, sorted);
             }
@@ -145,7 +145,7 @@ public class TableAggregationRow extends Panel {
     }
 
     //todo do without class cast
-    protected boolean isEditableAggr(UIDL uidl, int colIndex) {
+    protected boolean isAggregationEditable(UIDL uidl, int colIndex) {
         UIDL colUidl = uidl.getChildByTagName("editableAggregationColumns");
         if (colUidl == null) {
             return false;
@@ -168,7 +168,7 @@ public class TableAggregationRow extends Panel {
         return false;
     }
 
-    protected void addCellWithField(String text, char align, String style, boolean sorted, int colIndex) {
+    protected void addCellWithField(String text, char align, int colIndex) {
         final TableCellElement td = DOM.createTD().cast();
         final DivElement container = DOM.createDiv().cast();
         container.setClassName(tableWidget.getStylePrimaryName() + "-cell-wrapper" + " " + "widget-container");
@@ -287,7 +287,7 @@ public class TableAggregationRow extends Panel {
         return cs.getWidth() + cs.getPaddingWidth() + cs.getBorderWidth();
     }
 
-    public void setTotalAggregationInputHandler(BiConsumer<Integer, String> totalAggregationInputHandler) {
+    public void setTotalAggregationInputHandler(TotalAggregationInputListener totalAggregationInputHandler) {
         this.totalAggregationInputHandler = totalAggregationInputHandler;
     }
 
@@ -310,7 +310,7 @@ public class TableAggregationRow extends Panel {
             Integer columnIndex = getColumnIndex(element);
             if (columnIndex != null) {
                 InputElement input = element.cast();
-                totalAggregationInputHandler.accept(columnIndex, input.getValue());
+                totalAggregationInputHandler.onInputChange(columnIndex, input.getValue());
             }
         }
     }

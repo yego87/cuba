@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.haulmont.cuba.gui.components.Table;
 import com.haulmont.cuba.web.AppUI;
-import com.haulmont.cuba.web.gui.components.WebAbstractTable.TotalAggregationInputValueChange;
+import com.haulmont.cuba.web.gui.components.WebAbstractTable.AggregationInputValueChangeContext;
 import com.haulmont.cuba.web.gui.components.presentations.TablePresentations;
 import com.haulmont.cuba.web.gui.data.PropertyValueStringify;
 import com.haulmont.cuba.web.toolkit.ShortcutActionManager;
@@ -84,7 +84,7 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
     protected Object focusItem;
     protected Runnable beforePaintListener;
 
-    protected Function<TotalAggregationInputValueChange, Boolean> aggregationDistributionProvider;
+    protected Function<AggregationInputValueChangeContext, Boolean> aggregationDistributionProvider;
 
     public CubaTreeTable() {
         registerRpc(new CubaTableServerRpc() {
@@ -106,12 +106,17 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
                 if (aggregationDistributionProvider != null) {
                     Object columnId = columnIdMap.get(columnKey);
 
-                    TotalAggregationInputValueChange event =
-                            new TotalAggregationInputValueChange(columnId, value, true);
+                    AggregationInputValueChangeContext event =
+                            new AggregationInputValueChangeContext(columnId, value, true);
                     if (!aggregationDistributionProvider.apply(event)) {
                         rollbackAggregationInputFieldValue(columnIndex);
                     }
                 }
+            }
+
+            @Override
+            public void onAggregationGroupInputChange(int columnIndex, String columnKey, String groupKey, String value) {
+                // is used by CubaGroupTable
             }
         });
     }
@@ -951,12 +956,12 @@ public class CubaTreeTable extends com.vaadin.ui.TreeTable implements TreeTableC
     }
 
     @Override
-    public void setAggregationDistributionProvider(Function<TotalAggregationInputValueChange, Boolean> distributionProvider) {
+    public void setAggregationDistributionProvider(Function<AggregationInputValueChangeContext, Boolean> distributionProvider) {
         this.aggregationDistributionProvider = distributionProvider;
     }
 
     @Override
-    public Function<TotalAggregationInputValueChange, Boolean> getAggregationDistributionProvider() {
+    public Function<AggregationInputValueChangeContext, Boolean> getAggregationDistributionProvider() {
         return aggregationDistributionProvider;
     }
 

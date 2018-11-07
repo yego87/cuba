@@ -30,7 +30,6 @@ import com.vaadin.client.ui.*;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 public class TableWidgetDelegate {
     public static final String CUBA_TABLE_CLICKABLE_CELL_STYLE = "c-table-clickable-cell";
@@ -64,7 +63,8 @@ public class TableWidgetDelegate {
     public Set<String> clickableColumns;
     public TableCellClickListener cellClickListener;
 
-    public BiConsumer<Integer, String> totalAggregationInputHandler;
+    public TotalAggregationInputListener totalAggregationInputHandler;
+    public GroupAggregationInputListener groupAggregationInputHandler;
 
     public VOverlay customPopupOverlay;
     public Widget customPopupWidget;

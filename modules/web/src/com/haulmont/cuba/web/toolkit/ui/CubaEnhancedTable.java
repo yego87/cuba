@@ -18,7 +18,7 @@
 package com.haulmont.cuba.web.toolkit.ui;
 
 import com.haulmont.cuba.gui.components.Table;
-import com.haulmont.cuba.web.gui.components.WebAbstractTable.TotalAggregationInputValueChange;
+import com.haulmont.cuba.web.gui.components.WebAbstractTable.AggregationInputValueChangeContext;
 import com.haulmont.cuba.web.gui.components.presentations.TablePresentations;
 import com.haulmont.cuba.web.toolkit.data.AggregationContainer;
 import com.vaadin.ui.Component;
@@ -98,8 +98,8 @@ public interface CubaEnhancedTable extends AggregationContainer {
 
     void addAggregationEditableColumn(Object columnId);
 
-    void setAggregationDistributionProvider(Function<TotalAggregationInputValueChange, Boolean> distributionProvider);
-    Function<TotalAggregationInputValueChange, Boolean> getAggregationDistributionProvider();
+    void setAggregationDistributionProvider(Function<AggregationInputValueChangeContext, Boolean> distributionProvider);
+    Function<AggregationInputValueChangeContext, Boolean> getAggregationDistributionProvider();
 
     interface CellClickListener {
         void onClick(Object itemId, Object columnId);

@@ -138,7 +138,7 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
         if (hasGroups() && hasAggregation) {
             target.startTag("groupRows");
             for (Object itemId : getVisibleItemIds()) {
-                if (isExpanded(itemId) && isAggregatedValuesChanged(itemId)) {
+                if (isAggregatedValuesChanged(itemId)) {
                     target.startTag("tr");
 
                     target.addAttribute("groupKey", groupIdMap.key(itemId));
@@ -719,14 +719,11 @@ public class CubaGroupTable extends CubaTable implements GroupTableContainer {
             GroupAggregationInputValueChangeContext context
                     = new GroupAggregationInputValueChangeContext(columnId, value, false, groupColumnId);
             if (!aggregationDistributionProvider.apply(context)) {
-                rollbackAggregationInputFieldValue(columnIndex);
+                // clear cache to update aggregated values
+                cachedAggregatedValues.clear();
+                markAsDirty();
             }
         }
-    }
-
-    @Override
-    protected void rollbackAggregationInputFieldValue(int columnIndex) {
-
     }
 
     @Override

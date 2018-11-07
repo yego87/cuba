@@ -99,15 +99,6 @@ public class TableAggregationRow extends Panel {
         initialized = getElement().hasChildNodes();
     }
 
-    public void rollbackInputFieldValue(int columnIndex) {
-        for (AggregationInputFieldInfo info : inputsList) {
-            if (info.getColumnIndex() == columnIndex) {
-                info.getInputElement().setValue(info.oldValue);
-                break;
-            }
-        }
-    }
-
     protected void addCellsFromUIDL(UIDL uidl) {
         int colIndex = 0;
         final Iterator cells = uidl.getChildIterator();

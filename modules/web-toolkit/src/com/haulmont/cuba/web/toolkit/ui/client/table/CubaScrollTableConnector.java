@@ -69,13 +69,6 @@ public class CubaScrollTableConnector extends TableConnector {
             public void requestFocus(String itemKey, String columnKey) {
                 getWidget().requestFocus(itemKey, columnKey);
             }
-
-            @Override
-            public void rollbackAggregationInputFieldValue(int columnIndex) {
-                if (getWidget()._delegate.aggregationRow != null) {
-                    getWidget()._delegate.aggregationRow.rollbackInputFieldValue(columnIndex);
-                }
-            }
         });
     }
 

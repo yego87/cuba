@@ -106,7 +106,7 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
                     AggregationInputValueChangeContext event =
                             new AggregationInputValueChangeContext(columnId, value, true);
                     if (!aggregationDistributionProvider.apply(event)) {
-                        rollbackAggregationInputFieldValue(columnIndex);
+                        markAsDirty();
                     }
                 }
             }
@@ -889,9 +889,5 @@ public class CubaTable extends com.vaadin.ui.Table implements TableContainer, Cu
         }
 
         super.paintContent(target);
-    }
-
-    protected void rollbackAggregationInputFieldValue(int columnIndex) {
-        getRpcProxy(CubaTableClientRpc.class).rollbackAggregationInputFieldValue(columnIndex);
     }
 }

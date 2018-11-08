@@ -18,22 +18,20 @@ package com.haulmont.cuba.gui.sys;
 
 public final class UiControllerDefinition {
 
-    private static final String UI_CONTROLLER_DEF = "UiControllerDefinition{id='%s', controllerClass='%s'%s}";
-
     private final String id;
     private final String controllerClass;
-    private final PageDefinition pageDefinition;
+    private final RouteDefinition routeDefinition;
 
     public UiControllerDefinition(String id, String controllerClass) {
         this.id = id;
         this.controllerClass = controllerClass;
-        this.pageDefinition = null;
+        this.routeDefinition = null;
     }
 
-    public UiControllerDefinition(String id, String controllerClass, PageDefinition pageDefinition) {
+    public UiControllerDefinition(String id, String controllerClass, RouteDefinition routeDefinition) {
         this.id = id;
         this.controllerClass = controllerClass;
-        this.pageDefinition = pageDefinition;
+        this.routeDefinition = routeDefinition;
     }
 
     public String getId() {
@@ -44,17 +42,19 @@ public final class UiControllerDefinition {
         return controllerClass;
     }
 
-    public PageDefinition getPageDefinition() {
-        return pageDefinition;
+    public RouteDefinition getRouteDefinition() {
+        return routeDefinition;
     }
 
     @Override
     public String toString() {
-        String pageDef = pageDefinition == null
-                ? ""
-                : ", " + pageDefinition.toString();
-
-        return String.format(UI_CONTROLLER_DEF, id, controllerClass, pageDef);
+        return "UiControllerDefinition{" +
+                "id='" + id + '\'' +
+                ", controllerClass='" + controllerClass + '\'' +
+                (routeDefinition == null
+                        ? ""
+                        : ", " + routeDefinition.toString()) +
+                '}';
     }
 
 }

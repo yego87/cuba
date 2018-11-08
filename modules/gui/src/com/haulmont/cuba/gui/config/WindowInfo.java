@@ -19,7 +19,7 @@ package com.haulmont.cuba.gui.config;
 import com.haulmont.cuba.gui.screen.FrameOwner;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.screen.ScreenFragment;
-import com.haulmont.cuba.gui.sys.PageDefinition;
+import com.haulmont.cuba.gui.sys.RouteDefinition;
 import org.dom4j.Element;
 
 import javax.annotation.Nonnull;
@@ -41,14 +41,14 @@ public class WindowInfo {
     private final Element descriptor;
     private final String screenClassName;
 
-    private final PageDefinition pageDefinition;
+    private final RouteDefinition routeDefinition;
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor) {
         this(id, windowAttributesProvider, descriptor, null);
     }
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor,
-                      PageDefinition pageDefinition) {
+                      RouteDefinition routeDefinition) {
         checkNotNullArgument(id);
         checkNotNullArgument(descriptor);
 
@@ -56,11 +56,11 @@ public class WindowInfo {
         this.windowAttributesProvider = windowAttributesProvider;
         this.descriptor = descriptor;
         this.screenClassName = null;
-        this.pageDefinition = pageDefinition;
+        this.routeDefinition = routeDefinition;
     }
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider,
-                      String screenClassName, PageDefinition pageDefinition) {
+                      String screenClassName, RouteDefinition routeDefinition) {
         checkNotNullArgument(id);
         checkNotNullArgument(screenClassName);
 
@@ -68,7 +68,7 @@ public class WindowInfo {
         this.windowAttributesProvider = windowAttributesProvider;
         this.screenClassName = screenClassName;
         this.descriptor = null;
-        this.pageDefinition = pageDefinition;
+        this.routeDefinition = routeDefinition;
     }
 
     /**
@@ -146,10 +146,10 @@ public class WindowInfo {
     }
 
     /**
-     * JavaDoc
+     * @return route definition configured with {@link com.haulmont.cuba.gui.Route} annotation
      */
-    public PageDefinition getPageDefinition() {
-        return pageDefinition;
+    public RouteDefinition getRouteDefinition() {
+        return routeDefinition;
     }
 
     @Override

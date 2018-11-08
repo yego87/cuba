@@ -18,20 +18,18 @@ package com.haulmont.cuba.gui.sys;
 
 import com.haulmont.cuba.gui.screen.Screen;
 
-public class PageDefinition {
+public class RouteDefinition {
 
-    private static final String PAGE_DEF = "PageDefinition{route='%s'%s}";
-
-    private final String route;
+    private final String path;
     private final Class<? extends Screen> parent;
 
-    public PageDefinition(String route, Class<? extends Screen> parent) {
-        this.route = route;
+    public RouteDefinition(String path, Class<? extends Screen> parent) {
+        this.path = path;
         this.parent = parent;
     }
 
-    public String getRoute() {
-        return route;
+    public String getPath() {
+        return path;
     }
 
     public Class<? extends Screen> getParent() {
@@ -43,18 +41,10 @@ public class PageDefinition {
 
     @Override
     public String toString() {
-        String parentClass = getParentClass();
-        String parent = "".equals(parentClass)
-                ? ""
-                : String.format(", parent=\'%s\'", parentClass);
-
-        return String.format(PAGE_DEF, route, parent);
-    }
-
-    protected String getParentClass() {
-        if (parent == null || Screen.class == parent) {
-            return "";
-        }
-        return parent.getName();
+        return "RouteDefinition{" +
+                "path='" + path + '\'' +
+                (Screen.class == parent ? ""
+                        : ", parent='" + parent.getName() + '\'') +
+                '}';
     }
 }

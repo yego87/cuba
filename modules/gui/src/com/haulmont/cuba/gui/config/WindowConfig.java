@@ -24,17 +24,12 @@ import com.haulmont.cuba.core.global.Metadata;
 import com.haulmont.cuba.core.global.Resources;
 import com.haulmont.cuba.core.global.Scripting;
 import com.haulmont.cuba.core.sys.AppContext;
-import com.haulmont.cuba.gui.NoSuchRouteException;
 import com.haulmont.cuba.gui.NoSuchScreenException;
 import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.components.AbstractFrame;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.screen.*;
-import com.haulmont.cuba.gui.sys.AnnotationScanMetadataReaderFactory;
-import com.haulmont.cuba.gui.sys.PageDefinition;
-import com.haulmont.cuba.gui.sys.UiControllerDefinition;
-import com.haulmont.cuba.gui.sys.UiControllersConfiguration;
-import com.haulmont.cuba.gui.sys.UiDescriptorUtils;
+import com.haulmont.cuba.gui.sys.*;
 import com.haulmont.cuba.gui.xml.layout.ScreenXmlLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringTokenizer;
@@ -252,6 +247,8 @@ public class WindowConfig {
         primaryEditors.clear();
         primaryLookups.clear();
 
+        routes.clear();
+
         loadScreenConfigurations();
         loadScreensXml();
 
@@ -264,7 +261,7 @@ public class WindowConfig {
 
             for (UiControllerDefinition definition : uiControllers) {
                 WindowInfo windowInfo = new WindowInfo(definition.getId(), windowAttributesProvider,
-                        definition.getControllerClass(), definition.getPageDefinition());
+                        definition.getControllerClass(), definition.getRouteDefinition());
                 registerScreen(definition.getId(), windowInfo);
             }
         }
@@ -307,14 +304,14 @@ public class WindowConfig {
                 continue;
             }
 
-            PageDefinition pageDef = loadPageDefinition(element);
+            RouteDefinition pageDef = loadPageDefinition(element);
 
             WindowInfo windowInfo = new WindowInfo(id, windowAttributesProvider, element, pageDef);
             registerScreen(id, windowInfo);
         }
     }
 
-    protected PageDefinition loadPageDefinition(Element screenRegistration) {
+    protected RouteDefinition loadPageDefinition(Element screenRegistration) {
         String templateAttr = screenRegistration.attributeValue("template");
         if (templateAttr == null || templateAttr.isEmpty()) {
             return null;
@@ -342,7 +339,7 @@ public class WindowConfig {
         //noinspection unchecked
         Class<? extends Screen> parentAttr = (Class<? extends Screen>) pageAnnotation.get(Route.PARENT_ATTRIBUTE);
 
-        return new PageDefinition(pathAttr, parentAttr);
+        return new RouteDefinition(pathAttr, parentAttr);
     }
 
     protected void registerScreen(String id, WindowInfo windowInfo) {
@@ -357,9 +354,9 @@ public class WindowConfig {
 
         screens.put(id, windowInfo);
 
-        PageDefinition pageDef = windowInfo.getPageDefinition();
+        RouteDefinition pageDef = windowInfo.getRouteDefinition();
         if (pageDef != null) {
-            routes.put(pageDef.getRoute(), id);
+            routes.put(pageDef.getPath(), id);
         }
     }
 
@@ -468,21 +465,6 @@ public class WindowConfig {
         return screenId != null
                 ? findWindowInfo(screenId)
                 : null;
-    }
-
-    /**
-     * Get screen information by route.
-     *
-     * @param route route
-     * @return screen's registration information
-     * @throws NoSuchScreenException if the screen with specified ID is not registered
-     */
-    public WindowInfo getWindowInfoByRoute(String route) {
-        WindowInfo windowInfo = findWindowInfoByRoute(route);
-        if (windowInfo == null) {
-            throw new NoSuchRouteException(route);
-        }
-        return windowInfo;
     }
 
     /**

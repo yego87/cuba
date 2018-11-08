@@ -21,7 +21,7 @@ import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
-import com.haulmont.cuba.gui.sys.PageDefinition;
+import com.haulmont.cuba.gui.sys.RouteDefinition;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
@@ -141,18 +141,18 @@ public class WebUrlRouting implements UrlRouting {
     }
 
     protected String buildDialogRoute(Screen dialog) {
-        PageDefinition page = getPage(dialog);
-        if (page == null) {
+        RouteDefinition route = getRouteDef(dialog);
+        if (route == null) {
             return buildCurrentScreenRoute();
         }
 
-        String dialogRoute = page.getRoute();
-        if (page.getParent() == null) {
+        String dialogRoute = route.getPath();
+        if (route.getParent() == null) {
             return dialogRoute;
         }
 
         Screen currentScreen = getCurrentScreen();
-        boolean openedInContext = currentScreen.getClass() == page.getParent();
+        boolean openedInContext = currentScreen.getClass() == route.getParent();
         if (!openedInContext) {
             throw new IllegalStateException("Dialog is opened outside of its context");
         }
@@ -225,15 +225,15 @@ public class WebUrlRouting implements UrlRouting {
     }
 
     protected String getRoute(Screen screen) {
-        PageDefinition page = getPage(screen);
-        String route = page != null ? page.getRoute() : null;
+        RouteDefinition routeDef = getRouteDef(screen);
+        String route = routeDef != null ? routeDef.getPath() : null;
 
         return route == null || route.isEmpty() ? "" : route;
     }
 
-    protected PageDefinition getPage(Screen screen) {
+    protected RouteDefinition getRouteDef(Screen screen) {
         if (screen != null) {
-            return getScreenContext(screen).getWindowInfo().getPageDefinition();
+            return getScreenContext(screen).getWindowInfo().getRouteDefinition();
         }
         return null;
     }

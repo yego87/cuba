@@ -376,7 +376,7 @@ public class UrlChangeHandler {
 
         Screen screen = findActiveScreenByState(requestedState);
         UiControllerUtils.fireEvent(screen, UrlParamsChangedEvent.class,
-                new UrlParamsChangedEvent(requestedState.getParams()));
+                new UrlParamsChangedEvent(screen, requestedState.getParams()));
 
         return true;
     }

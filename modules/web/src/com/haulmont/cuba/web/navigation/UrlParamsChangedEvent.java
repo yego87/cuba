@@ -16,14 +16,28 @@
 
 package com.haulmont.cuba.web.navigation;
 
+import com.haulmont.cuba.gui.screen.Screen;
+
+import java.util.EventObject;
 import java.util.Map;
 
-public class UrlParamsChangedEvent {
+/**
+ * An event that is fired every time opened screen URL params have been changed.
+ * <p>
+ * Enables to handle params changing in both cases: external and internal URL mutations.
+ */
+public class UrlParamsChangedEvent extends EventObject {
 
     protected final Map<String, String> params;
 
-    public UrlParamsChangedEvent(Map<String, String> params) {
+    public UrlParamsChangedEvent(Screen source, Map<String, String> params) {
+        super(source);
         this.params = params;
+    }
+
+    @Override
+    public Screen getSource() {
+        return (Screen) super.getSource();
     }
 
     public Map<String, String> getParams() {

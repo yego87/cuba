@@ -24,10 +24,10 @@ import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.events.sys.UiEventsMulticaster;
 import com.haulmont.cuba.gui.exception.UiExceptionHandler;
-import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.sys.TestIdManager;
 import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.sys.navigation.Navigation;
+import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.theme.ThemeConstantsRepository;
 import com.haulmont.cuba.security.app.UserSessionService;
 import com.haulmont.cuba.security.global.LoginException;
@@ -38,13 +38,13 @@ import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.events.UIRefreshEvent;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
+import com.haulmont.cuba.web.navigation.WebNavigation;
 import com.haulmont.cuba.web.security.events.AppInitializedEvent;
 import com.haulmont.cuba.web.security.events.SessionHeartbeatEvent;
 import com.haulmont.cuba.web.sys.*;
 import com.haulmont.cuba.web.sys.WebJarResourceResolver;
 import com.haulmont.cuba.web.sys.navigation.UrlChangeHandler;
 import com.haulmont.cuba.web.sys.navigation.WebHistory;
-import com.haulmont.cuba.web.sys.navigation.WebNavigation;
 import com.haulmont.cuba.web.widgets.*;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -349,8 +349,7 @@ public class AppUI extends CubaUI
         autowireContext(urlChangeHandler, applicationContext);
         setUrlChangeHandler(urlChangeHandler);
 
-        getPage().addPopStateListener(event ->
-                urlChangeHandler.handleUriChange());
+        getPage().addPopStateListener(urlChangeHandler::handleUriChange);
 
         History history = new WebHistory(this);
         autowireContext(history, applicationContext);

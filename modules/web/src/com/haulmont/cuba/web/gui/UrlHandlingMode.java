@@ -17,7 +17,7 @@
 package com.haulmont.cuba.web.gui;
 
 import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.sys.navigation.Navigation;
+import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.sys.navigation.UrlChangeHandler;
 import com.haulmont.cuba.web.widgets.CubaHistoryControl;

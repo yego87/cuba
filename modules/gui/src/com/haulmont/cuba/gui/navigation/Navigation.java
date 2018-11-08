@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.sys.navigation;
+package com.haulmont.cuba.gui.navigation;
 
-import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.screen.Screen;
 
 import java.util.Collections;
 import java.util.Map;
 
 /**
- * This bean is intended for reflecting app state to URI based on currently opened screen.
+ * Interface defining methods for reflecting app state to URL based on currently opened screen.
  * <p>
- * It can be used either for creating new browser history entry and replacing current state.
+ * It can be used either for creating new browser history entry or replacing current state.
  * <p>
- * Passed params map enables to reflect inner screen state to URI to use it later.
+ * Passed params map enables to reflect inner screen state to URL to use it later.
  */
 public interface Navigation {
 
@@ -45,14 +45,14 @@ public interface Navigation {
     /**
      * Pushes the state corresponding to the given {@code screen}.
      * <p>
-     * The given {@code uriParams} will be reflected in URI as GET request params.
+     * The given {@code urlParams} will be reflected in URI as GET request params.
      * <p>
      * Creates new entry in browser history.
      *
      * @param screen    screen that is used to build new navigation state
-     * @param uriParams URI params map
+     * @param urlParams URI params map
      */
-    void pushState(Screen screen, Map<String, String> uriParams);
+    void pushState(Screen screen, Map<String, String> urlParams);
 
     /**
      * Replaces current state by the state corresponding to the given {@code screen}.
@@ -68,14 +68,14 @@ public interface Navigation {
     /**
      * Replaces current state by the state corresponding to the given {@code screen}.
      * <p>
-     * The given {@code uriParams} will be reflected in URI as GET request params.
+     * The given {@code urlParams} will be reflected in URI as GET request params.
      * <p>
      * Doesn't create new entry in browser history.
      *
      * @param screen    screen that is used to build new navigation state
-     * @param uriParams URI params map
+     * @param urlParams URI params map
      */
-    void replaceState(Screen screen, Map<String, String> uriParams);
+    void replaceState(Screen screen, Map<String, String> urlParams);
 
     /**
      * @return current state parsed from URI fragment.

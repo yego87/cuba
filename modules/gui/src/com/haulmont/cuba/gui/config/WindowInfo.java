@@ -19,7 +19,7 @@ package com.haulmont.cuba.gui.config;
 import com.haulmont.cuba.gui.screen.FrameOwner;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.screen.ScreenFragment;
-import com.haulmont.cuba.gui.sys.UiControllerDefinition;
+import com.haulmont.cuba.gui.sys.PageDefinition;
 import org.dom4j.Element;
 
 import javax.annotation.Nonnull;
@@ -41,14 +41,14 @@ public class WindowInfo {
     private final Element descriptor;
     private final String screenClassName;
 
-    private final UiControllerDefinition.PageDefinition pageDefinition;
+    private final PageDefinition pageDefinition;
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor) {
         this(id, windowAttributesProvider, descriptor, null);
     }
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider, Element descriptor,
-                      UiControllerDefinition.PageDefinition pageDefinition) {
+                      PageDefinition pageDefinition) {
         checkNotNullArgument(id);
         checkNotNullArgument(descriptor);
 
@@ -60,7 +60,7 @@ public class WindowInfo {
     }
 
     public WindowInfo(String id, WindowAttributesProvider windowAttributesProvider,
-                      String screenClassName, UiControllerDefinition.PageDefinition pageDefinition) {
+                      String screenClassName, PageDefinition pageDefinition) {
         checkNotNullArgument(id);
         checkNotNullArgument(screenClassName);
 
@@ -148,7 +148,7 @@ public class WindowInfo {
     /**
      * JavaDoc
      */
-    public UiControllerDefinition.PageDefinition getPageDefinition() {
+    public PageDefinition getPageDefinition() {
         return pageDefinition;
     }
 

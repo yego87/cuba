@@ -92,7 +92,7 @@ public class DefaultApp extends App implements StateChangeListener, UserSubstitu
             }
 
             if (redirectHandler != null && redirectHandler.scheduled()) {
-                redirectHandler.performRedirect();
+                redirectHandler.redirect();
             }
 
             publishAppLoggedInEvent();

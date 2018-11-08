@@ -19,7 +19,14 @@ package com.haulmont.cuba.web.sys.navigation;
 import com.haulmont.bali.util.ParamsMap;
 import com.haulmont.chile.core.model.MetaClass;
 import com.haulmont.cuba.core.entity.Entity;
-import com.haulmont.cuba.core.global.*;
+import com.haulmont.cuba.core.global.AccessDeniedException;
+import com.haulmont.cuba.core.global.BeanLocator;
+import com.haulmont.cuba.core.global.DataManager;
+import com.haulmont.cuba.core.global.LoadContext;
+import com.haulmont.cuba.core.global.Messages;
+import com.haulmont.cuba.core.global.Metadata;
+import com.haulmont.cuba.core.global.Security;
+import com.haulmont.cuba.core.global.View;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.WindowParams;
@@ -28,10 +35,14 @@ import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.navigation.NavigationAware;
-import com.haulmont.cuba.gui.navigation.NavigationState;
-import com.haulmont.cuba.gui.screen.*;
+import com.haulmont.cuba.gui.screen.EditorScreen;
+import com.haulmont.cuba.gui.screen.FrameOwner;
+import com.haulmont.cuba.gui.screen.MapScreenOptions;
+import com.haulmont.cuba.gui.screen.OpenMode;
+import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
 import com.haulmont.cuba.gui.sys.navigation.History;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.util.OperationResult;
 import com.haulmont.cuba.security.entity.EntityOp;
 import com.haulmont.cuba.security.entity.PermissionType;
@@ -53,7 +64,12 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static com.haulmont.cuba.gui.screen.UiControllerUtils.getScreenContext;
 
@@ -91,7 +107,7 @@ public class UrlChangeHandler {
         this.ui = ui;
     }
 
-    public void handleUriChange() {
+    public void handleUriChange(@SuppressWarnings("unused") Page.PopStateEvent event) {
         if (notSuitableUrlHandlingMode()) {
             return;
         }
@@ -532,7 +548,7 @@ public class UrlChangeHandler {
     }
 
     protected NavigationState getResolvedState(Screen screen) {
-        return getScreenContext(screen).getRouteInfo().getResolvedState();
+        return getScreenContext(screen).getNavigationState();
     }
 
     protected void handle404(NavigationState requestedState) {

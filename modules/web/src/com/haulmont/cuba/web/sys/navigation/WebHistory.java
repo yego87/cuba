@@ -18,7 +18,7 @@ package com.haulmont.cuba.web.sys.navigation;
 
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;

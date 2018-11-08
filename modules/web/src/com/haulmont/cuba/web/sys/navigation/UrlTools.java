@@ -18,15 +18,23 @@ package com.haulmont.cuba.web.sys.navigation;
 
 import com.google.common.collect.ImmutableMap;
 import com.haulmont.bali.util.URLEncodeUtils;
-import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.haulmont.bali.util.Preconditions.checkNotEmptyString;
+import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
+
 public class UrlTools {
+
+    private static final Logger log = LoggerFactory.getLogger(UrlTools.class);
 
     protected static final String ROOT_ROUTE = "^(\\w+)$";
     protected static final Pattern ROOT_ROUTE_PATTERN = Pattern.compile(ROOT_ROUTE);
@@ -64,20 +72,43 @@ public class UrlTools {
             UUID.class, bb -> new UUID(bb.getLong(), bb.getLong())
     );
 
-    public static String serializeIdT(Object id) {
-        String encoded = Base64.getEncoder().withoutPadding()
-                .encodeToString(getBytes(id));
-        return URLEncodeUtils.encodeUtf8(encoded);
+    @Nullable
+    public static String serializeId(Object id) {
+        checkNotNullArgument(id, "Unable to serialize null id");
+
+        String serialized = null;
+        Base64.Encoder encoder = Base64.getEncoder().withoutPadding();
+
+        try {
+            String encoded = encoder.encodeToString(toBytes(id));
+            serialized = URLEncodeUtils.encodeUtf8(encoded);
+        } catch (Exception e) {
+            log.info("An error occurred while serializing id: {}", id, e);
+        }
+
+        return serialized;
     }
 
+    @Nullable
     public static Object deserializeId(Class idClass, String base64) {
-        byte[] decoded = Base64.getDecoder().decode(URLEncodeUtils.decodeUtf8(base64));
-        return fromBytes(idClass, ByteBuffer.wrap(decoded));
+        checkNotNullArgument(idClass, "Unable to deserialize id without its type");
+        checkNotEmptyString("Unable to deserialize empty string");
+
+        Object deserialized = null;
+        byte[] decodedBytes = Base64.getDecoder().decode(URLEncodeUtils.decodeUtf8(base64));
+
+        try {
+            deserialized = fromBytes(idClass, ByteBuffer.wrap(decodedBytes));
+        } catch (Exception e) {
+            log.info("An error occurred while deserializing Base64 id \"{}\" with type {}", base64, idClass, e);
+        }
+
+        return deserialized;
     }
 
     public static NavigationState parseState(String uriFragment) {
         if (uriFragment == null || uriFragment.isEmpty()) {
-            return null;
+            return NavigationState.empty();
         }
 
         if (ROOT_ROUTE_PATTERN.matcher(uriFragment).matches()) {
@@ -92,6 +123,7 @@ public class UrlTools {
             return parseParamsRoute(uriFragment);
         }
 
+        log.info("Unable to parse \"{}\" as navigation state. Return empty", uriFragment);
         return NavigationState.empty();
     }
 
@@ -164,7 +196,7 @@ public class UrlTools {
         return paramsMap;
     }
 
-    protected static byte[] getBytes(Object id) {
+    protected static byte[] toBytes(Object id) {
         return serializers.get(id.getClass()).apply(id).array();
     }
 

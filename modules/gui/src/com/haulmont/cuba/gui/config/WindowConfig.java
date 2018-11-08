@@ -31,6 +31,7 @@ import com.haulmont.cuba.gui.components.AbstractFrame;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.sys.AnnotationScanMetadataReaderFactory;
+import com.haulmont.cuba.gui.sys.PageDefinition;
 import com.haulmont.cuba.gui.sys.UiControllerDefinition;
 import com.haulmont.cuba.gui.sys.UiControllersConfiguration;
 import com.haulmont.cuba.gui.sys.UiDescriptorUtils;
@@ -306,14 +307,14 @@ public class WindowConfig {
                 continue;
             }
 
-            UiControllerDefinition.PageDefinition pageDef = loadPageDefinition(element);
+            PageDefinition pageDef = loadPageDefinition(element);
 
             WindowInfo windowInfo = new WindowInfo(id, windowAttributesProvider, element, pageDef);
             registerScreen(id, windowInfo);
         }
     }
 
-    protected UiControllerDefinition.PageDefinition loadPageDefinition(Element screenRegistration) {
+    protected PageDefinition loadPageDefinition(Element screenRegistration) {
         String templateAttr = screenRegistration.attributeValue("template");
         if (templateAttr == null || templateAttr.isEmpty()) {
             return null;
@@ -341,7 +342,7 @@ public class WindowConfig {
         //noinspection unchecked
         Class<? extends Screen> parentAttr = (Class<? extends Screen>) pageAnnotation.get(Page.PARENT_ATTRIBUTE);
 
-        return new UiControllerDefinition.PageDefinition(pathAttr, parentAttr);
+        return new PageDefinition(pathAttr, parentAttr);
     }
 
     protected void registerScreen(String id, WindowInfo windowInfo) {
@@ -356,7 +357,7 @@ public class WindowConfig {
 
         screens.put(id, windowInfo);
 
-        UiControllerDefinition.PageDefinition pageDef = windowInfo.getPageDefinition();
+        PageDefinition pageDef = windowInfo.getPageDefinition();
         if (pageDef != null) {
             routes.put(pageDef.getRoute(), id);
         }

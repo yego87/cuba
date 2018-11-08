@@ -20,8 +20,8 @@ import com.haulmont.cuba.gui.Dialogs;
 import com.haulmont.cuba.gui.Fragments;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
-import com.haulmont.cuba.gui.config.RouteInfo;
 import com.haulmont.cuba.gui.config.WindowInfo;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 
 public interface ScreenContext {
 
@@ -29,7 +29,9 @@ public interface ScreenContext {
 
     WindowInfo getWindowInfo();
 
-    RouteInfo getRouteInfo();
+    NavigationState getNavigationState();
+
+    void setNavigationState(NavigationState navigationState);
 
     Screens getScreens();
 

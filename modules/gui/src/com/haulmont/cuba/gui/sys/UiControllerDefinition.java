@@ -16,8 +16,6 @@
 
 package com.haulmont.cuba.gui.sys;
 
-import com.haulmont.cuba.gui.screen.Screen;
-
 public final class UiControllerDefinition {
 
     private static final String UI_CONTROLLER_DEF = "UiControllerDefinition{id='%s', controllerClass='%s'%s}";
@@ -52,38 +50,11 @@ public final class UiControllerDefinition {
 
     @Override
     public String toString() {
-        String pageDef = pageDefinition == null ? ""
+        String pageDef = pageDefinition == null
+                ? ""
                 : ", " + pageDefinition.toString();
 
         return String.format(UI_CONTROLLER_DEF, id, controllerClass, pageDef);
     }
 
-    public static class PageDefinition {
-
-        private static final String PAGE_DEF = "PageDefinition{route='%s'}";
-
-        private final String route;
-        private final Class<? extends Screen> parent;
-
-        public PageDefinition(String route, Class<? extends Screen> parent) {
-            this.route = route;
-            this.parent = parent;
-        }
-
-        public String getRoute() {
-            return route;
-        }
-
-        public Class<? extends Screen> getParent() {
-            if (parent == Screen.class) {
-                return null;
-            }
-            return parent;
-        }
-
-        @Override
-        public String toString() {
-            return String.format(PAGE_DEF, route);
-        }
-    }
 }

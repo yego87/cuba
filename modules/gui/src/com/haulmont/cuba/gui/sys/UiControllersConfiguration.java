@@ -118,7 +118,7 @@ public class UiControllersConfiguration extends AbstractScanConfiguration {
         return pageAnnotation == null
                 ? new UiControllerDefinition(controllerId, className)
                 : new UiControllerDefinition(controllerId, className,
-                        new UiControllerDefinition.PageDefinition(routeAttr, parentAttr));
+                        new PageDefinition(routeAttr, parentAttr));
     }
 
     protected boolean isCandidateUiController(MetadataReader metadataReader) {

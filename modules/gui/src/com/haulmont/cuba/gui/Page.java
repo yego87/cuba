@@ -26,16 +26,15 @@ import java.lang.annotation.*;
  * with specified route and that URL should be changed according to the route when the screen is opened.
  * <p>
  *
- * <pre>
- *     Example:
- *
- *     Screen annotated with {@code @Page("help")} corresponds to "/app/{rootRoute}/help",
- *     where {rootRoute} equals to currently opened root screen.
- *
- *     This screen will be opened when URL changes from "/app/{rootRoute}" to "/app/{rootRoute}/help" and URL will be
- *     changed in the same way when the screen is opened.
- * </pre>
+ * <br/> Example:
+ * <br/>
+ * Screen annotated with {@code @Page("help")} corresponds to "{@code /app/{rootRoute}/help}" route,
+ * where {rootRoute} equals to currently opened root screen.
  * <p>
+ *
+ * This screen will be opened when URL changes from "{@code /app/{rootRoute}}" to "{@code /app/{rootRoute}/help}"
+ * and URL will be changed in the same way when the screen is opened.
+ * <p><br/>
  *
  * Required parent screen that should be opened to form a route can be specified with "parent" property. If this
  * property is set but parent screen isn't opened annotated screen route will not be applied.
@@ -43,25 +42,21 @@ import java.lang.annotation.*;
  *
  * URL squashing can be used if the "parentPrefix" property is specified. Annotated screen route will be merged with
  * a route configured in property value screen if a parent is currently opened.
- * <p>
+ * <p><br/>
  *
- * <pre>
- *     Example. Let two screens exist:
- * {@code
+ * Example. Let two screens exist:
+ * <pre>{@code
+ *   @Page("orders")
+ *   public class OrderBrowse { ... }
  *
- * @Page("orders")
- * public class OrderBrowse { ... }
+ *   @Page(route = "orders/edit", parentPrefix = OrderBrowse.class)
+ *   public class OrderEdit { ... }
+ * }</pre>
  *
- * @Page(route = "orders/edit", parentPrefix = OrderBrowse.class)
- * public class OrderEdit { ... }
- * }
+ * When OrderEdit screen is opened after OrderBrowse screen resulting address will be "{@code app/{rootRoute}/users/edit}".
+ * <p><br/>
  *
- *     When OrderEdit screen is opened after OrderBrowse screen resulting address will be
- *     "app/{rootRoute/users/users/edit}.
- *
- *     It allows to specify clear routes for each screen and avoid repeats in URL.
- * </pre>
- *
+ * It allows to specify clear routes for each screen and avoid repeats in URL.
  * Annotated class must be a direct or indirect subclass of {@link Screen}.
  * <p>
  *

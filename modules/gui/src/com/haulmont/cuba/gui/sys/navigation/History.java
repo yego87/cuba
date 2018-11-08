@@ -16,12 +16,10 @@
 
 package com.haulmont.cuba.gui.sys.navigation;
 
-import com.haulmont.cuba.gui.navigation.NavigationState;
-
 import javax.annotation.Nullable;
 
 /**
- * This bean is intended to store and access local copy of opened screens history.
+ * Interface defining methods to store and access local copy of opened screens history.
  * <p>
  * It is mainly used by UriChangeHandler to distinguish history and navigation transitions.
  * <p>

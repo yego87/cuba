@@ -19,7 +19,7 @@ package com.haulmont.cuba.web.sys;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.components.RootWindow;
-import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
@@ -91,7 +91,7 @@ public class RedirectHandler {
         return redirect != null;
     }
 
-    public void performRedirect() {
+    public void redirect() {
         UrlHandlingMode urlHandlingMode = webConfig.getUrlHandlingMode();
         if (UrlHandlingMode.URL_ROUTES != urlHandlingMode) {
             log.debug("RedirectHandler is disabled for {} URL handling mode", urlHandlingMode);

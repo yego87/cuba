@@ -531,8 +531,7 @@ public class WebScreens implements Screens, WindowManager {
 
         if (currentScreen != null) {
             String currentScreenRoute = getScreenContext(currentScreen)
-                    .getRouteInfo()
-                    .getResolvedState()
+                    .getNavigationState()
                     .asRoute();
             Page.getCurrent().replaceState("#" + currentScreenRoute);
         }

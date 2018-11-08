@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.web.sys.navigation;
+package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.core.global.Events;
-import com.haulmont.cuba.gui.sys.navigation.Navigation;
+import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
-import com.haulmont.cuba.gui.navigation.NavigationState;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
-import com.haulmont.cuba.gui.sys.UiControllerDefinition.PageDefinition;
+import com.haulmont.cuba.gui.sys.PageDefinition;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
+import com.haulmont.cuba.web.sys.navigation.UrlTools;
 import com.vaadin.server.Page;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +95,7 @@ public class WebNavigation implements Navigation {
         }
 
         NavigationState newNavState = getState();
-        getScreenContext(screen).getRouteInfo().update(newNavState);
+        getScreenContext(screen).setNavigationState(newNavState);
 
         if (pushState) {
             ui.getHistory().forward(newNavState);
@@ -209,7 +210,7 @@ public class WebNavigation implements Navigation {
 
         if (screen instanceof EditorScreen) {
             Object entityId = ((EditorScreen) screen).getEditedEntity().getId();
-            String base64Id = UrlTools.serializeIdT(entityId);
+            String base64Id = UrlTools.serializeId(entityId);
 
             params.put("id", base64Id);
         }

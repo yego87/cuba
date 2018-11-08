@@ -20,16 +20,16 @@ import com.haulmont.cuba.gui.Dialogs;
 import com.haulmont.cuba.gui.Fragments;
 import com.haulmont.cuba.gui.Notifications;
 import com.haulmont.cuba.gui.Screens;
-import com.haulmont.cuba.gui.config.RouteInfo;
 import com.haulmont.cuba.gui.config.WindowInfo;
 import com.haulmont.cuba.gui.screen.ScreenContext;
 import com.haulmont.cuba.gui.screen.ScreenOptions;
+import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 
 public class ScreenContextImpl implements ScreenContext {
 
     protected final ScreenOptions options;
     protected final WindowInfo windowInfo;
-    protected final RouteInfo routeInfo;
+    protected NavigationState navigationState;
 
     protected final Screens screens;
     protected final Dialogs dialogs;
@@ -39,7 +39,7 @@ public class ScreenContextImpl implements ScreenContext {
     public ScreenContextImpl(WindowInfo windowInfo, ScreenOptions options,
                              Screens screens, Dialogs dialogs, Notifications notifications, Fragments fragments) {
         this.windowInfo = windowInfo;
-        this.routeInfo = new RouteInfo();
+        this.navigationState = NavigationState.empty();
         this.options = options;
 
         this.screens = screens;
@@ -59,8 +59,13 @@ public class ScreenContextImpl implements ScreenContext {
     }
 
     @Override
-    public RouteInfo getRouteInfo() {
-        return routeInfo;
+    public NavigationState getNavigationState() {
+        return navigationState;
+    }
+
+    @Override
+    public void setNavigationState(NavigationState navigationState) {
+        this.navigationState = navigationState;
     }
 
     @Override

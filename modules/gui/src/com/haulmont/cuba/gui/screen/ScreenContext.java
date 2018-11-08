@@ -23,7 +23,6 @@ import com.haulmont.cuba.gui.Screens;
 import com.haulmont.cuba.gui.config.WindowInfo;
 
 public interface ScreenContext {
-
     ScreenOptions getScreenOptions();
 
     WindowInfo getWindowInfo();

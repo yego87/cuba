@@ -65,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.haulmont.cuba.gui.screen.UiControllerUtils.getScreenContext;
-
 public class UrlChangeHandler {
 
     private static final Logger log = LoggerFactory.getLogger(UrlChangeHandler.class);
@@ -414,7 +412,7 @@ public class UrlChangeHandler {
     }
 
     protected String getStateMark(Screen screen) {
-        return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
+        return String.valueOf(((WebWindow) screen.getWindow()).getUrlStateMark());
     }
 
     protected Screen findActiveScreenByState(NavigationState requestedState) {

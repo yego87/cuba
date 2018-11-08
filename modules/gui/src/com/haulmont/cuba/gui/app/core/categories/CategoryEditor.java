@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-@Route("categories/edit")
+@Route(path = "categories/edit", parentPrefix = CategoryBrowser.class)
 public class CategoryEditor extends AbstractEditor<Category> {
     @Inject
     protected DataManager dataManager;

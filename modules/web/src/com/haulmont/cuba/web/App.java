@@ -113,6 +113,7 @@ public abstract class App {
     protected MessageTools messageTools;
     @Inject
     protected SettingsClient settingsClient;
+
     @Inject
     protected Events events;
     @Inject

@@ -36,7 +36,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Route("files/edit")
+@Route(path = "files/edit", parentPrefix = FileBrowser.class)
 public class FileEditor extends AbstractEditor<FileDescriptor> {
 
     private static final Logger log = LoggerFactory.getLogger(FileEditor.class);

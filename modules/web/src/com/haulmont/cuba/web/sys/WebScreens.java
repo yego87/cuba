@@ -1406,7 +1406,7 @@ public class WebScreens implements Screens, WindowManager {
         WindowBreadCrumbs breadCrumbs = createWindowBreadCrumbs(screen);
         breadCrumbs.setWindowNavigateHandler(this::handleWindowBreadCrumbsNavigate);
         breadCrumbs.addWindow(screen.getWindow());
-        ((WebWindow) screen.getWindow()).setStateMark(getConfiguredWorkArea().getNewStateMark());
+        ((WebWindow) screen.getWindow()).setUrlStateMark(getConfiguredWorkArea().generateUrlStateMark());
 
         TabWindowContainer windowContainer = new TabWindowContainerImpl();
         windowContainer.setPrimaryStyleName("c-app-window-wrap");
@@ -1507,7 +1507,7 @@ public class WebScreens implements Screens, WindowManager {
         windowContainer.addComponent(newWindowComposition);
 
         breadCrumbs.addWindow(newWindow);
-        ((WebWindow) newWindow).setStateMark(workArea.getNewStateMark());
+        ((WebWindow) newWindow).setUrlStateMark(workArea.generateUrlStateMark());
 
         if (workArea.getMode() == Mode.TABBED) {
             TabSheetBehaviour tabSheet = workArea.getTabbedWindowContainer().getTabSheetBehaviour();
@@ -1536,7 +1536,7 @@ public class WebScreens implements Screens, WindowManager {
 
     protected void showDialogWindow(Screen screen) {
         DialogWindow window = (DialogWindow) screen.getWindow();
-        ((WebWindow) window).setStateMark(getConfiguredWorkArea().getNewStateMark());
+        ((WebWindow) window).setUrlStateMark(getConfiguredWorkArea().generateUrlStateMark());
 
         CubaWindow vWindow = window.unwrapComposition(CubaWindow.class);
         vWindow.setErrorHandler(ui);

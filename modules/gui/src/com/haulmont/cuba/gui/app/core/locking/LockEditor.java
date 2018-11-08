@@ -32,7 +32,7 @@ import javax.inject.Named;
 import java.util.Map;
 import java.util.TreeMap;
 
-@Route(value = "locks/edit", parentPrefix = LockBrowser.class)
+@Route(path = "locks/edit", parentPrefix = LockBrowser.class)
 public class LockEditor extends AbstractEditor {
 
     @Inject

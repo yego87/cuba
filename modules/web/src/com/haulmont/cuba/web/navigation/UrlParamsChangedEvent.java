@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * An event that is fired every time opened screen URL params have been changed.
  * <p>
- * Enables to handle params changing in both cases: external and internal URL mutations.
+ * Enables handling of client-side URL parameter change event.
  */
 public class UrlParamsChangedEvent extends EventObject {
 

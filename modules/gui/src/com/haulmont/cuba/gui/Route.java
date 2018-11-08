@@ -24,25 +24,25 @@ import java.lang.annotation.*;
 /**
  * Registers an annotated class as corresponding to some route. It means that that screen should be opened when URL ends
  * with specified route and that URL should be changed according to the route when the screen is opened.
- * <p>
+ * <p><br>
  *
- * <br/> Example:
- * <br/>
+ * Example:
+ * <br>
  * Screen annotated with {@code @Route("help")} corresponds to "{@code /app/{rootRoute}/help}" route,
  * where {rootRoute} equals to currently opened root screen.
  * <p>
  *
  * This screen will be opened when URL changes from "{@code /app/{rootRoute}}" to "{@code /app/{rootRoute}/help}"
  * and URL will be changed in the same way when the screen is opened.
- * <p><br/>
+ * <p><br>
  *
  * Required parent screen that should be opened to form a route can be specified with "parent" property. If this
  * property is set but parent screen isn't opened annotated screen route will not be applied.
- * <p><br/>
+ * <p><br>
  *
  * URL squashing can be used if the "parentPrefix" property is specified. Annotated screen route will be merged with
  * a route configured in property value screen if a parent is currently opened.
- * <p><br/>
+ * <p><br>
  *
  * Example. Let two screens exist:
  * <pre>{@code
@@ -54,11 +54,10 @@ import java.lang.annotation.*;
  * }</pre>
  *
  * When OrderEdit screen is opened after OrderBrowse screen resulting address will be "{@code app/{rootRoute}/users/edit}".
- * <p><br/>
+ * <p><br>
  *
  * It allows to specify clear routes for each screen and avoid repeats in URL.
  * Annotated class must be a direct or indirect subclass of {@link Screen}.
- * <p>
  *
  * @see Screen
  */

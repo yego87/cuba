@@ -100,8 +100,7 @@ public abstract class WebWindow implements Window, Component.Wrapper,
 
     private EventHub eventHub;
 
-    protected int stateMark;
-
+    protected int urlStateMark;
     protected NavigationState resolvedState;
 
     public WebWindow() {
@@ -1040,12 +1039,12 @@ public abstract class WebWindow implements Window, Component.Wrapper,
         setIcon(icons.get(icon));
     }
 
-    public int getStateMark() {
-        return stateMark;
+    public int getUrlStateMark() {
+        return urlStateMark;
     }
 
-    public void setStateMark(int stateMark) {
-        this.stateMark = stateMark;
+    public void setUrlStateMark(int urlStateMark) {
+        this.urlStateMark = urlStateMark;
     }
 
     public NavigationState getResolvedState() {

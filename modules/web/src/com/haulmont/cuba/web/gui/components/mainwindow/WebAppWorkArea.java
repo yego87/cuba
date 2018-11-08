@@ -93,7 +93,7 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
 
     protected boolean shortcutsInitialized = false;
 
-    protected int stateCounter = 0;
+    protected int urlStateCounter = 0;
 
     public WebAppWorkArea() {
         component = new CssLayout();
@@ -706,8 +706,8 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
         return layout;
     }
 
-    public int getNewStateMark() {
-        return stateCounter++;
+    public int generateUrlStateMark() {
+        return urlStateCounter++;
     }
 
     // Allows Tabs reordering, do not support component / text drop to Tabs panel

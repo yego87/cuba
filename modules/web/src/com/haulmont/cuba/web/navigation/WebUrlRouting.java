@@ -17,6 +17,7 @@
 package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.core.global.Events;
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.screen.EditorScreen;
@@ -72,7 +73,7 @@ public class WebUrlRouting implements UrlRouting {
     }
 
     @Override
-        public void replaceState(Screen screen, Map<String, String> urlParams) {
+    public void replaceState(Screen screen, Map<String, String> urlParams) {
         if (notSuitableUrlHandlingMode()) {
             return;
         }
@@ -166,36 +167,55 @@ public class WebUrlRouting implements UrlRouting {
         List<Screen> screens = new ArrayList<>(ui.getScreens().getOpenedScreens().getCurrentBreadcrumbs());
         Collections.reverse(screens);
 
+        String prevSubRoute = null;
         StringBuilder state = new StringBuilder();
 
         for (int i = 0; i < screens.size() && i < MAX_NESTED_ROUTES; i++) {
-            String route = buildRoutePart(state.toString(), screens.get(i));
+            String route = buildRoutePart(prevSubRoute, screens.get(i));
+
             if (StringUtils.isNotEmpty(state) && StringUtils.isNotEmpty(route)) {
                 state.append('/');
             }
             state.append(route);
+
+            prevSubRoute = route;
         }
 
         return state.toString();
     }
 
-    // TODO: rewrite with parent prefix
-    protected String buildRoutePart(String state, Screen screen) {
+    protected String buildRoutePart(String prevSubRoute, Screen screen) {
         String screenRoute = getRoute(screen);
-        if (!(screen instanceof EditorScreen))
-            return screenRoute;
 
-        int slashIdx = screenRoute.indexOf('/');
-        if (slashIdx <= 0) {
+        Route routeAnnotation = screen.getClass().getAnnotation(Route.class);
+        if (routeAnnotation == null) {
             return screenRoute;
         }
 
-        String editorContext = screenRoute.substring(0, slashIdx);
-        if (!state.endsWith(editorContext)) {
+        Class<? extends Screen> parentPrefixClass = routeAnnotation.parentPrefix();
+        if (Screen.class == parentPrefixClass) {
             return screenRoute;
         }
 
-        return screenRoute.substring(slashIdx + 1);
+        Route parentPrefixClassRoute = parentPrefixClass.getAnnotation(Route.class);
+        if (parentPrefixClassRoute == null) {
+            log.info("\"{}\" screen is specified as parent prefix but it has no route");
+            return screenRoute;
+        }
+
+        String parentRoute = !parentPrefixClassRoute.value().isEmpty()
+                ? parentPrefixClassRoute.value()
+                : parentPrefixClassRoute.path();
+
+        if (parentRoute.isEmpty()) {
+            return screenRoute;
+        }
+
+        if (Objects.equals(prevSubRoute, parentRoute)) {
+            return screenRoute.replace(parentRoute + "/", "");
+        } else {
+            return screenRoute;
+        }
     }
 
     protected String buildParamsString(Screen screen, Map<String, String> urlParams) {
@@ -232,10 +252,8 @@ public class WebUrlRouting implements UrlRouting {
     }
 
     protected RouteDefinition getRouteDef(Screen screen) {
-        if (screen != null) {
-            return getScreenContext(screen).getWindowInfo().getRouteDefinition();
-        }
-        return null;
+        return screen == null ? null
+                : getScreenContext(screen).getWindowInfo().getRouteDefinition();
     }
 
     protected Screen getCurrentScreen() {
@@ -245,7 +263,7 @@ public class WebUrlRouting implements UrlRouting {
     }
 
     protected String getStateMark(Screen screen) {
-        return String.valueOf(((WebWindow) screen.getWindow()).getStateMark());
+        return String.valueOf(((WebWindow) screen.getWindow()).getUrlStateMark());
     }
 
     protected boolean externalNavigation(NavigationState requestedState, String newRoute) {

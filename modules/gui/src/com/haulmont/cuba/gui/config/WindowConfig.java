@@ -304,14 +304,14 @@ public class WindowConfig {
                 continue;
             }
 
-            RouteDefinition pageDef = loadPageDefinition(element);
+            RouteDefinition routeDef = loadRouteDef(element);
 
-            WindowInfo windowInfo = new WindowInfo(id, windowAttributesProvider, element, pageDef);
+            WindowInfo windowInfo = new WindowInfo(id, windowAttributesProvider, element, routeDef);
             registerScreen(id, windowInfo);
         }
     }
 
-    protected RouteDefinition loadPageDefinition(Element screenRegistration) {
+    protected RouteDefinition loadRouteDef(Element screenRegistration) {
         String templateAttr = screenRegistration.attributeValue("template");
         if (templateAttr == null || templateAttr.isEmpty()) {
             return null;
@@ -327,17 +327,17 @@ public class WindowConfig {
             return null;
         }
 
-        Map<String, Object> pageAnnotation = loadClassMetadata(screenControllerFqn)
+        Map<String, Object> routeAnnotation = loadClassMetadata(screenControllerFqn)
                 .getAnnotationMetadata()
                 .getAnnotationAttributes(Route.class.getName());
 
-        if (pageAnnotation == null) {
+        if (routeAnnotation == null) {
             return null;
         }
 
-        String pathAttr = (String) pageAnnotation.get(Route.PATH_ATTRIBUTE);
+        String pathAttr = (String) routeAnnotation.get(Route.PATH_ATTRIBUTE);
         //noinspection unchecked
-        Class<? extends Screen> parentAttr = (Class<? extends Screen>) pageAnnotation.get(Route.PARENT_ATTRIBUTE);
+        Class<? extends Screen> parentAttr = (Class<? extends Screen>) routeAnnotation.get(Route.PARENT_ATTRIBUTE);
 
         return new RouteDefinition(pathAttr, parentAttr);
     }
@@ -354,9 +354,9 @@ public class WindowConfig {
 
         screens.put(id, windowInfo);
 
-        RouteDefinition pageDef = windowInfo.getRouteDefinition();
-        if (pageDef != null) {
-            routes.put(pageDef.getPath(), id);
+        RouteDefinition routeDef = windowInfo.getRouteDefinition();
+        if (routeDef != null) {
+            routes.put(routeDef.getPath(), id);
         }
     }
 

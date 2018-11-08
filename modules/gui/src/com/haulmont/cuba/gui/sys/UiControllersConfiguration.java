@@ -17,7 +17,7 @@
 package com.haulmont.cuba.gui.sys;
 
 import com.haulmont.bali.util.Preconditions;
-import com.haulmont.cuba.gui.Page;
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.screen.UiController;
 import org.slf4j.Logger;
@@ -101,15 +101,14 @@ public class UiControllersConfiguration extends AbstractScanConfiguration {
             valueAttr = (String) uiControllerAnn.get(UiController.VALUE_ATTRIBUTE);
         }
 
-        Map<String, Object> pageAnnotation = metadataReader.getAnnotationMetadata().getAnnotationAttributes(Page.class.getName());
+        Map<String, Object> pageAnnotation = metadataReader.getAnnotationMetadata().getAnnotationAttributes(Route.class.getName());
 
-        String routeAttr = null;
-        boolean publicPageAttr = false;
+        String pathAttr = null;
         Class<? extends Screen> parentAttr = null;
         if (pageAnnotation != null) {
-            routeAttr = (String) pageAnnotation.get(Page.ROUTE_ATTRIBUTE);
+            pathAttr = (String) pageAnnotation.get(Route.PATH_ATTRIBUTE);
             //noinspection unchecked
-            parentAttr = (Class<? extends Screen>) pageAnnotation.get(Page.PARENT_ATTRIBUTE);
+            parentAttr = (Class<? extends Screen>) pageAnnotation.get(Route.PARENT_ATTRIBUTE);
         }
 
         String className = metadataReader.getClassMetadata().getClassName();
@@ -118,7 +117,7 @@ public class UiControllersConfiguration extends AbstractScanConfiguration {
         return pageAnnotation == null
                 ? new UiControllerDefinition(controllerId, className)
                 : new UiControllerDefinition(controllerId, className,
-                        new PageDefinition(routeAttr, parentAttr));
+                        new PageDefinition(pathAttr, parentAttr));
     }
 
     protected boolean isCandidateUiController(MetadataReader metadataReader) {

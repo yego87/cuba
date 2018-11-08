@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.sys.navigation;
+package com.haulmont.cuba.web.sys.navigation;
 
 import javax.annotation.Nullable;
 
 /**
  * Interface defining methods to store and access local copy of opened screens history.
  * <p>
- * It is mainly used by UriChangeHandler to distinguish history and navigation transitions.
+ * It is mainly used by UrlChangeHandler to distinguish history and navigation transitions.
  * <p>
  * <b>Pay attention that manual history mutation can lead to errors.</b>
  */

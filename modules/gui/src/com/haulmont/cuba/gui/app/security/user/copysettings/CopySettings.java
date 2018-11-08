@@ -18,7 +18,7 @@
 package com.haulmont.cuba.gui.app.security.user.copysettings;
 
 import com.haulmont.cuba.core.global.AppBeans;
-import com.haulmont.cuba.gui.Page;
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.WindowParam;
 import com.haulmont.cuba.gui.app.security.user.browse.UserBrowser;
 import com.haulmont.cuba.gui.components.*;
@@ -32,7 +32,7 @@ import javax.inject.Inject;
 import java.util.Map;
 import java.util.Set;
 
-@Page(value = "copySettings", parent = UserBrowser.class)
+@Route(value = "copy-settings", parent = UserBrowser.class)
 public class CopySettings extends AbstractWindow {
 
     @Inject

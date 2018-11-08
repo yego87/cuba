@@ -34,15 +34,8 @@ import com.haulmont.cuba.gui.components.CloseOriginType;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.config.WindowConfig;
 import com.haulmont.cuba.gui.config.WindowInfo;
-import com.haulmont.cuba.gui.navigation.NavigationAware;
-import com.haulmont.cuba.gui.screen.EditorScreen;
-import com.haulmont.cuba.gui.screen.FrameOwner;
-import com.haulmont.cuba.gui.screen.MapScreenOptions;
-import com.haulmont.cuba.gui.screen.OpenMode;
-import com.haulmont.cuba.gui.screen.Screen;
+import com.haulmont.cuba.gui.screen.*;
 import com.haulmont.cuba.gui.screen.compatibility.LegacyFrame;
-import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.util.OperationResult;
 import com.haulmont.cuba.security.entity.EntityOp;
 import com.haulmont.cuba.security.entity.PermissionType;
@@ -53,6 +46,7 @@ import com.haulmont.cuba.web.app.ui.navigation.notfoundwindow.NotFoundScreen;
 import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
+import com.haulmont.cuba.web.navigation.UrlParamsChangedEvent;
 import com.haulmont.cuba.web.sys.RedirectHandler;
 import com.haulmont.cuba.web.sys.navigation.accessfilter.NavigationFilter;
 import com.haulmont.cuba.web.sys.navigation.accessfilter.NavigationFilter.AccessCheckResult;
@@ -112,7 +106,7 @@ public class UrlChangeHandler {
             return;
         }
 
-        NavigationState requestedState = ui.getNavigation().getState();
+        NavigationState requestedState = ui.getUrlRouting().getState();
         if (requestedState == null) {
             log.debug("Unable to handle requested state: \"{}\"", Page.getCurrent().getUriFragment());
             reloadApp();
@@ -184,7 +178,7 @@ public class UrlChangeHandler {
         NavigationState prevState = getHistory().backward();
         selectScreen(findActiveScreenByState(prevState));
         //noinspection ConstantConditions
-        Page.getCurrent().replaceState("#" + prevState.asRoute());
+        UrlTools.replaceState(prevState.asRoute());
     }
 
     protected void handleHistoryForward() {
@@ -195,7 +189,7 @@ public class UrlChangeHandler {
 
         String route = getResolvedState(currentScreen).asRoute();
 
-        Page.getCurrent().setUriFragment(route);
+        UrlTools.pushState(route);
         showNotification(messages.getMainMessage("navigation.unableToGoForward"));
     }
 
@@ -381,9 +375,8 @@ public class UrlChangeHandler {
         }
 
         Screen screen = findActiveScreenByState(requestedState);
-        if (screen instanceof NavigationAware) {
-            ((NavigationAware) screen).urlParamsChanged(requestedState.getParams());
-        }
+        UiControllerUtils.fireEvent(screen, UrlParamsChangedEvent.class,
+                new UrlParamsChangedEvent(requestedState.getParams()));
 
         return true;
     }
@@ -463,8 +456,7 @@ public class UrlChangeHandler {
         if (screen == null) {
             screen = getAnyCurrentScreen();
         }
-        String route = getResolvedState(screen).asRoute();
-        Page.getCurrent().setUriFragment(route);
+        UrlTools.pushState(getResolvedState(screen).asRoute());
     }
 
     protected void handleNoAuthNavigation(NavigationState requestedState) {
@@ -548,7 +540,7 @@ public class UrlChangeHandler {
     }
 
     protected NavigationState getResolvedState(Screen screen) {
-        return getScreenContext(screen).getNavigationState();
+        return ((WebWindow) screen.getWindow()).getResolvedState();
     }
 
     protected void handle404(NavigationState requestedState) {

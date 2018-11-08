@@ -17,8 +17,6 @@
 package com.haulmont.cuba.web.sys.navigation;
 
 import com.haulmont.bali.util.Preconditions;
-import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
@@ -56,7 +54,7 @@ public class WebHistory implements History {
 
         Preconditions.checkNotNullArgument(navigationState);
 
-        NavigationState state = ui.getNavigation().getState();
+        NavigationState state = ui.getUrlRouting().getState();
         if (!navigationState.equals(state)) {
             throw new IllegalStateException("New history entry doesn't match with actual state");
         }
@@ -77,7 +75,7 @@ public class WebHistory implements History {
         }
 
         NavigationState prevState = history.get(now - 1);
-        NavigationState state = ui.getNavigation().getState();
+        NavigationState state = ui.getUrlRouting().getState();
         if (now - 1 > 0 && !prevState.equals(state)) {
             throw new IllegalStateException("Previous history entry doesn't match with actual state");
         }

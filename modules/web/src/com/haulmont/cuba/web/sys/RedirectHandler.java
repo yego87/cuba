@@ -19,10 +19,10 @@ package com.haulmont.cuba.web.sys;
 import com.haulmont.bali.util.Preconditions;
 import com.haulmont.cuba.core.global.Events;
 import com.haulmont.cuba.gui.components.RootWindow;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
+import com.haulmont.cuba.web.sys.navigation.NavigationState;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -83,7 +83,7 @@ public class RedirectHandler {
 
         RootWindow rootWindow = ui.getTopLevelWindow();
         if (rootWindow != null) {
-            ui.getNavigation().replaceState(rootWindow.getFrameOwner(), params);
+            ui.getUrlRouting().replaceState(rootWindow.getFrameOwner(), params);
         }
     }
 
@@ -113,7 +113,7 @@ public class RedirectHandler {
             return;
         }
 
-        NavigationState currentState = ui.getNavigation().getState();
+        NavigationState currentState = ui.getUrlRouting().getState();
         NavigationState newState = new NavigationState(currentState.getRoot(), "", redirectTarget, params);
 
         ui.getUrlChangeHandler().handleUrlChangeInternal(newState);

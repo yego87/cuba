@@ -17,10 +17,8 @@
 package com.haulmont.cuba.web.navigation;
 
 import com.haulmont.cuba.core.global.Events;
-import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.components.DialogWindow;
 import com.haulmont.cuba.gui.components.RootWindow;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.screen.EditorScreen;
 import com.haulmont.cuba.gui.screen.Screen;
 import com.haulmont.cuba.gui.sys.PageDefinition;
@@ -28,6 +26,7 @@ import com.haulmont.cuba.web.AppUI;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.WebWindow;
+import com.haulmont.cuba.web.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.sys.navigation.UrlTools;
 import com.vaadin.server.Page;
 import org.apache.commons.collections4.MapUtils;
@@ -42,11 +41,11 @@ import java.util.stream.Collectors;
 import static com.haulmont.bali.util.Preconditions.checkNotNullArgument;
 import static com.haulmont.cuba.gui.screen.UiControllerUtils.getScreenContext;
 
-public class WebNavigation implements Navigation {
+public class WebUrlRouting implements UrlRouting {
 
     protected static final int MAX_NESTED_ROUTES = 2;
 
-    private static final Logger log = LoggerFactory.getLogger(WebNavigation.class);
+    private static final Logger log = LoggerFactory.getLogger(WebUrlRouting.class);
 
     @Inject
     protected Events events;
@@ -56,7 +55,7 @@ public class WebNavigation implements Navigation {
 
     protected AppUI ui;
 
-    public WebNavigation(AppUI ui) {
+    public WebUrlRouting(AppUI ui) {
         this.ui = ui;
     }
 
@@ -89,13 +88,13 @@ public class WebNavigation implements Navigation {
         String newState = buildNavState(screen, urlParams);
 
         if (pushState && !externalNavigation(oldNavState, newState)) {
-            Page.getCurrent().setUriFragment(newState, false);
+            UrlTools.pushState(newState);
         } else {
-            Page.getCurrent().replaceState("#" + newState);
+            UrlTools.replaceState(newState);
         }
 
         NavigationState newNavState = getState();
-        getScreenContext(screen).setNavigationState(newNavState);
+        ((WebWindow) screen.getWindow()).setResolvedState(newNavState);
 
         if (pushState) {
             ui.getHistory().forward(newNavState);
@@ -262,7 +261,7 @@ public class WebNavigation implements Navigation {
 
     protected boolean notSuitableUrlHandlingMode() {
         if (UrlHandlingMode.URL_ROUTES != webConfig.getUrlHandlingMode()) {
-            log.debug("Navigation bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
+            log.debug("UrlRouting bean invocations are ignored for {} URL handling mode", webConfig.getUrlHandlingMode());
             return true;
         }
         return false;

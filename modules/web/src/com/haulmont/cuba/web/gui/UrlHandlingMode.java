@@ -16,9 +16,9 @@
 
 package com.haulmont.cuba.web.gui;
 
-import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.web.WebConfig;
+import com.haulmont.cuba.web.navigation.UrlRouting;
+import com.haulmont.cuba.web.sys.navigation.History;
 import com.haulmont.cuba.web.sys.navigation.UrlChangeHandler;
 import com.haulmont.cuba.web.widgets.CubaHistoryControl;
 
@@ -40,9 +40,9 @@ public enum UrlHandlingMode {
      */
     BACK_ONLY,
     /**
-     * Changes are handled by {@link Navigation}, {@link History} and {@link UrlChangeHandler}.
+     * Changes are handled by {@link UrlRouting}, {@link History} and {@link UrlChangeHandler}.
      *
-     * @see Navigation
+     * @see UrlRouting
      * @see History
      * @see UrlChangeHandler
      */

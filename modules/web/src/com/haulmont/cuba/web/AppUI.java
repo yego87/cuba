@@ -24,10 +24,7 @@ import com.haulmont.cuba.gui.components.RootWindow;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.events.sys.UiEventsMulticaster;
 import com.haulmont.cuba.gui.exception.UiExceptionHandler;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.sys.TestIdManager;
-import com.haulmont.cuba.gui.sys.navigation.History;
-import com.haulmont.cuba.gui.navigation.Navigation;
 import com.haulmont.cuba.gui.theme.ThemeConstantsRepository;
 import com.haulmont.cuba.security.app.UserSessionService;
 import com.haulmont.cuba.security.global.LoginException;
@@ -38,11 +35,13 @@ import com.haulmont.cuba.web.controllers.ControllerUtils;
 import com.haulmont.cuba.web.events.UIRefreshEvent;
 import com.haulmont.cuba.web.gui.UrlHandlingMode;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
-import com.haulmont.cuba.web.navigation.WebNavigation;
+import com.haulmont.cuba.web.navigation.UrlRouting;
+import com.haulmont.cuba.web.navigation.WebUrlRouting;
 import com.haulmont.cuba.web.security.events.AppInitializedEvent;
 import com.haulmont.cuba.web.security.events.SessionHeartbeatEvent;
 import com.haulmont.cuba.web.sys.*;
-import com.haulmont.cuba.web.sys.WebJarResourceResolver;
+import com.haulmont.cuba.web.sys.navigation.History;
+import com.haulmont.cuba.web.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.sys.navigation.UrlChangeHandler;
 import com.haulmont.cuba.web.sys.navigation.WebHistory;
 import com.haulmont.cuba.web.widgets.*;
@@ -134,7 +133,7 @@ public class AppUI extends CubaUI
     protected Notifications notifications;
     protected WebBrowserTools webBrowserTools;
     protected UrlChangeHandler urlChangeHandler;
-    protected Navigation navigation;
+    protected UrlRouting urlRouting;
     protected History history;
 
     public AppUI() {
@@ -243,12 +242,12 @@ public class AppUI extends CubaUI
         this.fragments = fragments;
     }
 
-    public Navigation getNavigation() {
-        return navigation;
+    public UrlRouting getUrlRouting() {
+        return urlRouting;
     }
 
-    public void setNavigation(Navigation navigation) {
-        this.navigation = navigation;
+    public void setUrlRouting(UrlRouting urlRouting) {
+        this.urlRouting = urlRouting;
     }
 
     public UrlChangeHandler getUrlChangeHandler() {
@@ -271,7 +270,7 @@ public class AppUI extends CubaUI
     protected void init(VaadinRequest request) {
         log.trace("Initializing UI {}", this);
 
-        NavigationState requestedState = getNavigation().getState();
+        NavigationState requestedState = getUrlRouting().getState();
 
         try {
             this.testMode = globalConfig.getTestMode();
@@ -341,9 +340,9 @@ public class AppUI extends CubaUI
         autowireContext(screens, applicationContext);
         setScreens(screens);
 
-        Navigation navigation = new WebNavigation(this);
-        autowireContext(navigation, applicationContext);
-        setNavigation(navigation);
+        UrlRouting urlRouting = new WebUrlRouting(this);
+        autowireContext(urlRouting, applicationContext);
+        setUrlRouting(urlRouting);
 
         UrlChangeHandler urlChangeHandler = new UrlChangeHandler(this);
         autowireContext(urlChangeHandler, applicationContext);
@@ -486,7 +485,7 @@ public class AppUI extends CubaUI
     @Override
     public void handleRequest(VaadinRequest request) {
         // on refresh page call
-        processExternalLink(request, getNavigation().getState());
+        processExternalLink(request, getUrlRouting().getState());
     }
 
     /**

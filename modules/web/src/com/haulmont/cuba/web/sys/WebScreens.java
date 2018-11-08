@@ -66,8 +66,8 @@ import com.haulmont.cuba.web.gui.components.WebDialogWindow.GuiDialogWindow;
 import com.haulmont.cuba.web.gui.components.WebTabWindow;
 import com.haulmont.cuba.web.gui.components.mainwindow.WebAppWorkArea;
 import com.haulmont.cuba.web.gui.icons.IconResolver;
+import com.haulmont.cuba.web.sys.navigation.UrlTools;
 import com.haulmont.cuba.web.widgets.*;
-import com.vaadin.server.Page;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Layout;
 import org.apache.commons.lang3.StringUtils;
@@ -422,7 +422,7 @@ public class WebScreens implements Screens, WindowManager {
 
         fireEvent(screen, AfterShowEvent.class, new AfterShowEvent(screen));
 
-        ui.getNavigation().pushState(screen);
+        ui.getUrlRouting().pushState(screen);
     }
 
     protected void checkNotYetOpened(Screen screen) {
@@ -517,24 +517,25 @@ public class WebScreens implements Screens, WindowManager {
             return;
         }
 
-        Screen currentScreen = null;
-
-        Iterator<Screen> currentBreadCrumbs = getOpenedScreens()
-                .getCurrentBreadcrumbs()
-                .iterator();
-        if (currentBreadCrumbs.hasNext()) {
-            currentScreen = currentBreadCrumbs.next();
-        }
-        if (currentScreen == null) {
-            currentScreen = getOpenedScreens().getRootScreenOrNull();
-        }
-
+        Screen currentScreen = getAnyCurrentScreen();
         if (currentScreen != null) {
-            String currentScreenRoute = getScreenContext(currentScreen)
-                    .getNavigationState()
-                    .asRoute();
-            Page.getCurrent().replaceState("#" + currentScreenRoute);
+            String currentScreenRoute = ((WebWindow) currentScreen.getWindow()).getResolvedState().asRoute();
+            UrlTools.replaceState(currentScreenRoute);
         }
+    }
+
+    protected Screen getAnyCurrentScreen() {
+        Iterator<Screen> dialogsIterator = getOpenedScreens().getDialogScreens().iterator();
+        if (dialogsIterator.hasNext()) {
+            return dialogsIterator.next();
+        }
+
+        Iterator<Screen> screensIterator = getOpenedScreens().getCurrentBreadcrumbs().iterator();
+        if (screensIterator.hasNext()) {
+            return screensIterator.next();
+        }
+
+        return getOpenedScreens().getRootScreenOrNull();
     }
 
     protected void removeThisTabWindow(Screen screen) {

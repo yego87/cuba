@@ -26,7 +26,7 @@ import com.haulmont.cuba.core.global.Scripting;
 import com.haulmont.cuba.core.sys.AppContext;
 import com.haulmont.cuba.gui.NoSuchRouteException;
 import com.haulmont.cuba.gui.NoSuchScreenException;
-import com.haulmont.cuba.gui.Page;
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.components.AbstractFrame;
 import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.screen.*;
@@ -332,15 +332,15 @@ public class WindowConfig {
 
         Map<String, Object> pageAnnotation = loadClassMetadata(screenControllerFqn)
                 .getAnnotationMetadata()
-                .getAnnotationAttributes(Page.class.getName());
+                .getAnnotationAttributes(Route.class.getName());
 
         if (pageAnnotation == null) {
             return null;
         }
 
-        String pathAttr = (String) pageAnnotation.get(Page.ROUTE_ATTRIBUTE);
+        String pathAttr = (String) pageAnnotation.get(Route.PATH_ATTRIBUTE);
         //noinspection unchecked
-        Class<? extends Screen> parentAttr = (Class<? extends Screen>) pageAnnotation.get(Page.PARENT_ATTRIBUTE);
+        Class<? extends Screen> parentAttr = (Class<? extends Screen>) pageAnnotation.get(Route.PARENT_ATTRIBUTE);
 
         return new PageDefinition(pathAttr, parentAttr);
     }

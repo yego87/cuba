@@ -18,7 +18,7 @@ package com.haulmont.cuba.web.sys.navigation;
 
 import com.google.common.collect.ImmutableMap;
 import com.haulmont.bali.util.URLEncodeUtils;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
+import com.vaadin.server.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +104,18 @@ public class UrlTools {
         }
 
         return deserialized;
+    }
+
+    public static void pushState(String navigationState) {
+        checkNotEmptyString(navigationState, "Unable to push empty navigation state");
+
+        Page.getCurrent().setUriFragment(navigationState, false);
+    }
+
+    public static void replaceState(String navigationState) {
+        checkNotEmptyString(navigationState, "Unable to replace by empty navigation state");
+
+        Page.getCurrent().replaceState("#" + navigationState);
     }
 
     public static NavigationState parseState(String uriFragment) {

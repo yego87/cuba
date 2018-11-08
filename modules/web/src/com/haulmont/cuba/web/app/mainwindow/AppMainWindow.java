@@ -17,22 +17,21 @@
 
 package com.haulmont.cuba.web.app.mainwindow;
 
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.components.mainwindow.AppMenu;
 import com.haulmont.cuba.gui.components.mainwindow.AppWorkArea;
 import com.haulmont.cuba.gui.components.mainwindow.FoldersPane;
 import com.haulmont.cuba.gui.components.mainwindow.FtsField;
-import com.haulmont.cuba.gui.screen.UiController;
 import com.haulmont.cuba.web.WebConfig;
 import com.haulmont.cuba.web.gui.components.WebComponentsHelper;
-import com.haulmont.cuba.gui.Page;
 import com.haulmont.cuba.web.widgets.CubaHorizontalSplitPanel;
 import com.vaadin.server.Sizeable.Unit;
 
 import javax.inject.Inject;
 import java.util.Map;
 
-@Page("main")
+@Route("main")
 public class AppMainWindow extends AbstractMainWindow {
 
     @Inject

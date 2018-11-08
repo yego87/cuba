@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.haulmont.cuba.gui.navigation;
+package com.haulmont.cuba.web.navigation;
 
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.gui.screen.Screen;
+import com.haulmont.cuba.web.sys.navigation.NavigationState;
 
 import java.util.Collections;
 import java.util.Map;
@@ -29,7 +29,7 @@ import java.util.Map;
  * <p>
  * Passed params map enables to reflect inner screen state to URL to use it later.
  */
-public interface Navigation {
+public interface UrlRouting {
 
     /**
      * Pushes the state corresponding to the given {@code screen}.

@@ -28,7 +28,7 @@ import java.lang.annotation.*;
  *
  * <br/> Example:
  * <br/>
- * Screen annotated with {@code @Page("help")} corresponds to "{@code /app/{rootRoute}/help}" route,
+ * Screen annotated with {@code @Route("help")} corresponds to "{@code /app/{rootRoute}/help}" route,
  * where {rootRoute} equals to currently opened root screen.
  * <p>
  *
@@ -46,10 +46,10 @@ import java.lang.annotation.*;
  *
  * Example. Let two screens exist:
  * <pre>{@code
- *   @Page("orders")
+ *   @Route("orders")
  *   public class OrderBrowse { ... }
  *
- *   @Page(route = "orders/edit", parentPrefix = OrderBrowse.class)
+ *   @Route(route = "orders/edit", parentPrefix = OrderBrowse.class)
  *   public class OrderEdit { ... }
  * }</pre>
  *
@@ -65,17 +65,17 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface Page {
+public @interface Route {
 
     String VALUE_ATTRIBUTE = "value";
-    String ROUTE_ATTRIBUTE = "route";
+    String PATH_ATTRIBUTE = "path";
     String PARENT_ATTRIBUTE = "parent";
 
-    @AliasFor(ROUTE_ATTRIBUTE)
+    @AliasFor(PATH_ATTRIBUTE)
     String value() default "";
 
     @AliasFor(VALUE_ATTRIBUTE)
-    String route() default "";
+    String path() default "";
 
     Class<? extends Screen> parent() default Screen.class;
 

@@ -17,7 +17,7 @@
 package com.haulmont.cuba.web.app.ui.navigation.notfoundwindow;
 
 import com.haulmont.cuba.core.global.Messages;
-import com.haulmont.cuba.gui.Page;
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.UiComponents;
 import com.haulmont.cuba.gui.WindowParam;
 import com.haulmont.cuba.gui.components.AbstractWindow;
@@ -28,7 +28,7 @@ import com.haulmont.cuba.web.theme.HaloTheme;
 import javax.inject.Inject;
 import java.util.Map;
 
-@Page("404")
+@Route("404")
 @UiController(NotFoundScreen.ID)
 public class NotFoundScreen extends AbstractWindow {
 

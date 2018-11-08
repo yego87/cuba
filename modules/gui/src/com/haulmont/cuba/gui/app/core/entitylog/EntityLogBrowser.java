@@ -32,7 +32,7 @@ import com.haulmont.cuba.core.global.AppBeans;
 import com.haulmont.cuba.core.global.Metadata;
 import com.haulmont.cuba.core.global.ReferenceToEntitySupport;
 import com.haulmont.cuba.core.global.TimeSource;
-import com.haulmont.cuba.gui.Page;
+import com.haulmont.cuba.gui.Route;
 import com.haulmont.cuba.gui.WindowManager;
 import com.haulmont.cuba.gui.WindowParams;
 import com.haulmont.cuba.gui.app.core.entityinspector.EntityInspectorBrowse;
@@ -50,7 +50,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 
-@Page("entityLog")
+@Route("entity-log")
 public class EntityLogBrowser extends AbstractWindow {
 
     public interface Companion {

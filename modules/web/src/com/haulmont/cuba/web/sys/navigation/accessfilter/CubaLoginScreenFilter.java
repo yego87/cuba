@@ -17,8 +17,8 @@
 package com.haulmont.cuba.web.sys.navigation.accessfilter;
 
 import com.haulmont.cuba.core.global.Messages;
-import com.haulmont.cuba.gui.sys.navigation.NavigationState;
 import com.haulmont.cuba.web.App;
+import com.haulmont.cuba.web.sys.navigation.NavigationState;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 

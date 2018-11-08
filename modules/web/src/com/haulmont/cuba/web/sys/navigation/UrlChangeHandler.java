@@ -280,7 +280,7 @@ public class UrlChangeHandler {
             if (screen == null) {
                 revertNavigationState();
                 showNotification(messages.getMainMessage("navigation.failedToOpenEditor"));
-                return false;
+                return true;
             }
         } else {
             screen = getScreens().create(windowInfo.getId(), OpenMode.NEW_TAB);

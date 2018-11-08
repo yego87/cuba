@@ -41,6 +41,8 @@ import com.haulmont.cuba.web.gui.components.WebAbstractComponent;
 import com.haulmont.cuba.web.gui.components.util.ShortcutListenerDelegate;
 import com.haulmont.cuba.web.sys.TabWindowContainer;
 import com.haulmont.cuba.web.sys.WindowBreadCrumbs;
+import com.haulmont.cuba.web.sys.navigation.NavigationState;
+import com.haulmont.cuba.web.sys.navigation.UrlTools;
 import com.haulmont.cuba.web.widgets.*;
 import com.haulmont.cuba.web.widgets.addons.dragdroplayouts.drophandlers.DefaultTabSheetDropHandler;
 import com.haulmont.cuba.web.widgets.client.addons.dragdroplayouts.ui.LayoutDragMode;
@@ -232,6 +234,7 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
 
             cubaTabSheet.setCloseOthersHandler(this::closeOtherTabWindows);
             cubaTabSheet.setCloseAllTabsHandler(this::closeAllTabWindows);
+            cubaTabSheet.addSelectedTabChangeListener(event -> reflectTabChangeToUrl());
         } else {
             CubaManagedTabSheet cubaManagedTabSheet = new CubaManagedTabSheet();
 
@@ -248,6 +251,7 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
 
             cubaManagedTabSheet.setCloseOthersHandler(this::closeOtherTabWindows);
             cubaManagedTabSheet.setCloseAllTabsHandler(this::closeAllTabWindows);
+            cubaManagedTabSheet.addSelectedTabChangeListener(event -> reflectTabChangeToUrl());
         }
 
         tabbedContainer.setHeight(100, Sizeable.Unit.PERCENTAGE);
@@ -256,6 +260,20 @@ public class WebAppWorkArea extends WebAbstractComponent<CssLayout> implements A
         tabbedContainer.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
 
         return tabbedContainer;
+    }
+
+    protected void reflectTabChangeToUrl() {
+        Component selectedTab = tabbedContainer.getTabSheetBehaviour().getSelectedTab();
+        if (selectedTab == null) {
+            return;
+        }
+
+        Window selectedWindow = ((TabWindowContainer) selectedTab).getBreadCrumbs().getCurrentWindow();
+        NavigationState resolvedState = ((WebWindow) selectedWindow).getResolvedState();
+
+        if (resolvedState != null) {
+            UrlTools.replaceState(resolvedState.asRoute());
+        }
     }
 
     protected Action.Handler createTabSheetActionHandler(HasTabSheetBehaviour tabSheet) {

@@ -20,7 +20,6 @@ import com.haulmont.cuba.core.config.type.TypeFactory;
 
 public class UrlHandlingModeFactory extends TypeFactory {
 
-
     @Override
     public Object build(String string) {
         for (UrlHandlingMode mode : UrlHandlingMode.values()) {
